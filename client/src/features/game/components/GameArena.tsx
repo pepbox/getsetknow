@@ -8,9 +8,11 @@ import {
   LinearProgress,
   Avatar,
   Grid,
+  Drawer,
 } from "@mui/material";
 import AssignmentTurnedInOutlinedIcon from "@mui/icons-material/AssignmentTurnedInOutlined";
 import GlobalButton from "../../../components/ui/button";
+import ConfirmationModal from "./ConfirmationModa";
 
 // Dummy data - will be replaced with backend data
 const dummyData = {
@@ -49,13 +51,26 @@ const dummyData = {
 
 const GameArena: React.FC = () => {
   const [knowsPerson, setKnowsPerson] = useState<boolean>(false);
+  const [person, setPerson] = useState<string>("");
+  const [skipModal, setSkipModal] = useState(false);
+  const [submitModal, setSubmitModal] = useState(false);
+  const [GuessedRight, setGuessedRight] = useState<boolean>(true);
   const handleIKnowWhoThisIs = () => {
     setKnowsPerson(true);
     console.log("I know who this is clicked");
   };
 
-  const handleCantFindThem = () => {
-    console.log("Can't find him/her clicked");
+  const handleSkipModalOpen = () => setSkipModal(true);
+  const handleSkipModalClose = () => setSkipModal(false);
+  const handleSkipConfirm = () => {
+    console.log("Skipping to next player");
+    // Add your skip logic here
+  };
+  const handleSubmitModalOpen = () => setSubmitModal(true);
+  const handleSubmitModalClose = () => setSubmitModal(false);
+  const handleSubmitConfirm = () => {
+    console.log("Submitting form");
+    // Add your submit logic here
   };
   const progressValue = 75;
 
@@ -84,7 +99,13 @@ const GameArena: React.FC = () => {
           >
             GetSetKnow!
           </Typography>
-          <IconButton edge="end" color="inherit">
+          <IconButton
+            edge="end"
+            color="inherit"
+            onClick={() => {
+              setGuessedRight(!GuessedRight);
+            }}
+          >
             <AssignmentTurnedInOutlinedIcon sx={{ color: "text.primary" }} />
           </IconButton>
         </Toolbar>
@@ -117,250 +138,381 @@ const GameArena: React.FC = () => {
       </Box>
 
       {/* Main Content */}
-      <Box
-        sx={{
-          flex: 1,
-          display: "flex",
-          flexDirection: "column",
-        }}
-      >
-        {/* Stats Cards */}
-        <Box
-          sx={{
-            display: "flex",
-            bgcolor: "primary.main",
-            flexDirection: "row",
-            gap: "12px",
-            marginBottom: "24px",
-            padding: "16px",
-          }}
-        >
+      {GuessedRight ? (
+        <>
           <Box
-            display={"flex"}
-            flex={1}
-            flexDirection={"column"}
-            alignItems={"center"}
-            textAlign={"center"}
-            justifyContent={"center"}
+            sx={{
+              display: "flex",
+              position: "relative",
+              flexDirection: "column",
+              height: "50vh",
+              bgcolor: "primary.main",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
           >
-            <Typography
-              variant="h4"
-              sx={{
-                fontSize: "14px",
-                color: "white",
-                mb: 1,
-              }}
-            >
-              Total <br /> Score
-            </Typography>
-            <Typography
-              variant="h3"
-              sx={{
-                color: "#FFFFFF",
-              }}
-            >
-              {dummyData.totalScore}
-            </Typography>
-          </Box>
-          <Box bgcolor={"white"} width={"2px"} py={2} />
-
-          <Box
-            display={"flex"}
-            flex={1}
-            flexDirection={"column"}
-            alignItems={"center"}
-            textAlign={"center"}
-            justifyContent={"center"}
-          >
-            <Typography
-              variant="h4"
-              sx={{
-                fontSize: "14px",
-                mb: 1,
-                color: "white",
-              }}
-            >
-              People I <br /> know
-            </Typography>
-            <Typography
-              variant="h3"
-              sx={{
-                color: "#FFFFFF",
-              }}
-            >
-              {dummyData.peopleIKnow}
-            </Typography>
-          </Box>
-
-          <Box bgcolor={"white"} width={"2px"} py={2} />
-
-          <Box
-            display={"flex"}
-            flex={1}
-            flexDirection={"column"}
-            alignItems={"center"}
-            justifyContent={"center"}
-            textAlign={"center"}
-          >
-            <Typography
-              variant="h4"
-              sx={{
-                mb: 1,
-                fontSize: "14px",
-                color: "white",
-              }}
-            >
-              People who <br /> know me
-            </Typography>
-            <Typography
-              variant="h3"
-              sx={{
-                color: "#FFFFFF",
-              }}
-            >
-              {dummyData.peopleWhoKnowMe}
-            </Typography>
-          </Box>
-        </Box>
-
-        {/* Profile Information */}
-        <Box
-          sx={{
-            flex: 1,
-            bgcolor: "primary.main",
-            display: "flex",
-            flexDirection: "column",
-            gap: "16px",
-            p: "24px",
-            maxHeight: "300px",
-            overflowY: "auto",
-          }}
-        >
-          {/* Profile Fields - Dynamically Generated */}
-          {Object.entries(dummyData.profile).map(([key, value], index) => (
             <Box
-              key={index}
-              sx={{ display: "flex", alignItems: "center", gap: "12px" }}
+              position={"absolute"}
+              bottom={0}
+              component="img"
+              sx={{
+                width: "300px",
+                height: "300px",
+                objectFit: "contain",
+              }}
+              src="/src/assets/guessedRight.png"
+              alt=" "
+            />
+          </Box>
+          <Box
+            sx={{
+              width: "100%",
+              mt: 2,
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              gap: 2,
+            }}
+          >
+            <Typography
+              variant="h6"
+              sx={{
+                fontWeight: "bold",
+                textAlign: "center",
+                mb: 2,
+              }}
             >
-              <Typography
-                variant="body1"
-                sx={{
-                  color: "#FFFFFF",
-                  minWidth: "100px",
-                  fontWeight: 500,
-                }}
+              Wohoo! You guessed it right.
+              <br />
+              Thanks for the participation.
+            </Typography>
+          </Box>{" "}
+        </>
+      ) : (
+        <>
+          <Box
+            sx={{
+              flex: 1,
+              display: "flex",
+              flexDirection: "column",
+            }}
+          >
+            {/* Stats Cards */}
+            <Box
+              sx={{
+                display: "flex",
+                bgcolor: "primary.main",
+                flexDirection: "row",
+                gap: "12px",
+                marginBottom: "24px",
+                padding: "16px",
+              }}
+            >
+              <Box
+                display={"flex"}
+                flex={1}
+                flexDirection={"column"}
+                alignItems={"center"}
+                textAlign={"center"}
+                justifyContent={"center"}
               >
-                {key.charAt(0).toUpperCase() +
-                  key.slice(1).replace(/([A-Z])/g, " $1")}
-              </Typography>
+                <Typography
+                  variant="h4"
+                  sx={{
+                    fontSize: "14px",
+                    color: "white",
+                    mb: 1,
+                  }}
+                >
+                  Total <br /> Score
+                </Typography>
+                <Typography
+                  variant="h3"
+                  sx={{
+                    color: "#FFFFFF",
+                  }}
+                >
+                  {dummyData.totalScore}
+                </Typography>
+              </Box>
+              <Box bgcolor={"white"} width={"2px"} py={2} />
 
               <Box
-                sx={{
-                  border: "2px solid white",
-                  color: "white",
-                  padding: "1px 8px",
-                  width: "100%",
-                  textAlign: "left",
-                  borderRadius: "8px",
-                }}
+                display={"flex"}
+                flex={1}
+                flexDirection={"column"}
+                alignItems={"center"}
+                textAlign={"center"}
+                justifyContent={"center"}
               >
-                <Typography variant="h6" sx={{ textWrap: "wrap" }}>
-                  {value}
+                <Typography
+                  variant="h4"
+                  sx={{
+                    fontSize: "14px",
+                    mb: 1,
+                    color: "white",
+                  }}
+                >
+                  People I <br /> know
+                </Typography>
+                <Typography
+                  variant="h3"
+                  sx={{
+                    color: "#FFFFFF",
+                  }}
+                >
+                  {dummyData.peopleIKnow}
+                </Typography>
+              </Box>
+
+              <Box bgcolor={"white"} width={"2px"} py={2} />
+
+              <Box
+                display={"flex"}
+                flex={1}
+                flexDirection={"column"}
+                alignItems={"center"}
+                justifyContent={"center"}
+                textAlign={"center"}
+              >
+                <Typography
+                  variant="h4"
+                  sx={{
+                    mb: 1,
+                    fontSize: "14px",
+                    color: "white",
+                  }}
+                >
+                  People who <br /> know me
+                </Typography>
+                <Typography
+                  variant="h3"
+                  sx={{
+                    color: "#FFFFFF",
+                  }}
+                >
+                  {dummyData.peopleWhoKnowMe}
                 </Typography>
               </Box>
             </Box>
-          ))}
-        </Box>
 
-        {knowsPerson && (
-          <Grid
-            container
-            spacing={2}
-            sx={{
-              mb: "20vh",
-              border: "2px solid black",
-              padding: "24px 8px",
-              m: "16px 8px",
-              borderRadius: "8px",
-            }}
-          >
-            {dummyData.players.map((player, index) => (
-              <Grid
-                size={4}
-                key={index}
+            {/* Profile Information */}
+            <Box
+              sx={{
+                flex: 1,
+                bgcolor: "primary.main",
+                display: "flex",
+                flexDirection: "column",
+                gap: "16px",
+                p: "24px",
+                maxHeight: "300px",
+                overflowY: "auto",
+              }}
+            >
+              {/* Profile Fields - Dynamically Generated */}
+              {Object.entries(dummyData.profile).map(([key, value], index) => (
+                <Box
+                  key={index}
+                  sx={{ display: "flex", alignItems: "center", gap: "12px" }}
+                >
+                  <Typography
+                    variant="body1"
+                    sx={{
+                      color: "#FFFFFF",
+                      minWidth: "100px",
+                      fontWeight: 500,
+                    }}
+                  >
+                    {key.charAt(0).toUpperCase() +
+                      key.slice(1).replace(/([A-Z])/g, " $1")}
+                  </Typography>
+
+                  <Box
+                    sx={{
+                      border: "2px solid white",
+                      color: "white",
+                      padding: "1px 8px",
+                      width: "100%",
+                      textAlign: "left",
+                      borderRadius: "8px",
+                    }}
+                  >
+                    <Typography variant="h6" sx={{ textWrap: "wrap" }}>
+                      {value}
+                    </Typography>
+                  </Box>
+                </Box>
+              ))}
+            </Box>
+
+            <ConfirmationModal
+              open={skipModal}
+              onClose={handleSkipModalClose}
+              mainText="Are you sure you want to skip and jump to next player?"
+              primaryButtonText="No"
+              secondaryButtonText="Yes"
+              onPrimaryClick={handleSkipModalClose}
+              onSecondaryClick={handleSkipConfirm}
+            />
+            <ConfirmationModal
+              open={submitModal}
+              onClose={handleSubmitModalClose}
+              mainText="Are you sure you want to submit?"
+              primaryButtonText="Submit"
+              secondaryButtonText="Back"
+              onPrimaryClick={handleSubmitConfirm}
+              onSecondaryClick={handleSubmitModalClose}
+            />
+
+            {/* Drawer-like Player Selection */}
+            <Drawer
+              anchor="bottom"
+              open={knowsPerson}
+              onClose={() => setKnowsPerson(false)}
+              slotProps={{
+                paper: {
+                  sx: {
+                    bottom: "150px", // lifts the drawer up from bottom
+                    position: "fixed", // override default absolute positioning
+                    height: "auto", // optional
+                  },
+                },
+              }}
+              ModalProps={{
+                keepMounted: true,
+              }}
+            >
+              <IconButton
+                onClick={() => setKnowsPerson(false)}
                 sx={{
-                  display: "flex",
-                  flexDirection: "column",
-                  justifyContent: "center",
-                  alignItems: "center",
+                  position: "absolute",
+                  top: 8,
+                  right: 8,
+                  zIndex: 2,
+                }}
+                aria-label="Close"
+              >
+                <span style={{ fontSize: 24, fontWeight: "bold" }}>×</span>
+              </IconButton>
+              <Grid
+                container
+                spacing={2}
+                sx={{
+                  mb: 2,
+                  mt: 2,
                 }}
               >
-                <Avatar
-                  alt={player.name}
+                {dummyData.players.map((player, index) => (
+                  <Grid
+                    size={4}
+                    key={index}
+                    onClick={() => setPerson(player.name)}
+                    sx={{
+                      cursor: "pointer",
+                      display: "flex",
+                      flexDirection: "column",
+                      justifyContent: "center",
+                      alignItems: "center",
+                    }}
+                  >
+                    <Avatar
+                      alt={player.name}
+                      sx={{
+                        width: 56,
+                        height: 56,
+                        bgcolor: "primary.main",
+                      }}
+                    />
+                    <Typography
+                      variant="h6"
+                      sx={{
+                        textAlign: "center",
+                        color: "black",
+                        fontWeight: 500,
+                      }}
+                    >
+                      {player.name.split(" ").map((word, i, arr) => (
+                        <React.Fragment key={i}>
+                          {word}
+                          {i < arr.length - 1 && <br />}
+                        </React.Fragment>
+                      ))}
+                    </Typography>
+                  </Grid>
+                ))}
+              </Grid>
+            </Drawer>
+            {/* Action Buttons */}
+            <Box height={"150px"} />
+            <Box
+              sx={{
+                display: "flex",
+                position: "fixed",
+                bottom: 0,
+                bgcolor: "white",
+                flexDirection: "column",
+                gap: "12px",
+                padding: "20px",
+                width: "100%",
+              }}
+            >
+              {!person && (
+                <GlobalButton
+                  onClick={handleIKnowWhoThisIs}
+                  sx={{ maxWidth: "300px", mx: "auto" }}
+                >
+                  I know who this is
+                </GlobalButton>
+              )}
+              {person && (
+                <GlobalButton
+                  onClick={handleSubmitModalOpen}
+                  sx={{ maxWidth: "300px", mx: "auto" }}
+                >
+                  Submit
+                </GlobalButton>
+              )}
+
+              {!person && (
+                <GlobalButton
+                  onClick={handleSkipModalOpen}
                   sx={{
-                    width: 56,
-                    height: 56,
-                    bgcolor: "primary.main",
-                  }}
-                />
-                <Typography
-                  variant="h6"
-                  sx={{
-                    textAlign: "center",
-                    color: "black",
-                    fontWeight: 500,
+                    maxWidth: "300px",
+                    mx: "auto",
+                    backgroundColor: "#FFFFFF",
+                    color: "#1C1C1E !important",
+                    border: "2px solid #E5E7EB",
+                    "&:hover": {
+                      backgroundColor: "#F3F4F6",
+                      color: "#1C1C1E !important",
+                    },
                   }}
                 >
-                  {player.name.split(" ").map((word, i, arr) => (
-                    <React.Fragment key={i}>
-                      {word}
-                      {i < arr.length - 1 && <br />}
-                    </React.Fragment>
-                  ))}
-                </Typography>
-              </Grid>
-            ))}
-          </Grid>
-        )}
-        {/* Action Buttons */}
-        <Box height={"150px"} />
-        <Box
-          sx={{
-            display: "flex",
-            position: "fixed",
-            bottom: 0,
-            bgcolor: "white",
-            flexDirection: "column",
-            gap: "12px",
-            padding: "20px",
-            width: "100%",
-          }}
-        >
-          <GlobalButton
-            onClick={handleIKnowWhoThisIs}
-            sx={{ maxWidth: "300px", mx: "auto" }}
-          >
-            I know who this is
-          </GlobalButton>
-
-          <GlobalButton
-            onClick={handleCantFindThem}
-            sx={{
-              maxWidth: "300px",
-              mx: "auto",
-              backgroundColor: "#FFFFFF",
-              color: "#1C1C1E !important",
-              border: "2px solid #E5E7EB",
-              "&:hover": {
-                backgroundColor: "#F3F4F6",
-                color: "#1C1C1E !important",
-              },
-            }}
-          >
-            Can't find him/her
-          </GlobalButton>
-        </Box>
-      </Box>
+                  Can't find him/her
+                </GlobalButton>
+              )}
+              {person && (
+                <GlobalButton
+                  onClick={handleSkipModalOpen}
+                  sx={{
+                    maxWidth: "300px",
+                    mx: "auto",
+                    backgroundColor: "#FFFFFF",
+                    color: "#1C1C1E !important",
+                    border: "2px solid #E5E7EB",
+                    "&:hover": {
+                      backgroundColor: "#F3F4F6",
+                      color: "#1C1C1E !important",
+                    },
+                  }}
+                >
+                  Back
+                </GlobalButton>
+              )}
+            </Box>
+          </Box>
+        </>
+      )}
     </Box>
   );
 };
