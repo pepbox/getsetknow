@@ -2,9 +2,10 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Box, Typography, TextField } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "../../../app/hooks";
-import { addAnswer, nextQuestion } from "../services/gameSlice";
+import { addAnswer, nextQuestion, setCurrentStep } from "../services/gameSlice";
 import GlobalButton from "../../../components/ui/button";
 import GameHeader from "../../../components/layout/GameHeader";
+import ProgressComponent from "../../../components/layout/ProgressComponent";
 
 const QuestionnaireScreen: React.FC = () => {
   const navigate = useNavigate();
@@ -27,6 +28,7 @@ const QuestionnaireScreen: React.FC = () => {
       );
 
       if (currentQuestionIndex < questions.length - 1) {
+        dispatch(setCurrentStep(5 + currentQuestionIndex));
         dispatch(nextQuestion());
         setAnswer("");
       } else {
@@ -48,6 +50,7 @@ const QuestionnaireScreen: React.FC = () => {
       }}
     >
       <GameHeader />
+      <ProgressComponent />
 
       <Box
         position={"relative"}
@@ -115,8 +118,6 @@ const QuestionnaireScreen: React.FC = () => {
             onClick={handleSubmit}
             disabled={!answer.trim()}
             sx={{
-              bgcolor: "#10B981",
-              "&:hover": { bgcolor: "#059669" },
               mt: 2,
             }}
           >

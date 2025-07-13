@@ -8,6 +8,8 @@ const initialState: GameState = {
   answers: [],
   isGameStarted: false,
   currentPlayer: null,
+  totalSteps: 0,
+  currentStep: 0,
 };
 
 const gameSlice = createSlice({
@@ -31,6 +33,12 @@ const gameSlice = createSlice({
         state.currentQuestionIndex += 1;
       }
     },
+    setTotalSteps: (state, action: PayloadAction<number>) => {
+      state.totalSteps = action.payload;
+    },
+    setCurrentStep: (state, action: PayloadAction<number>) => {
+      state.currentStep = action.payload;
+    },
     startGame: (state) => {
       state.isGameStarted = true;
     },
@@ -46,6 +54,8 @@ export const {
   setCurrentPlayer,
   addAnswer,
   nextQuestion,
+  setTotalSteps,
+  setCurrentStep,
   startGame,
   resetGame,
 } = gameSlice.actions;

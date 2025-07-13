@@ -29,4 +29,6 @@ export interface GameState {
   answers: IAnswer[];
   isGameStarted: boolean;
   currentPlayer: IPlayer | null;
+  totalSteps: number;
+  currentStep: number;
 }

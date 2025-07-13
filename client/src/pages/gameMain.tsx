@@ -4,6 +4,7 @@ import CaptureScreen from "../features/game/components/CaptureScreen";
 import IntroScreen from "../features/game/components/IntroScreen";
 import QuestionnaireScreen from "../features/game/components/QuestionnaireScreen";
 import WaitingAreaScreen from "../features/game/components/WaitingAreaScreen";
+import GameArena from "../features/game/components/GameArena";
 
 const GameMain = () => {
   return (
@@ -21,6 +22,8 @@ const GameMain = () => {
         <Route path="/intro" element={<IntroScreen />} />
         <Route path="/questionnaire" element={<QuestionnaireScreen />} />
         <Route path="/waiting" element={<WaitingAreaScreen />} />
+        <Route path="/arena" element={<GameArena />} />
+
       </Routes>
     </div>
   );

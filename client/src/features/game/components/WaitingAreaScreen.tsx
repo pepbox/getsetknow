@@ -1,375 +1,179 @@
-import React, { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { Box, Typography, Avatar as MuiAvatar, Chip } from "@mui/material";
-import { styled } from "@mui/material/styles";
+import React from "react";
+import { Box, Avatar, Typography } from "@mui/material";
+import { motion } from "framer-motion";
 
-interface Avatar {
+interface Player {
   id: number;
   name: string;
-  images: string[];
-  angle: number;
+  imageUrl: string;
 }
 
-const StyledContainer = styled(Box)(({ theme }) => ({
-  minHeight: "100vh",
-  backgroundColor: theme.palette.grey[50],
-  display: "flex",
-  flexDirection: "column",
-  alignItems: "center",
-  justifyContent: "center",
-  padding: 2,
-}));
+interface CircularPlayerAnimationProps {
+  radius?: number;
+  duration?: number;
+  size?: number;
+}
 
-const StyledAvatarContainer = styled(Box)({
-  position: "relative",
-  width: 300,
-  height: 300,
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "center",
-  "@media (min-width: 768px)": {
-    width: 350,
-    height: 350,
-  },
-});
-
-const StyledAvatar = styled(MuiAvatar)(({ theme }) => ({
-  width: 56,
-  height: 56,
-  border: `3px solid ${theme.palette.common.white}`,
-  boxShadow: theme.shadows[4],
-  background: "linear-gradient(135deg, #60a5fa 0%, #a855f7 100%)",
-  marginBottom: 1,
-  position: "relative",
-  overflow: "hidden",
-  "@media (min-width: 768px)": {
-    width: 64,
-    height: 64,
-  },
-}));
-
-const StyledChip = styled(Chip)(({ theme }) => ({
-  fontSize: "0.75rem",
-  fontWeight: 600,
-  color: theme.palette.grey[700],
-  backgroundColor: theme.palette.common.white,
-  boxShadow: theme.shadows[1],
-  whiteSpace: "nowrap",
-}));
-
-const LoadingDot = styled(Box)(({ theme }) => ({
-  width: 8,
-  height: 8,
-  backgroundColor: theme.palette.primary.main,
-  borderRadius: "50%",
-  margin: 2,
-}));
-
-const WaitingAreaScreen: React.FC = () => {
-  const [currentImageIndex, setCurrentImageIndex] = useState(0);
-
-  // Sample avatar data - replace with your actual images
-  const avatars: Avatar[] = [
+const WaitingAreaScreen: React.FC<CircularPlayerAnimationProps> = ({
+  radius = Math.min(window.innerWidth, 480) / 2 - 50,
+  duration = 10,
+  size = (Math.min(window.innerWidth, 480) / 2 -25 ) / 2,
+}) => {
+  const players: Player[] = [
     {
       id: 1,
-      name: "ARTIST",
-      images: [
-        "/src/assets/capture_asset1.png",
-        "/src/assets/capture_asset2.png",
-        "/src/assets/capture_asset3.png",
-      ],
-      angle: 0, // top
+      name: "Artist",
+      imageUrl: "/src/assets/artist.png",
     },
     {
       id: 2,
-      name: "ADVENTURER",
-      images: [
-        "/src/assets/capture_asset1.png",
-        "/src/assets/capture_asset2.png",
-        "/src/assets/capture_asset3.png",
-      ],
-      angle: 45, // top-right
+      name: "Music",
+      imageUrl: "/src/assets/music.png",
     },
     {
       id: 3,
-      name: "MUSIC",
-      images: [
-        "/src/assets/capture_asset1.png",
-        "/src/assets/capture_asset2.png",
-        "/src/assets/capture_asset3.png",
-      ],
-      angle: 90, // right
+      name: "Dance",
+      imageUrl: "/src/assets/Dance.png",
     },
     {
       id: 4,
-      name: "PHOTOGRAPHER",
-      images: [
-        "/src/assets/capture_asset1.png",
-        "/src/assets/capture_asset2.png",
-        "/src/assets/capture_asset3.png",
-      ],
-      angle: 135, // bottom-right
+      name: "Adventurer",
+      imageUrl: "/src/assets/adventure.png",
     },
     {
       id: 5,
-      name: "FOODIE",
-      images: [
-        "/src/assets/capture_asset1.png",
-        "/src/assets/capture_asset2.png",
-        "/src/assets/capture_asset3.png",
-      ],
-      angle: 180, // bottom
+      name: "UI/UX",
+      imageUrl: "/src/assets/uiux.png",
     },
     {
       id: 6,
-      name: "UI/UX",
-      images: [
-        "/src/assets/capture_asset1.png",
-        "/src/assets/capture_asset2.png",
-        "/src/assets/capture_asset3.png",
-      ],
-      angle: 225, // bottom-left
+      name: "Foodie",
+      imageUrl: "/src/assets/foodie.png",
     },
     {
       id: 7,
-      name: "DANCE",
-      images: [
-        "/src/assets/capture_asset1.png",
-        "/src/assets/capture_asset2.png",
-        "/src/assets/capture_asset3.png",
-      ],
-      angle: 270, // left
+      name: "Photographer",
+      imageUrl: "/src/assets/photographer.png",
     },
     {
       id: 8,
-      name: "MUSIC",
-      images: [
-        "/src/assets/capture_asset1.png",
-        "/src/assets/capture_asset2.png",
-        "/src/assets/capture_asset3.png",
-      ],
-      angle: 315, // top-left
+      name: "Developer",
+      imageUrl: "/src/assets/music2.png",
     },
   ];
+  // Ensure we only use 8 players
+  const playersToShow = players.slice(0, 8);
 
-  // Change images every 2 seconds
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrentImageIndex((prevIndex) => (prevIndex + 1) % 3);
-    }, 2000);
-    return () => clearInterval(interval);
-  }, []);
-
-  // Calculate position based on angle
-  const getPosition = (angle: number, radius: number) => {
+  const getPlayerPosition = (index: number) => {
+    const angle = (index * 360) / 8;
     const radian = (angle * Math.PI) / 180;
-    const x = Math.cos(radian) * radius;
-    const y = Math.sin(radian) * radius;
-    return { x, y };
-  };
 
-  // Animation variants for staggered entrance
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.15,
-        delayChildren: 0.2,
-      },
-    },
+    return {
+      x: Math.cos(radian) * radius,
+      y: Math.sin(radian) * radius,
+    };
   };
-
-  // Individual avatar animation variants
-  const avatarVariants = {
-    hidden: {
-      scale: 0,
-      opacity: 0,
-      rotate: -180,
-    },
-    visible: {
-      scale: 1,
-      opacity: 1,
-      rotate: 0,
-      transition: {
-        type: "spring",
-        damping: 15,
-        stiffness: 200,
-      },
-    },
-  };
-
-  // Image slide animation from 45-degree top
-  const imageVariants = {
-    enter: {
-      x: -30,
-      y: -30,
-      opacity: 0,
-      scale: 0.8,
-    },
-    center: {
-      x: 0,
-      y: 0,
-      opacity: 1,
-      scale: 1,
-      transition: {
-        duration: 0.5,
-        ease: "easeOut",
-      },
-    },
-    exit: {
-      x: 30,
-      y: 30,
-      opacity: 0,
-      scale: 0.8,
-      transition: {
-        duration: 0.3,
-        ease: "easeIn",
-      },
-    },
-  };
-
-  const radius = 120; // Circle radius - reduced for better circular appearance
 
   return (
-    <StyledContainer>
-      {/* Header */}
-      <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6 }}
+    <Box
+      sx={{
+        overflow: "hidden",
+        position: "relative",
+        // width: (radius + size) * 1.8,
+        width: "100%",
+        // height: (radius + size) * 1.8,
+        height: "100vh",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        flexDirection: "column",
+        margin: "0 auto",
+      }}
+    >
+      <Typography variant="h3" mt={4}>
+        GetSetKnow!
+      </Typography>
+      {/* Center circle indicator (optional) */}
+      <Box
+        sx={{
+          position: "absolute",
+          top: "55%",
+          left: "50%",
+          transform: "translate(-50%, -50%)",
+        }}
       >
-        <Box textAlign="center" mb={4}>
-          <Typography
-            variant="h4"
-            fontWeight="bold"
-            color="text.primary"
-            mb={1}
-          >
-            GetSetKnow!
-          </Typography>
-        </Box>
-      </motion.div>
+        <Typography variant="h5" textAlign={"center"} color="text.primary">
+          Waiting for <br />
+          players.
+        </Typography>
+      </Box>
 
-      {/* Main Container */}
+      {/* Rotating container */}
       <motion.div
-        variants={containerVariants}
-        initial="hidden"
-        animate="visible"
+        style={{
+          position: "relative",
+          width: "100%",
+          height: "100%",
+        }}
+        animate={{
+          rotate: 360,
+        }}
+        transition={{
+          duration: duration,
+          repeat: Infinity,
+          ease: "linear",
+        }}
       >
-        <StyledAvatarContainer>
-          {/* Center Text */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.5 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.6, delay: 1.2 }}
-          >
-            <Box textAlign="center" zIndex={10}>
-              <Typography
-                variant="h5"
-                fontWeight="600"
-                color="text.primary"
-                mb={1}
-              >
-                Waiting for
-                <br />
-                players..
-              </Typography>
-              <motion.div
-                animate={{ opacity: [0.5, 1, 0.5] }}
-                transition={{ duration: 1.5, repeat: Infinity }}
-              >
-                <Typography
-                  variant="body1"
-                  color="text.secondary"
-                  fontWeight="500"
-                >
-                  4 of 8 ready!
-                </Typography>
-              </motion.div>
-            </Box>
-          </motion.div>
+        {playersToShow.map((player, index) => {
+          const position = getPlayerPosition(index);
 
-          {/* Avatars positioned around the circle */}
-          {avatars.map((avatar, index) => {
-            const position = getPosition(avatar.angle - 90, radius); // -90 to start from top
-
-            return (
-              <motion.div
-                key={avatar.id}
-                variants={avatarVariants}
-                style={{
-                  position: "absolute",
-                  left: "50%",
-                  top: "50%",
-                  transform: `translate(calc(-50% + ${position.x}px), calc(-50% + ${position.y}px))`,
-                  display: "flex",
-                  flexDirection: "column",
-                  alignItems: "center",
-                }}
-              >
-                {/* Avatar Image Container */}
-                <motion.div whileHover={{ scale: 1.1 }}>
-                  <StyledAvatar>
-                    <AnimatePresence mode="wait">
-                      <motion.img
-                        key={`${avatar.id}-${currentImageIndex}`}
-                        src={avatar.images[currentImageIndex]}
-                        alt={avatar.name}
-                        style={{
-                          width: "100%",
-                          height: "100%",
-                          objectFit: "cover",
-                        }}
-                        variants={imageVariants}
-                        initial="enter"
-                        animate="center"
-                        exit="exit"
-                      />
-                    </AnimatePresence>
-                  </StyledAvatar>
-                </motion.div>
-
-                {/* Avatar Label */}
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 0.5 + index * 0.1 }}
-                >
-                  <StyledChip label={avatar.name} size="small" />
-                </motion.div>
-              </motion.div>
-            );
-          })}
-        </StyledAvatarContainer>
-      </motion.div>
-
-      {/* Loading Dots Animation */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 1.5 }}
-      >
-        <Box display="flex" justifyContent="center" mt={3}>
-          {[0, 1, 2].map((index) => (
+          return (
             <motion.div
-              key={index}
+              key={player.id}
+              style={{
+                position: "absolute",
+                left: "50%",
+                top: "50%",
+              }}
+              initial={{
+                x: position.x,
+                y: position.y,
+                translateX: "-50%",
+                translateY: "-50%",
+              }}
               animate={{
-                scale: [1, 1.5, 1],
-                opacity: [0.5, 1, 0.5],
+                rotate: -360,
+                x: position.x,
+                y: position.y,
+                translateX: "-50%",
+                translateY: "-50%",
               }}
               transition={{
-                duration: 1,
+                duration: duration,
                 repeat: Infinity,
-                delay: index * 0.2,
+                ease: "linear",
               }}
             >
-              <LoadingDot />
+              <Avatar
+                src={player.imageUrl}
+                alt={player.name}
+                sx={{
+                  width: size,
+                  height: size,
+                  border: "3px solid #fff",
+                  boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+                  transition: "transform 0.3s ease",
+                  "&:hover": {
+                    transform: "scale(1.1)",
+                    zIndex: 10,
+                  },
+                }}
+              />
             </motion.div>
-          ))}
-        </Box>
+          );
+        })}
       </motion.div>
-    </StyledContainer>
+    </Box>
   );
 };
 

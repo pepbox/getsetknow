@@ -4,9 +4,13 @@ import { Box, Typography } from "@mui/material";
 import Webcam from "react-webcam";
 import GlobalButton from "../../../components/ui/button";
 import GameHeader from "../../../components/layout/GameHeader";
+import ProgressComponent from "../../../components/layout/ProgressComponent";
+import { useAppDispatch } from "../../../app/hooks";
+import { setCurrentStep } from "../services/gameSlice";
 
 const CaptureScreen: React.FC = () => {
   const navigate = useNavigate();
+  const dispatch = useAppDispatch();
   const webcamRef = useRef<Webcam>(null);
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
 
@@ -14,118 +18,45 @@ const CaptureScreen: React.FC = () => {
     const imageSrc = webcamRef.current?.getScreenshot();
     if (imageSrc) {
       setCapturedImage(imageSrc);
+      dispatch(setCurrentStep(2));
     }
   }, [webcamRef]);
 
   const handleConfirm = () => {
-    navigate("/game/questionnaire");
+    dispatch(setCurrentStep(3));
+    navigate("/game/intro");
   };
 
   const handleRetake = () => {
+    dispatch(setCurrentStep(1));
     setCapturedImage(null);
   };
 
   return (
     <Box
       sx={{
-        position: "relative",
-        minHeight: "100vh",
         display: "flex",
         flexDirection: "column",
-        overflow: "hidden",
       }}
     >
       {/* Header */}
-      <GameHeader/>
+      <GameHeader />
+      <ProgressComponent />
 
-      {/* Character Images */}
       <Box
         sx={{
-          height: "300px",
-          position: "relative",
-          mb: 1,
-          bgcolor: "primary.main",  
+          bgcolor: "primary.main",
+          height: "270px",
         }}
-      >
-        {/* Left character */}
-        <Box
-          sx={{
-            position: "absolute",
-            left: 0,
-            bottom: 0,
-            width: "90px",
-            height: "125px",
-            zIndex: 1,
-          }}
-        >
-          <Box
-            component="img"
-            sx={{
-              width: "100%",
-              height: "100%",
-              objectFit: "contain",
-            }}
-            src="/src/assets/capture_asset1.png"
-            alt="Character 1"
-          />
-        </Box>
-
-        {/* Center character (main) - positioned higher */}
-        <Box
-          sx={{
-            position: "absolute",
-            left: "50%",
-            top: "0",
-            transform: "translateX(-50%)",
-            width: "170px",
-            height: "162px",
-            zIndex: 2,
-          }}
-        >
-          <Box
-            component="img"
-            sx={{
-              width: "100%",
-              height: "100%",
-              objectFit: "contain",
-            }}
-            src="/src/assets/capture_asset2.png"
-            alt="Main character"
-          />
-        </Box>
-
-        {/* Right character */}
-        <Box
-          sx={{
-            position: "absolute",
-            right: 0,
-            bottom: 0,
-            width: "100px",
-            height: "126px",
-            zIndex: 1,
-          }}
-        >
-          <Box
-            component="img"
-            sx={{
-              width: "100%",
-              height: "100%",
-              objectFit: "contain",
-            }}
-            src="/src/assets/capture_asset3.png"
-            alt="Character 3"
-          />
-        </Box>
-      </Box>
-
+      />
       {/* Main Content Container */}
       <Box
         sx={{
+          maxWidth: "270px",
           position: "absolute",
-          top: "40%",
-          transform: "translateX(30%)",
-          widht: "250px",
-          height: "250px",
+          top: "50%",
+          left: "50%",
+          transform: "translate(-50%, -50%)",
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
@@ -186,9 +117,10 @@ const CaptureScreen: React.FC = () => {
       <Box
         sx={{
           position: "absolute",
-          bottom: 10,
-          left: 0,
-          right: 0,
+          bottom: "5%",
+          left: "50%",
+          transform: "translateX(-50%)",
+          width: "100%",
           bgcolor: "white",
           display: "flex",
           flexDirection: "column",

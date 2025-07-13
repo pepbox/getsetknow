@@ -68,73 +68,73 @@ const baseTheme = createTheme({
     h1: {
       fontWeight: 700,
       fontSize: '32px',
-      lineHeight: 1.2,
-      color: '#1C1C1E',
+      // lineHeight: 1.2,
+      // color: '#1C1C1E',
     },
     h2: {
       fontWeight: 600,
       fontSize: '28px',
-      lineHeight: 1.3,
-      color: '#1C1C1E',
+      // lineHeight: 1.3,
+      // color: '#1C1C1E',
     },
     h3: {
       fontWeight: 600,
       fontSize: '24px',
-      lineHeight: 1.4,
-      color: '#1C1C1E',
+      // lineHeight: 1.4,
+      // color: '#1C1C1E',
     },
     h4: {
       fontWeight: 600,
       fontSize: '20px',
-      lineHeight: 1.4,
-      color: '#1C1C1E',
+      // lineHeight: 1.4,
+      // color: '#1C1C1E',
     },
     h5: {
       fontWeight: 500,
       fontSize: '18px',
-      lineHeight: 1.4,
-      color: '#1C1C1E',
+      // lineHeight: 1.4,
+      // color: '#1C1C1E',
     },
     h6: {
       fontWeight: 500,
       fontSize: '16px',
-      lineHeight: 1.4,
-      color: '#1C1C1E',
+      // lineHeight: 1.4,
+      // color: '#1C1C1E',
     },
     subtitle1: {
       fontSize: '16px',
       fontWeight: 500,
-      lineHeight: 1.5,
+      // lineHeight: 1.5,
       color: '#6B7280',
     },
     subtitle2: {
       fontSize: '14px',
       fontWeight: 500,
-      lineHeight: 1.5,
+      // lineHeight: 1.5,
       color: '#6B7280',
     },
     body1: {
       fontWeight: 400,
       fontSize: '16px',
-      lineHeight: 1.6,
+      // lineHeight: 1.6,
       color: '#1C1C1E',
     },
     body2: {
       fontWeight: 400,
       fontSize: '14px',
-      lineHeight: 1.6,
+      // lineHeight: 1.6,
       color: '#6B7280',
     },
     button: {
       fontWeight: 500,
       fontSize: '16px',
       textTransform: 'none',
-      lineHeight: 1.4,
+      // lineHeight: 1.4,
     },
     caption: {
       fontSize: '12px',
       fontWeight: 400,
-      lineHeight: 1.5,
+      // lineHeight: 1.5,
       color: '#6B7280',
     },
   },
@@ -213,7 +213,7 @@ const baseTheme = createTheme({
       styleOverrides: {
         root: {
           borderRadius: 8,
-          fontWeight: 500,
+          fontWeight: 700,
           fontSize: '14px',
         },
         colorPrimary: {
@@ -274,19 +274,4 @@ const baseTheme = createTheme({
   },
 });
 
-// Custom theme extensions
-export const theme = createTheme(baseTheme, {
-  // Additional custom spacing and breakpoints if needed
-  spacing: 8,
-  breakpoints: {
-    values: {
-      xs: 0,
-      sm: 600,
-      md: 960,
-      lg: 1280,
-      xl: 1920,
-    },
-  },
-});
-
-export default theme;
+export default baseTheme;
