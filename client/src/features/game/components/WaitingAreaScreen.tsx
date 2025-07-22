@@ -25,7 +25,12 @@ const WaitingAreaScreen: React.FC<CircularPlayerAnimationProps> = ({
     useAppSelector((state) => state.game.isGameStarted) || true;
   const navigate = useNavigate();
   useEffect(() => {
-    if (isGameStarted) navigate("/game/arena");
+    if (isGameStarted) {
+      const timeout = setTimeout(() => {
+        navigate("/game/arena");
+      }, 6000);
+      return () => clearTimeout(timeout);
+    }
   }, [isGameStarted]);
 
   const players: Player[] = [

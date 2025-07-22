@@ -73,7 +73,7 @@ const CaptureScreen: React.FC = () => {
           position: "absolute",
           top: "50%",
           left: "50%",
-          transform: "translate(-50%, -50%)",
+          transform: "translate(-50%, -35%)",
           display: "flex",
           flexDirection: "column",
           alignItems: "center",

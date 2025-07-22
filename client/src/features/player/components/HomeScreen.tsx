@@ -34,18 +34,22 @@ const HomeScreen: React.FC = () => {
     <Box
       position={"absolute"}
       sx={{
-        maxWidth: "480px",
+        top: 0,
+        left: 0,  
+        width: "100%",
+        height: "100%",
+        overflowY: "hidden",
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
-        py: 4,
+        pt: 4,
       }}
     >
       <Typography
         variant="h1"
         sx={{
           color: "text.primary",
-          fontSize: "48px",
+          fontSize: "36px",
           textAlign: "center",
         }}
       >
@@ -55,7 +59,7 @@ const HomeScreen: React.FC = () => {
       <Box
         component="img"
         sx={{
-          width: "100%",
+          maxHeight: "380px",
           objectFit: "cover",
         }}
         src="/src/assets/homescreenBanner.png"
@@ -65,7 +69,7 @@ const HomeScreen: React.FC = () => {
       <Box
         position={"relative"}
         sx={{
-          bottom: "110px",
+          bottom: "80px",
           borderRadius: 2,
           background: "linear-gradient(180deg, #A78BFA 0%, #3622C9 100%)",
           padding: "2px",
@@ -109,6 +113,7 @@ const HomeScreen: React.FC = () => {
             }}
           >
             <GlobalButton
+              fullWidth
               onClick={handleStart}
               disabled={!firstname || !lastname}
             >
