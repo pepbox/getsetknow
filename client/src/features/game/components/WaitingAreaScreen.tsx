@@ -1,6 +1,8 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Box, Avatar, Typography } from "@mui/material";
 import { motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
+import { useAppSelector } from "../../../app/hooks";
 
 interface Player {
   id: number;
@@ -17,8 +19,15 @@ interface CircularPlayerAnimationProps {
 const WaitingAreaScreen: React.FC<CircularPlayerAnimationProps> = ({
   radius = Math.min(window.innerWidth, 480) / 2 - 50,
   duration = 10,
-  size = (Math.min(window.innerWidth, 480) / 2 -25 ) / 2,
+  size = (Math.min(window.innerWidth, 480) / 2 - 25) / 2,
 }) => {
+  const isGameStarted =
+    useAppSelector((state) => state.game.isGameStarted) || true;
+  const navigate = useNavigate();
+  useEffect(() => {
+    if (isGameStarted) navigate("/game/arena");
+  }, [isGameStarted]);
+
   const players: Player[] = [
     {
       id: 1,

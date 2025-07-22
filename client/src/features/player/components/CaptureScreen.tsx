@@ -6,13 +6,17 @@ import GlobalButton from "../../../components/ui/button";
 import GameHeader from "../../../components/layout/GameHeader";
 import ProgressComponent from "../../../components/layout/ProgressComponent";
 import { useAppDispatch } from "../../../app/hooks";
-import { setCurrentStep } from "../services/gameSlice";
+import { setCurrentStep } from "../../game/services/gameSlice";
+import { useOnboardPlayerMutation } from "../services/player.api";
+import { useAppSelector } from "../../../app/hooks";
 
 const CaptureScreen: React.FC = () => {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const webcamRef = useRef<Webcam>(null);
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
+  const [OnboardPlayer] = useOnboardPlayerMutation();
+  const playerName = useAppSelector((state) => state.player.player?.name);
 
   const capture = useCallback(() => {
     const imageSrc = webcamRef.current?.getScreenshot();
@@ -23,8 +27,21 @@ const CaptureScreen: React.FC = () => {
   }, [webcamRef]);
 
   const handleConfirm = () => {
-    dispatch(setCurrentStep(3));
-    navigate("/game/intro");
+    if (!capturedImage) return;
+    OnboardPlayer({
+      name: playerName,
+      profilePhoto: capturedImage,
+      session: "687dedc3fbc85e571416e6c9",
+    })
+      .unwrap()
+      .then(() => {
+        console.log("Player onboarded successfully");
+        dispatch(setCurrentStep(3));
+        navigate("/game/intro");
+      })
+      .catch((error) => {
+        console.error("Error onboarding player:", error);
+      });
   };
 
   const handleRetake = () => {

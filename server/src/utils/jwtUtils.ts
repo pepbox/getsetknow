@@ -3,9 +3,9 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-export const generateAccessToken = (id: string, role: "USER" | "ADMIN", companyId: string) => {
+export const generateAccessToken = (id: string, role: "USER" | "ADMIN") => {
   return jwt.sign(
-    { id, role, companyId },
+    { id, role },
     process.env.ACCESS_TOKEN_SECRET as string,
     {
       expiresIn: parseInt(process.env.ACCESS_TOKEN_EXPIRY || '900', 10),

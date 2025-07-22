@@ -23,10 +23,6 @@ export interface IAnswer {
 }
 
 export interface GameState {
-  players: IPlayer[];
-  questions: IQuestion[];
-  currentQuestionIndex: number;
-  answers: IAnswer[];
   isGameStarted: boolean;
   currentPlayer: IPlayer | null;
   totalSteps: number;

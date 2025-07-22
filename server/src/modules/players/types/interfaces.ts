@@ -1,6 +1,7 @@
 import { Document, Types } from "mongoose";
 
 export interface IPlayer extends Document {
+    _id: Types.ObjectId;
     name: string;
     profilePhoto: string;
     session: Types.ObjectId;

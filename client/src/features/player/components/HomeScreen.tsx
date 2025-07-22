@@ -1,10 +1,9 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Alert, Box, Snackbar, TextField, Typography } from "@mui/material";
 import { useAppDispatch } from "../../../app/hooks";
-import { setCurrentStep, setPlayers, setQuestions, setTotalSteps } from "../services/gameSlice";
 import GlobalButton from "../../../components/ui/button";
-import { mockPlayers, mockQuestions } from "../../../data/mockData";
+import { setPlayer } from "../services/player.slice";
 
 const HomeScreen: React.FC = () => {
   const navigate = useNavigate();
@@ -13,19 +12,17 @@ const HomeScreen: React.FC = () => {
   const [lastname, setLastname] = React.useState<string>("");
   const [showSnackbar, setShowSnackbar] = useState(false);
 
-  useEffect(() => {
-    dispatch(setPlayers(mockPlayers));
-    dispatch(setQuestions(mockQuestions));
-    dispatch(setTotalSteps(mockQuestions.length+3));
-    dispatch(setCurrentStep(1));
-  }, [dispatch]);
-
   const handleStart = () => {
     if (!firstname || !lastname) {
       setShowSnackbar(true);
       return;
     }
-    // const playerName = `${firstname} ${lastname}`;
+    const playerName = `${firstname} ${lastname}`;
+    dispatch(
+      setPlayer({
+        name: playerName,
+      })
+    );
     navigate("/game/capture");
   };
 
@@ -111,7 +108,12 @@ const HomeScreen: React.FC = () => {
               pb: 2,
             }}
           >
-            <GlobalButton onClick={handleStart} disabled={!firstname || !lastname}>Start</GlobalButton>
+            <GlobalButton
+              onClick={handleStart}
+              disabled={!firstname || !lastname}
+            >
+              Start
+            </GlobalButton>
           </Box>
         </Box>
       </Box>

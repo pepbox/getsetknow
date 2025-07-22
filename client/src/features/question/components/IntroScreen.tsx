@@ -5,7 +5,7 @@ import GlobalButton from "../../../components/ui/button";
 import GameHeader from "../../../components/layout/GameHeader";
 import ProgressComponent from "../../../components/layout/ProgressComponent";
 import { useAppDispatch } from "../../../app/hooks";
-import { setCurrentStep } from "../services/gameSlice";
+import { setCurrentStep } from "../../game/services/gameSlice";
 
 const IntroScreen: React.FC = () => {
   const navigate = useNavigate();

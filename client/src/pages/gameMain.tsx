@@ -1,10 +1,10 @@
 import { Route, Routes } from "react-router-dom";
-import HomeScreen from "../features/game/components/HomeScreen";
-import CaptureScreen from "../features/game/components/CaptureScreen";
-import IntroScreen from "../features/game/components/IntroScreen";
-import QuestionnaireScreen from "../features/game/components/QuestionnaireScreen";
 import WaitingAreaScreen from "../features/game/components/WaitingAreaScreen";
-import GameArena from "../features/game/components/GameArena";
+import CaptureScreen from "../features/player/components/CaptureScreen";
+import HomeScreen from "../features/player/components/HomeScreen";
+import IntroScreen from "../features/question/components/IntroScreen";
+import Questionnaire from "../features/question/pages/Questionnaire";
+import GameArenaPage from "../features/game/pages/GameArenaPage";
 
 const GameMain = () => {
   return (
@@ -20,10 +20,9 @@ const GameMain = () => {
         <Route path="/" element={<HomeScreen />} />
         <Route path="/capture" element={<CaptureScreen />} />
         <Route path="/intro" element={<IntroScreen />} />
-        <Route path="/questionnaire" element={<QuestionnaireScreen />} />
+        <Route path="/questionnaire" element={<Questionnaire />} />
         <Route path="/waiting" element={<WaitingAreaScreen />} />
-        <Route path="/arena" element={<GameArena />} />
-
+        <Route path="/arena" element={<GameArenaPage />} />
       </Routes>
     </div>
   );
