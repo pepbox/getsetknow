@@ -12,6 +12,7 @@ router.post('/storeQuestionResponse', authenticateUser, asyncHandeler(questionCo
 router.get('/getPlayersCards', authenticateUser, asyncHandeler(playerControllers.getPlayersCards));
 router.get('/getPlayersBySession', authenticateUser, asyncHandeler(playerControllers.getPlayersBySession));
 router.post('/submitGuess', authenticateUser, asyncHandeler(playerControllers.submitGuess));
+router.get('/getUserGuesses', authenticateUser, asyncHandeler(playerControllers.getUserGuesses));
 
 
 export default router;

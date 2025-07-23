@@ -24,7 +24,7 @@ export const gameApi = api.injectEndpoints({
         method: 'GET',
       }),
       transformResponse: (response: { data: GameCard[] }) => response.data,
-      //   providesTags: ['GameCards'],
+      // providesTags: ['GameCards'],
     }),
 
     getPlayersBySession: builder.query<Player[], void>({
@@ -42,8 +42,18 @@ export const gameApi = api.injectEndpoints({
         method: 'POST',
         body,
       }),
-      //   invalidatesTags: ['GameCards'],
+      invalidatesTags: ['GameCards'],
     }),
+
+    getUserGuesses: builder.query({
+      query: () => ({
+        url: '/player/getUserGuesses',
+        method: 'GET',
+      }),
+      // transformResponse: (response: { data: Player[] }) => response.data,
+      providesTags: ['GameCards'],
+    }),
+
   }),
 });
 
@@ -51,4 +61,5 @@ export const {
   useGetPlayersCardsQuery,
   useGetPlayersBySessionQuery,
   useSubmitGuessMutation,
+  useGetUserGuessesQuery,
 } = gameApi;

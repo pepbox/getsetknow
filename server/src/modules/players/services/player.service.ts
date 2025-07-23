@@ -30,6 +30,13 @@ class PlayerService {
     }
 
     async createGuess(data: { user: Types.ObjectId; personId: Types.ObjectId }): Promise<IGuess> {
+        const existingGuess = await Guess.findOne({
+            user: data.user,
+            personId: data.personId,
+        });
+        if (existingGuess) {
+            return existingGuess;
+        }
         const guess = new Guess({
             user: data.user,
             personId: data.personId,
@@ -43,6 +50,10 @@ class PlayerService {
 
     async updateGuessById(guessId: string, updateData: Partial<IGuess>): Promise<IGuess | null> {
         return await Guess.findByIdAndUpdate(guessId, updateData, { new: true });
+    }
+
+    async getGuessesByUserId(userId: Types.ObjectId): Promise<IGuess[]> {
+        return await Guess.find({ user: userId });
     }
 }
 

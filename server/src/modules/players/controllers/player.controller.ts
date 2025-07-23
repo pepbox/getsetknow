@@ -199,3 +199,47 @@ export const submitGuess = async (
         });
     }
 };
+
+export const getUserGuesses = async (
+    req: Request,
+    res: Response
+): Promise<void> => {
+    try {
+        const currentUserId = req.user?.id;
+
+        if (!currentUserId) {
+            res.status(StatusCodes.BAD_REQUEST).json({
+                success: false,
+                message: "User ID is required",
+            });
+            return;
+        }
+
+        // Fetch all guesses made by the user
+        const guesses = await playerService.getGuessesByUserId(currentUserId);
+
+        const result = guesses.map((guess: any) => {
+            if (!guess.guessedPersonId) {
+                return {
+                    guessId: guess._id,
+                    status: "no guess",
+                };
+            }
+            const isCorrect = guess.personId.toString() === guess.guessedPersonId.toString();
+            return {
+                guessId: guess._id,
+                status: isCorrect ? "correct" : "wrong",
+            };
+        });
+
+        res.status(StatusCodes.OK).json({
+            success: true,
+            data: result,
+        });
+    } catch (error) {
+        console.error("Error fetching user guesses:", error);
+        res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+            message: "Internal Server Error",
+        });
+    }
+};

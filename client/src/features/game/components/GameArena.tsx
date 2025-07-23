@@ -12,6 +12,7 @@ import {
 import AssignmentTurnedInOutlinedIcon from "@mui/icons-material/AssignmentTurnedInOutlined";
 import GlobalButton from "../../../components/ui/button";
 import ConfirmationModal from "./ConfirmationModa";
+import QuestionsNavigationModal from "./QuestionsNavigationModal";
 
 interface GameArenaProps {
   data: {
@@ -30,27 +31,40 @@ interface GameArenaProps {
   };
   progressValue: number;
   selectedPersonId: string | null;
+  currentQuestionIndex: number; // Add this new prop
   onPersonSelect: (personId: string) => void;
   onSubmitGuess: () => void;
   onNextCard: () => void;
   onSkipCard: () => void;
   onClearSelection: () => void;
+  onNavigateToQuestion: (questionIndex: number) => void; // Add this new prop
+  guesses: Array<{
+    guessId: string;
+    status: "correct" | "wrong" | "no guess";
+  }>;
 }
 
 const GameArena: React.FC<GameArenaProps> = ({
   data,
   progressValue,
   selectedPersonId,
+  currentQuestionIndex, // New prop
   onPersonSelect,
   onSubmitGuess,
   onNextCard,
   onSkipCard,
   onClearSelection,
+  onNavigateToQuestion, // New prop
+  guesses,
 }) => {
   const [knowsPerson, setKnowsPerson] = useState<boolean>(false);
   const [skipModal, setSkipModal] = useState(false);
   const [submitModal, setSubmitModal] = useState(false);
   const [searchText, setSearchText] = useState("");
+  const [questionsModal, setQuestionsModal] = useState(false);
+
+  // const { data: guessesData, isLoading: guessesLoading } =
+  //   useGetUserGuessesQuery();
 
   const handleIKnowWhoThisIs = () => {
     setKnowsPerson(true);
@@ -82,6 +96,16 @@ const GameArena: React.FC<GameArenaProps> = ({
 
   const handleNextClick = () => {
     onNextCard();
+  };
+
+  const handleQuestionsModalOpen = () => setQuestionsModal(true);
+  const handleQuestionsModalClose = () => setQuestionsModal(false);
+
+  const handleNavigateToQuestion = (questionIndex: number) => {
+    onNavigateToQuestion(questionIndex);
+  };
+  const handleAssignmentIconClick = () => {
+    handleQuestionsModalOpen();
   };
 
   // Format profile key for display
@@ -284,7 +308,11 @@ const GameArena: React.FC<GameArenaProps> = ({
           >
             GetSetKnow!
           </Typography>
-          <IconButton edge="end" color="inherit">
+          <IconButton
+            edge="end"
+            color="inherit"
+            onClick={handleAssignmentIconClick}
+          >
             <AssignmentTurnedInOutlinedIcon sx={{ color: "text.primary" }} />
           </IconButton>
         </Toolbar>
@@ -432,7 +460,7 @@ const GameArena: React.FC<GameArenaProps> = ({
             flexDirection: "column",
             gap: "16px",
             p: "24px",
-            maxHeight: "300px",
+            maxHeight:`${window.innerHeight - 250}px`,
             overflowY: "auto",
           }}
         >
@@ -489,6 +517,15 @@ const GameArena: React.FC<GameArenaProps> = ({
           secondaryButtonText="Back"
           onPrimaryClick={handleSubmitConfirm}
           onSecondaryClick={handleSubmitModalClose}
+        />
+
+        <QuestionsNavigationModal
+          open={questionsModal}
+          onClose={handleQuestionsModalClose}
+          guesses={guesses || []}
+          currentQuestionIndex={currentQuestionIndex}
+          onNavigateToQuestion={handleNavigateToQuestion}
+          // loading={guessesLoading}
         />
 
         {/* Drawer-like Player Selection */}
@@ -618,7 +655,7 @@ const GameArena: React.FC<GameArenaProps> = ({
             flexDirection: "row",
             gap: "12px",
             padding: "12px",
-            height:"fit-content",
+            height: "fit-content",
             width: "100%",
           }}
         >

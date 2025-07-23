@@ -3,7 +3,7 @@ import { SerializedError } from '@reduxjs/toolkit';
 import { gameApi, GameCard, Player } from './gameArena.Api';
 
 export interface GuessResult {
-  correct: boolean;
+  correct: boolean | null;
   guessedPersonId: string;
   actualPersonId?: string;
 }
@@ -49,14 +49,17 @@ const gameArenaSlice = createSlice({
     setCurrentGuess: (state, action: PayloadAction<{ guessId: string; guessedPersonId: string }>) => {
       state.currentGuess = action.payload;
     },
-    
+
     clearCurrentGuess: (state) => {
       state.currentGuess = {
         guessId: null,
         guessedPersonId: null,
       };
     },
-    
+    setCurrentCardIndex: (state, action: PayloadAction<number>) => {
+      state.currentCardIndex = action.payload;
+    },
+
     nextCard: (state) => {
       if (state.currentCardIndex < state.gameCards.length - 1) {
         state.currentCardIndex += 1;
@@ -69,7 +72,7 @@ const gameArenaSlice = createSlice({
         state.gameCompleted = true;
       }
     },
-    
+
     skipCard: (state) => {
       if (state.currentCardIndex < state.gameCards.length - 1) {
         state.currentCardIndex += 1;
@@ -82,14 +85,14 @@ const gameArenaSlice = createSlice({
         state.gameCompleted = true;
       }
     },
-    
+
     updateScore: (state, action: PayloadAction<{ correct: boolean }>) => {
       if (action.payload.correct) {
         state.totalScore += 10; // Add points for correct guess
         state.peopleIKnow += 1;
       }
     },
-    
+
     resetGame: (state) => {
       state.currentCardIndex = 0;
       state.lastGuessResult = null;
@@ -99,12 +102,12 @@ const gameArenaSlice = createSlice({
       };
       state.gameCompleted = false;
     },
-    
+
     setGuessResult: (state, action: PayloadAction<GuessResult>) => {
       state.lastGuessResult = action.payload;
     },
   },
-  
+
   extraReducers: (builder) => {
     builder
       // Get Players Cards
@@ -129,7 +132,7 @@ const gameArenaSlice = createSlice({
           state.error = error;
         }
       )
-      
+
       // Get Players by Session
       .addMatcher(
         gameApi.endpoints.getPlayersBySession.matchPending,
@@ -152,7 +155,7 @@ const gameArenaSlice = createSlice({
           state.error = error;
         }
       )
-      
+
       // Submit Guess
       .addMatcher(
         gameApi.endpoints.submitGuess.matchPending,
@@ -165,13 +168,13 @@ const gameArenaSlice = createSlice({
         gameApi.endpoints.submitGuess.matchFulfilled,
         (state, { payload }) => {
           state.isLoading = false;
-          
+
           // Update score based on result
           if (payload.correct) {
             state.totalScore += 10;
             state.peopleIKnow += 1;
           }
-          
+
           // Set the guess result
           state.lastGuessResult = {
             correct: payload.correct,
@@ -185,7 +188,31 @@ const gameArenaSlice = createSlice({
           state.isLoading = false;
           state.error = error;
         }
-      );
+      )
+
+      .addMatcher(
+        gameApi.endpoints.getUserGuesses.matchPending,
+        (state) => {
+          state.isLoading = true;
+          state.error = null;
+        }
+      )
+      .addMatcher(
+        gameApi.endpoints.getUserGuesses.matchFulfilled,
+        (state, { payload }) => {
+          state.isLoading = false;
+          state.players = payload;
+        }
+      )
+      .addMatcher(
+        gameApi.endpoints.getUserGuesses.matchRejected,
+        (state, { error }) => {
+          state.isLoading = false;
+          state.error = error;
+        }
+      )
+
+
   },
 });
 
@@ -196,6 +223,7 @@ export const {
   skipCard,
   updateScore,
   resetGame,
+  setCurrentCardIndex,
   setGuessResult,
 } = gameArenaSlice.actions;
 

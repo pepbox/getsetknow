@@ -77,7 +77,7 @@ const baseQueryWithReauth: BaseQueryFn<
 export const api = createApi({
     baseQuery: baseQueryWithReauth,
     tagTypes: [
-
+        "GameCards",
     ],
     endpoints: () => ({}),
 });

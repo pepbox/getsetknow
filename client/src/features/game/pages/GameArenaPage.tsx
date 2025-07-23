@@ -6,6 +6,7 @@ import {
   useGetPlayersCardsQuery,
   useGetPlayersBySessionQuery,
   useSubmitGuessMutation,
+  useGetUserGuessesQuery,
 } from "../services/gameArena.Api";
 import {
   setCurrentGuess,
@@ -13,6 +14,7 @@ import {
   nextCard,
   skipCard,
   setGuessResult,
+  setCurrentCardIndex,
 } from "../services/gameArenaSlice";
 import GameArena from "../components/GameArena";
 
@@ -47,6 +49,24 @@ const GameArenaPage: React.FC = () => {
     error: playersError,
   } = useGetPlayersBySessionQuery();
 
+  // Add this new hook for fetching user guesses
+  // const {
+  //   data: guessesData,
+  //   isLoading: isLoadingGuesses,
+  //   error: guessesError,
+  // } = useGetUserGuessesQuery({});
+
+  const {
+    data: guessesData,
+    isLoading: isLoadingGuesses,
+    error: guessesError,
+  } = useGetUserGuessesQuery(
+    {},
+    {
+      skip: isLoadingCards || !gameCards.length, // <- Important part
+    }
+  );
+
   const [submitGuess] = useSubmitGuessMutation();
 
   // Redux state
@@ -62,8 +82,12 @@ const GameArenaPage: React.FC = () => {
   } = gameState;
 
   // Loading and error states
-  const isLoading = isLoadingCards || isLoadingPlayers || gameState.isLoading;
-  const error = cardsError || playersError || gameState.error;
+  const isLoading =
+    isLoadingCards ||
+    isLoadingPlayers ||
+    gameState.isLoading ||
+    isLoadingGuesses;
+  const error = cardsError || playersError || gameState.error || guessesError;
 
   // Get current card data
   const currentCard = gameCards[currentCardIndex];
@@ -85,7 +109,7 @@ const GameArenaPage: React.FC = () => {
           profilePhoto: player.profilePhoto,
         })),
         currentGuessId: currentCard.guessId,
-        isLastGuessCorrect: lastGuessResult?.correct,
+        isLastGuessCorrect: lastGuessResult?.correct ?? undefined,
         gameCompleted,
       }
     : null;
@@ -132,6 +156,28 @@ const GameArenaPage: React.FC = () => {
 
   const handleClearSelection = () => {
     dispatch(clearCurrentGuess());
+  };
+
+  // Add this new handler for question navigation
+  const handleNavigateToQuestion = (questionIndex: number) => {
+    // Check if the question is already answered correctly
+    const guesses = guessesData?.data || [];
+    const targetGuess = guesses[questionIndex];
+
+    if (targetGuess && targetGuess.status === "correct") {
+      // Don't allow navigation to correctly answered questions
+      return;
+    }
+
+    // Navigate to the specific question
+    if (questionIndex >= 0 && questionIndex < gameCards.length) {
+      // Clear current selection and any guess results when navigating
+      dispatch(clearCurrentGuess());
+      // dispatch(setGuessResult({ correct: undefined, guessedPersonId: undefined }));
+
+      // Set the current card index to the selected question
+      dispatch(setCurrentCardIndex(questionIndex)); // You may need to create this action if it doesn't exist
+    }
   };
 
   // Loading state
@@ -181,11 +227,14 @@ const GameArenaPage: React.FC = () => {
       data={gameArenaData}
       progressValue={progressValue}
       selectedPersonId={currentGuess.guessedPersonId}
+      currentQuestionIndex={currentCardIndex} // Add this prop
       onPersonSelect={handlePersonSelection}
       onSubmitGuess={handleSubmitGuess}
       onNextCard={handleNextCard}
       onSkipCard={handleSkipCard}
       onClearSelection={handleClearSelection}
+      onNavigateToQuestion={handleNavigateToQuestion} // Add this prop
+      guesses={guessesData?.data || []} // Pass guesses data
     />
   );
 };
