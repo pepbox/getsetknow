@@ -5,11 +5,15 @@ import { Routes,
    Navigate
    } from 'react-router-dom';
 import GameMain from './pages/gameMain';
+import AdminMain from './pages/adminMain';
 
 const App: React.FC = () => {
   return (
       <Routes>
         <Route path="/game/*" element={<GameMain/>}/>
+        <Route path="/admin/*" element={<AdminMain/>}/>
+        
+        {/* Redirect to game main if no specific path is matched */}
         <Route path="*" element={<Navigate to="/game"/>}/>
         
         
