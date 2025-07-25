@@ -30,6 +30,7 @@ export const adminApi = api.injectEndpoints({
         method: 'PUT',
         body: updateData,
       }),
+      invalidatesTags: ["AdminPlayer"],
     }),
 
     fetchDashboardData: builder.query({
@@ -38,6 +39,7 @@ export const adminApi = api.injectEndpoints({
         method: 'GET',
       }),
       transformResponse: (response: any) => response.data,
+      providesTags: ["AdminPlayer"],
     }),
     updatePlayer: builder.mutation({
       query: (updateData) => ({
@@ -45,6 +47,16 @@ export const adminApi = api.injectEndpoints({
         method: 'PUT',
         body: updateData,
       }),
+      invalidatesTags: ["AdminPlayer"],
+    }),
+
+    getPlayerWithResponses: builder.query({
+      query: (playerId: string) => ({
+        url: `/admin/getPlayerWithResponses${playerId}`,
+        method: 'GET',
+      }),
+      transformResponse: (response: any) => response.data,
+      // providesTags: ["AdminPlayer"],
     }),
 
   }),
@@ -55,4 +67,5 @@ export const { useAdminLoginMutation,
   useUpdateSessionMutation,
   useFetchDashboardDataQuery,
   useUpdatePlayerMutation,
+  useLazyGetPlayerWithResponsesQuery,
 } = adminApi;

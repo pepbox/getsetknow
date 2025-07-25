@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import Dashboard from "../components/Dashboard";
 import {
   useFetchDashboardDataQuery,
+  useLazyGetPlayerWithResponsesQuery,
   useUpdatePlayerMutation,
 } from "../services/admin.Api";
 import Loader from "../../../components/ui/Loader";
@@ -12,6 +13,18 @@ import Alert from "@mui/material/Alert";
 const DashboardPage: React.FC = () => {
   const { data, isError, isLoading } = useFetchDashboardDataQuery({});
   const [UpdatePlayer] = useUpdatePlayerMutation();
+  const [getPlayerWithResponses, { isLoading: loadingResponses }] =
+    useLazyGetPlayerWithResponsesQuery();
+
+  const [playerWithResponses, setPlayerWithResponses] = useState<{
+    player: {
+      id: string;
+      name: string;
+      profilePhoto: string;
+      score: number;
+    };
+    responses: any[];
+  } | null>(null);
 
   const [snackbar, setSnackbar] = useState<{
     open: boolean;
@@ -44,7 +57,29 @@ const DashboardPage: React.FC = () => {
         });
       console.log("Change name for player:", playerId);
     },
+
     onViewResponses: (playerId: string) => {
+      getPlayerWithResponses(playerId)
+        .unwrap()
+        .then((response) => {
+          setPlayerWithResponses({
+            player: {
+              id: response.player.id,
+              name: response.player.name,
+              profilePhoto: response.player.profilePhoto,
+              score: response.player.score,
+            },
+            responses: response.responses,
+          });
+        })
+        .catch((error) => {
+          setSnackbar({
+            open: true,
+            message: "Failed to fetch player responses",
+            severity: "error",
+          });
+          console.error("Failed to fetch player responses:", error);
+        });
       console.log("View responses for player:", playerId);
     },
   };
@@ -62,6 +97,8 @@ const DashboardPage: React.FC = () => {
         players={data.players}
         onChangeName={handlers?.onChangeName}
         onViewResponses={handlers?.onViewResponses}
+        playerWithResponses={playerWithResponses}
+        loadingResponses={loadingResponses}
       />
       <Snackbar
         open={snackbar.open}

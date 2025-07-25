@@ -45,7 +45,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
         display="flex"
         justifyContent="space-between"
         alignItems="center"
-        px={10}
+        px={4}
         py={2}
       >
         <Typography variant="h6" fontWeight="bold">
@@ -77,7 +77,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
       <Paper
         sx={{
           p: 3,
-          px: 10,
+          px: 4,
           mb: 2,
           backgroundColor: "rgba(252, 166, 30, 0.10)",
           dropShadow: "0px 2px 4px rgba(0, 0, 0, 0.1)",

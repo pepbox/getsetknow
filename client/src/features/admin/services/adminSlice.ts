@@ -160,6 +160,29 @@ const adminSlice = createSlice({
                     state.error = error;
                 }
             );
+            
+
+        builder
+            .addMatcher(
+                adminApi.endpoints.getPlayerWithResponses.matchPending,
+                (state) => {
+                    state.isLoading = true;
+                    state.error = null;
+                }
+            )
+            .addMatcher(
+                adminApi.endpoints.getPlayerWithResponses.matchFulfilled,
+                (state) => {
+                    state.isLoading = false;
+                }
+            )
+            .addMatcher(
+                adminApi.endpoints.getPlayerWithResponses.matchRejected,
+                (state, { error }) => {
+                    state.isLoading = false;
+                    state.error = error;
+                }
+            );
 
     },
 });

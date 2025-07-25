@@ -18,6 +18,7 @@ const Dashboard: React.FC<DashboardProps> = ({
   players,
   onChangeName,
   onViewResponses,
+  playerWithResponses = null, // Default value for playerWithResponses
 }) => {
   const [UpdateSession] = useUpdateSessionMutation();
   const [gameStatus, setGameStatus] = useState<string>("pending");
@@ -60,20 +61,20 @@ const Dashboard: React.FC<DashboardProps> = ({
 
   return (
     <Box sx={{ py: 3 }}>
-      {transaction ? "Transactions Enabled" : "Transactions Disabled"}
       <DashboardHeader
         data={headerData}
         onGameStatusChange={onGameStatusChange}
         transaction={transaction}
         onTransactionsChange={onTransactionsChange}
       />
-      <Box sx={{ px: 10 }}>
+      <Box sx={{ px: 4 }}>
         <PlayerTable
-          transaction={transaction}
-          gameStatus={gameStatus}
           players={players}
+          gameStatus={gameStatus}
+          transaction={transaction}
           onChangeName={onChangeName}
           onViewResponses={onViewResponses}
+          playerWithResponses={playerWithResponses}
         />
       </Box>
       <Dialog open={confirmDialogOpen} onClose={handleDialogClose}>

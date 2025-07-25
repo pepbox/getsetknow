@@ -13,8 +13,23 @@ export interface PlayerTableProps {
     players: Player[];
     gameStatus: string;
     transaction?: boolean;
-    onChangeName?: (playerId: string,name :string) => void;
+    onChangeName?: (playerId: string, name: string) => void;
     onViewResponses?: (playerId: string) => void;
+    playerWithResponses?: {
+        player: {
+            id: string;
+            name: string;
+            profilePhoto?: string;
+            score: number;
+        };
+        responses: {
+            questionId: string;
+            keyAspect: string;
+            questionText: string;
+            response: string;
+        }[];
+    } | null;
+    loadingResponses?: boolean;
 }
 
 // Type definitions
@@ -45,10 +60,25 @@ export interface DashboardHeaderProps {
 
 export interface DashboardProps {
     headerData: HeaderData;
+    playerWithResponses?: {
+        player: {
+            id: string;
+            name: string;
+            profilePhoto?: string;
+            score: number;
+        };
+        responses: {
+            questionId: string;
+            keyAspect: string;
+            questionText: string;
+            response: string;
+        }[];
+    } | null;
     players: Player[];
     onGameStatusChange?: (status: boolean) => void;
-    onChangeName?: (playerId: string,name : string) => void;
+    onChangeName?: (playerId: string, name: string) => void;
     onViewResponses?: (playerId: string) => void;
+    loadingResponses?: boolean;
 }
 
 // export interface DashboardPageProps {

@@ -78,6 +78,7 @@ export const api = createApi({
     baseQuery: baseQueryWithReauth,
     tagTypes: [
         "GameCards",
+        "AdminPlayer",
     ],
     endpoints: () => ({}),
 });

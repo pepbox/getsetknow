@@ -281,3 +281,65 @@ export const updatePlayer = async (
         next(new AppError("Failed to update player.", StatusCodes.INTERNAL_SERVER_ERROR));
     }
 };
+
+
+export const getPlayerWithResponses = async (
+    req: Request,
+    res: Response
+): Promise<void> => {
+    try {
+        const { playerId } = req.params;
+        if (!playerId) {
+            res.status(StatusCodes.BAD_REQUEST).json({
+                success: false,
+                message: "Player ID is required",
+            });
+            return;
+        }
+
+        // Get player data
+        const player = await playerService.getPlayerById(playerId.toString());
+        if (!player) {
+            res.status(StatusCodes.NOT_FOUND).json({
+                success: false,
+                message: "Player not found",
+            });
+            return;
+        }
+
+        // Get responses by player id
+        const responses = await questionService.getResponsesByPlayerId(playerId);
+
+        // Map responses with question keyAspect and text
+        const mappedResponses = [];
+        for (const response of responses) {
+            const question = await questionService.getQuestionById(response.question.toString());
+            if (question) {
+                mappedResponses.push({
+                    questionId: question._id,
+                    keyAspect: question.keyAspect,
+                    questionText: question.questionText,
+                    response: response.response,
+                });
+            }
+        }
+
+        res.status(StatusCodes.OK).json({
+            success: true,
+            data: {
+                player: {
+                    id: player._id,
+                    name: player.name,
+                    profilePhoto: player.profilePhoto,
+                    score: player.score,
+                },
+                responses: mappedResponses,
+            },
+        });
+    } catch (error) {
+        console.error("Error fetching player with responses:", error);
+        res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+            message: "Internal Server Error",
+        });
+    }
+};

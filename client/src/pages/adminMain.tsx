@@ -1,7 +1,7 @@
 import { Route, Routes } from "react-router-dom";
 import DashboardPage from "../features/admin/Pages/DshboardPage";
 import AdminLogin from "../features/admin/Pages/AdminLogin";
-import ProtectedAdminRoute from "../features/admin/components/ProtectedAdminRoute";
+// import ProtectedAdminRoute from "../features/admin/components/ProtectedAdminRoute";
 import Box from "@mui/material/Box";
 
 const AdminMain = () => {
@@ -12,9 +12,9 @@ const AdminMain = () => {
         <Route 
           path="/dashboard" 
           element={
-            <ProtectedAdminRoute>
+            // <ProtectedAdminRoute>
               <DashboardPage />
-            </ProtectedAdminRoute>
+            // </ProtectedAdminRoute>
           } 
         />
         <Route path="/" element={<AdminLogin />} />

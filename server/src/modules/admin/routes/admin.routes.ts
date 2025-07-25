@@ -13,5 +13,6 @@ router.post('/logout', authenticateUser, authorizeRoles("ADMIN"), asyncHandeler(
 router.get('/fetch', authenticateUser, authorizeRoles("ADMIN"), asyncHandeler(adminControllers.fetchAdmin));
 router.get('/fetchDashboardData', authenticateUser, authorizeRoles("ADMIN"), asyncHandeler(adminControllers.fetchAdminDashboardData));
 router.put('/updatePlayer', authenticateUser, authorizeRoles("ADMIN"), asyncHandeler(playerControllers.updatePlayer));
+router.get('/getPlayerWithResponses:playerId', authenticateUser, authorizeRoles("ADMIN"), asyncHandeler(playerControllers.getPlayerWithResponses));
 
 export default router;
