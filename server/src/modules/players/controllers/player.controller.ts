@@ -113,8 +113,15 @@ export const getPlayersCards = async (
 
             result.push({
                 guessId: guess._id,
+                guessedPersonId: guess.guessedPersonId || null, // This will be null until the user guesses
                 responses: aspectResponseMap,
             });
+        }
+
+        // Shuffle the result array
+        for (let i = result.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [result[i], result[j]] = [result[j], result[i]];
         }
 
         res.status(StatusCodes.OK).json({
@@ -149,6 +156,11 @@ export const getPlayersBySession = async (
         const filteredPlayers = players.filter(
             (player: any) => player._id.toString() !== currentUserId
         );
+        for (let i = filteredPlayers.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [filteredPlayers[i], filteredPlayers[j]] = [filteredPlayers[j], filteredPlayers[i]];
+        }
+
         res.status(StatusCodes.OK).json({
             success: true,
             data: filteredPlayers,
@@ -206,17 +218,6 @@ export const submitGuess = async (
                 return;
             }
         }
-        //  else {
-        //     // Deduct 10 points if the guess is incorrect
-        //     const player = await playerService.updatePlayerScore(guess.user.toString(), -10);
-        //     if (!player) {
-        //         res.status(StatusCodes.NOT_FOUND).json({
-        //             success: false,
-        //             message: "Player not found",
-        //         });
-        //         return;
-        //     }
-        // }
 
         res.status(StatusCodes.OK).json({
             success: true,
@@ -369,5 +370,64 @@ export const getPlayerWithResponses = async (
     }
 };
 
+export const getPlayerStats = async (
+    req: Request,
+    res: Response
+): Promise<void> => {
+    try {
+        const playerId = req.user?.id;
+        if (!playerId) {
+            res.status(StatusCodes.BAD_REQUEST).json({
+                success: false,
+                message: "Player ID is required",
+            });
+            return;
+        }
 
+        // Get player data
+        const player = await playerService.getPlayerById(playerId.toString());
+        if (!player) {
+            res.status(StatusCodes.NOT_FOUND).json({
+                success: false,
+                message: "Player not found",
+            });
+            return;
+        }
+
+        // Total score
+        const totalScore = player.score ?? 0;
+
+        // People you know
+        const guessesByUser = await playerService.getGuessesByUserId(player._id);
+        const correctGuessesByUser = guessesByUser.filter(
+            (guess: any) =>
+                guess.guessedPersonId &&
+                guess.personId.toString() === guess.guessedPersonId.toString()
+        );
+        const peopleIKnow = correctGuessesByUser.length;
+
+        // People who know you
+        const guessesByPerson = await playerService.getGuessesByPersonId(player._id);
+        const correctGuessesByPerson = guessesByPerson.filter(
+            (guess: any) =>
+                guess.guessedPersonId &&
+                guess.personId.toString() === guess.guessedPersonId.toString()
+        );
+        const peopleWhoKnowMe = correctGuessesByPerson.length;
+
+        res.status(StatusCodes.OK).json({
+            success: true,
+            data: {
+                totalScore,
+                peopleIKnow,
+                peopleWhoKnowMe,
+            },
+        });
+    } catch (error) {
+        console.error("Error fetching player stats:", error);
+        res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+            message: "Internal Server Error",
+        });
+    }
+};
 

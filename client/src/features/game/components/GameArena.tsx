@@ -52,9 +52,9 @@ const GameArena: React.FC<GameArenaProps> = ({
   data,
   progressValue,
   selectedPersonId,
-  currentQuestionIndex, 
+  currentQuestionIndex,
   showResult,
-  setShowResult,// New prop
+  setShowResult, // New prop
   onPersonSelect,
   onSubmitGuess,
   onNextCard,
@@ -69,9 +69,6 @@ const GameArena: React.FC<GameArenaProps> = ({
   const [submitModal, setSubmitModal] = useState(false);
   const [searchText, setSearchText] = useState("");
   const [questionsModal, setQuestionsModal] = useState(false);
-
-  // const { data: guessesData, isLoading: guessesLoading } =
-  //   useGetUserGuessesQuery();
 
   const handleIKnowWhoThisIs = () => {
     setKnowsPerson(true);
@@ -96,11 +93,6 @@ const GameArena: React.FC<GameArenaProps> = ({
     onPersonSelect(personId);
     // setKnowsPerson(false);
   };
-
-  // const handleBackClick = () => {
-  //   onClearSelection();
-  //   setKnowsPerson(false);
-  // };
 
   const handleNextClick = () => {
     onNextCard();
@@ -319,7 +311,7 @@ const GameArena: React.FC<GameArenaProps> = ({
         display: "flex",
         flexDirection: "column",
       }}
-    > 
+    >
       {/* Header */}
       <AppBar
         position="static"
@@ -701,31 +693,31 @@ const GameArena: React.FC<GameArenaProps> = ({
           }}
         >
           {/* {!selectedPersonId && ( */}
-            <GlobalButton
-              onClick={handleIKnowWhoThisIs}
-              sx={{ minWidth: "200px", mx: "auto" }}
-            >
-              I know who this is
-            </GlobalButton>
+          <GlobalButton
+            onClick={handleIKnowWhoThisIs}
+            sx={{ minWidth: "200px", mx: "auto" }}
+          >
+            I know who this is
+          </GlobalButton>
           {/* // )} */}
 
           {/* {!selectedPersonId && ( */}
-            <GlobalButton
-              onClick={handleSkipModalOpen}
-              sx={{
-                // maxWidth: "300px",
-                mx: "auto",
-                backgroundColor: "#FFFFFF",
+          <GlobalButton
+            onClick={handleSkipModalOpen}
+            sx={{
+              // maxWidth: "300px",
+              mx: "auto",
+              backgroundColor: "#FFFFFF",
+              color: "#1C1C1E !important",
+              border: "2px solid #E5E7EB",
+              "&:hover": {
+                backgroundColor: "#F3F4F6",
                 color: "#1C1C1E !important",
-                border: "2px solid #E5E7EB",
-                "&:hover": {
-                  backgroundColor: "#F3F4F6",
-                  color: "#1C1C1E !important",
-                },
-              }}
-            >
-              Skip
-            </GlobalButton>
+              },
+            }}
+          >
+            Skip
+          </GlobalButton>
           {/* )} */}
           {/* {selectedPersonId && (
             <GlobalButton

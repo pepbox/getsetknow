@@ -98,12 +98,12 @@ const gameArenaSlice = createSlice({
       }
     },
 
-   updateScore: (state, action: PayloadAction<{ correct: boolean }>) => {
+    updateScore: (state, action: PayloadAction<{ correct: boolean }>) => {
       if (action.payload.correct) {
         state.totalScore += 10; // Add points for correct guess
         state.peopleIKnow += 1;
       }
-    }, 
+    },
 
     resetGame: (state) => {
       state.currentCardIndex = 0;
@@ -218,6 +218,30 @@ const gameArenaSlice = createSlice({
       )
       .addMatcher(
         gameApi.endpoints.getUserGuesses.matchRejected,
+        (state, { error }) => {
+          state.isLoading = false;
+          state.error = error;
+        }
+      )
+
+      .addMatcher(
+        gameApi.endpoints.getPlayerStats.matchPending,
+        (state) => {
+          state.isLoading = true;
+          state.error = null;
+        }
+      )
+      .addMatcher(
+        gameApi.endpoints.getPlayerStats.matchFulfilled,
+        (state, { payload }) => {
+          state.isLoading = false;
+          state.totalScore = payload.totalScore || 0;
+          state.peopleIKnow = payload.peopleIKnow || 0;
+          state.peopleWhoKnowMe = payload.peopleWhoKnowMe || 0;
+        }
+      )
+      .addMatcher(
+        gameApi.endpoints.getPlayerStats.matchRejected,
         (state, { error }) => {
           state.isLoading = false;
           state.error = error;

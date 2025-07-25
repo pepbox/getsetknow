@@ -1,12 +1,13 @@
-import React,{ useState } from "react";
+import React, { useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
-import { Box, CircularProgress, Typography, Alert } from "@mui/material";
+import { Box, Alert } from "@mui/material";
 import { RootState, AppDispatch } from "../../../app/store";
 import {
   useGetPlayersCardsQuery,
   useGetPlayersBySessionQuery,
   useSubmitGuessMutation,
   useGetUserGuessesQuery,
+  useGetPlayerStatsQuery,
 } from "../services/gameArena.Api";
 import {
   setCurrentGuess,
@@ -17,6 +18,7 @@ import {
   setCurrentCardIndex,
 } from "../services/gameArenaSlice";
 import GameArena from "../components/GameArena";
+import Loader from "../../../components/ui/Loader";
 
 export interface GameArenaData {
   totalScore: number;
@@ -50,12 +52,7 @@ const GameArenaPage: React.FC = () => {
     error: playersError,
   } = useGetPlayersBySessionQuery();
 
-  // Add this new hook for fetching user guesses
-  // const {
-  //   data: guessesData,
-  //   isLoading: isLoadingGuesses,
-  //   error: guessesError,
-  // } = useGetUserGuessesQuery({});
+  useGetPlayerStatsQuery();
 
   const {
     data: guessesData,
@@ -183,19 +180,7 @@ const GameArenaPage: React.FC = () => {
 
   // Loading state
   if (isLoading) {
-    return (
-      <Box
-        sx={{
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          height: "100vh",
-        }}
-      >
-        <CircularProgress />
-        <Typography sx={{ ml: 2 }}>Loading game data...</Typography>
-      </Box>
-    );
+    return <Loader />;
   }
 
   // Error state

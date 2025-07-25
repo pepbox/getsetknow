@@ -2,6 +2,7 @@ import { api } from "../../../app/api";
 
 export interface GameCard {
   guessId: string;
+  guessedPersonId?: string;
   responses: Record<string, string>; // keyAspect -> response mapping
 }
 
@@ -54,6 +55,15 @@ export const gameApi = api.injectEndpoints({
       providesTags: ['GameCards'],
     }),
 
+    getPlayerStats: builder.query<any, void>({
+      query: () => ({
+        url: '/player/getPlayerStats',
+        method: 'GET',
+      }),
+      transformResponse: (response: { data: any }) => response.data,
+      providesTags: ['GameCards'],
+    }),
+
   }),
 });
 
@@ -62,4 +72,5 @@ export const {
   useGetPlayersBySessionQuery,
   useSubmitGuessMutation,
   useGetUserGuessesQuery,
+  useGetPlayerStatsQuery,
 } = gameApi;
