@@ -13,6 +13,8 @@ import AssignmentTurnedInOutlinedIcon from "@mui/icons-material/AssignmentTurned
 import GlobalButton from "../../../components/ui/button";
 import ConfirmationModal from "./ConfirmationModa";
 import QuestionsNavigationModal from "./QuestionsNavigationModal";
+import { useAppDispatch } from "../../../app/hooks";
+import { replayLastCard } from "../services/gameArenaSlice";
 
 interface GameArenaProps {
   data: {
@@ -32,6 +34,8 @@ interface GameArenaProps {
   progressValue: number;
   selectedPersonId: string | null;
   currentQuestionIndex: number; // Add this new prop
+  showResult: boolean; // Add this new prop
+  setShowResult: (value: boolean) => void; // Add this new prop
   onPersonSelect: (personId: string) => void;
   onSubmitGuess: () => void;
   onNextCard: () => void;
@@ -48,15 +52,18 @@ const GameArena: React.FC<GameArenaProps> = ({
   data,
   progressValue,
   selectedPersonId,
-  currentQuestionIndex, // New prop
+  currentQuestionIndex, 
+  showResult,
+  setShowResult,// New prop
   onPersonSelect,
   onSubmitGuess,
   onNextCard,
   onSkipCard,
-  onClearSelection,
+  // onClearSelection,
   onNavigateToQuestion, // New prop
   guesses,
 }) => {
+  const dispatch = useAppDispatch();
   const [knowsPerson, setKnowsPerson] = useState<boolean>(false);
   const [skipModal, setSkipModal] = useState(false);
   const [submitModal, setSubmitModal] = useState(false);
@@ -82,6 +89,7 @@ const GameArena: React.FC<GameArenaProps> = ({
   const handleSubmitConfirm = () => {
     setSubmitModal(false);
     onSubmitGuess();
+    setShowResult(true);
   };
 
   const handlePersonClick = (personId: string) => {
@@ -89,13 +97,18 @@ const GameArena: React.FC<GameArenaProps> = ({
     // setKnowsPerson(false);
   };
 
-  const handleBackClick = () => {
-    onClearSelection();
-    setKnowsPerson(false);
-  };
+  // const handleBackClick = () => {
+  //   onClearSelection();
+  //   setKnowsPerson(false);
+  // };
 
   const handleNextClick = () => {
     onNextCard();
+    setShowResult(false);
+  };
+  const handleReplayClick = () => {
+    dispatch(replayLastCard());
+    setShowResult(false);
   };
 
   const handleQuestionsModalOpen = () => setQuestionsModal(true);
@@ -126,7 +139,7 @@ const GameArena: React.FC<GameArenaProps> = ({
   };
 
   // Show result screen if there's a guess result
-  if (data?.isLastGuessCorrect !== undefined) {
+  if (showResult) {
     return (
       <Box
         sx={{
@@ -158,10 +171,10 @@ const GameArena: React.FC<GameArenaProps> = ({
         <Box
           sx={{
             width: "100%",
-            height: "50px",
+            height: "6px",
             zIndex: 1000,
             display: "flex",
-            p: 2,
+            p: 0,
             alignItems: "center",
           }}
         >
@@ -252,6 +265,23 @@ const GameArena: React.FC<GameArenaProps> = ({
               Next Player
             </GlobalButton>
           )}
+
+          {!data?.isLastGuessCorrect && (
+            <GlobalButton
+              onClick={handleReplayClick}
+              sx={{
+                maxWidth: "300px",
+                mx: "auto",
+                bgcolor: "primary.main",
+                color: "#fff",
+                "&:hover": {
+                  bgcolor: "primary.main",
+                },
+              }}
+            >
+              Replay
+            </GlobalButton>
+          )}
         </Box>
       </Box>
     );
@@ -289,7 +319,7 @@ const GameArena: React.FC<GameArenaProps> = ({
         display: "flex",
         flexDirection: "column",
       }}
-    >
+    > 
       {/* Header */}
       <AppBar
         position="static"
@@ -460,7 +490,7 @@ const GameArena: React.FC<GameArenaProps> = ({
             flexDirection: "column",
             gap: "16px",
             p: "24px",
-            maxHeight:`${window.innerHeight - 250}px`,
+            maxHeight: `${window.innerHeight - 250}px`,
             overflowY: "auto",
           }}
         >
@@ -540,7 +570,7 @@ const GameArena: React.FC<GameArenaProps> = ({
                 position: "fixed",
                 height: "auto",
                 borderRadius: 2,
-                p: 2,
+                p: "8px 8px 0  8px",
               },
             },
           }}
@@ -561,7 +591,7 @@ const GameArena: React.FC<GameArenaProps> = ({
             <span style={{ fontSize: 24, fontWeight: "bold" }}>×</span>
           </IconButton>
 
-          <Box sx={{ mt: 4, mb: 2 }}>
+          <Box sx={{ mt: 4, mb: 2, position: "relative" }}>
             <Box sx={{ mb: 2 }}>
               <input
                 type="text"
@@ -634,13 +664,24 @@ const GameArena: React.FC<GameArenaProps> = ({
               );
             })}
 
-            <GlobalButton
-              onClick={handleSubmitModalOpen}
-              disabled={!selectedPersonId}
-              sx={{ maxWidth: "300px", mx: "auto", mt: 2 }}
+            <Box
+              sx={{
+                position: "sticky",
+                bottom: 0,
+                left: 0,
+                bgcolor: "white",
+                zIndex: 10,
+                pt: 2,
+              }}
             >
-              Submit
-            </GlobalButton>
+              <GlobalButton
+                onClick={handleSubmitModalOpen}
+                disabled={!selectedPersonId}
+                sx={{ width: "100%", mx: "auto", my: "10px" }}
+              >
+                Submit
+              </GlobalButton>
+            </Box>
           </Box>
         </Drawer>
 
@@ -659,16 +700,16 @@ const GameArena: React.FC<GameArenaProps> = ({
             width: "100%",
           }}
         >
-          {!selectedPersonId && (
+          {/* {!selectedPersonId && ( */}
             <GlobalButton
               onClick={handleIKnowWhoThisIs}
               sx={{ minWidth: "200px", mx: "auto" }}
             >
               I know who this is
             </GlobalButton>
-          )}
+          {/* // )} */}
 
-          {!selectedPersonId && (
+          {/* {!selectedPersonId && ( */}
             <GlobalButton
               onClick={handleSkipModalOpen}
               sx={{
@@ -685,8 +726,8 @@ const GameArena: React.FC<GameArenaProps> = ({
             >
               Skip
             </GlobalButton>
-          )}
-          {selectedPersonId && (
+          {/* )} */}
+          {/* {selectedPersonId && (
             <GlobalButton
               onClick={handleBackClick}
               sx={{
@@ -703,7 +744,7 @@ const GameArena: React.FC<GameArenaProps> = ({
             >
               Back
             </GlobalButton>
-          )}
+          )} */}
         </Box>
       </Box>
     </Box>

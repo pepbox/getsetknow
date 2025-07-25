@@ -7,7 +7,6 @@ import {
   Typography,
   IconButton,
   Grid,
-  Chip,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 
@@ -47,18 +46,18 @@ const QuestionsNavigationModal: React.FC<QuestionsNavigationModalProps> = ({
     }
   };
 
-  const getStatusText = (status: string) => {
-    switch (status) {
-      case "correct":
-        return "Correct";
-      case "wrong":
-        return "Wrong";
-      case "no guess":
-        return "Unanswered";
-      default:
-        return "Unknown";
-    }
-  };
+  // const getStatusText = (status: string) => {
+  //   switch (status) {
+  //     case "correct":
+  //       return "Correct";
+  //     case "wrong":
+  //       return "Wrong";
+  //     case "no guess":
+  //       return "Unanswered";
+  //     default:
+  //       return "Unknown";
+  //   }
+  // };
 
   const handleQuestionClick = (index: number, status: string) => {
     // Don't allow navigation if the question is already answered correctly
@@ -96,7 +95,7 @@ const QuestionsNavigationModal: React.FC<QuestionsNavigationModalProps> = ({
         }}
       >
         <Typography variant="h6" component="div">
-          Questions
+          Cards
         </Typography>
         <IconButton
           onClick={onClose}
@@ -110,41 +109,17 @@ const QuestionsNavigationModal: React.FC<QuestionsNavigationModalProps> = ({
       </DialogTitle>
 
       <DialogContent>
-        {/* Legend */}
-        <Box sx={{ mb: 3 }}>
-          <Typography variant="subtitle2" sx={{ mb: 2, fontWeight: 600 }}>
-            Legend:
-          </Typography>
-          <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
-            <Chip
-              label="Correct"
-              sx={{
-                backgroundColor: "#4CAF50",
-                color: "white",
-                fontSize: "0.75rem",
-              }}
-              size="small"
-            />
-            <Chip
-              label="Wrong"
-              sx={{
-                backgroundColor: "#F44336",
-                color: "white",
-                fontSize: "0.75rem",
-              }}
-              size="small"
-            />
-            <Chip
-              label="Skipped/Unanswered"
-              sx={{
-                backgroundColor: "#9E9E9E",
-                color: "white",
-                fontSize: "0.75rem",
-              }}
-              size="small"
-            />
+        {/* Summary */}
+        {!loading && guesses.length > 0 && (
+          <Box sx={{ mb: 3, pt: 1, borderTop: "1px solid #e0e0e0" }}>
+            <Typography variant="body2" color="text.secondary">
+              Total Cards: {guesses.length} | Correct:{" "}
+              {guesses.filter((g) => g.status === "correct").length} | Wrong:{" "}
+              {guesses.filter((g) => g.status === "wrong").length} | Skipped:{" "}
+              {guesses.filter((g) => g.status === "no guess").length}
+            </Typography>
           </Box>
-        </Box>
+        )}
 
         {/* Questions Grid */}
         {loading ? (
@@ -214,37 +189,63 @@ const QuestionsNavigationModal: React.FC<QuestionsNavigationModalProps> = ({
                       />
                     )}
                   </Box>
-
-                  {/* Status text below each question */}
-                  <Typography
-                    variant="caption"
-                    sx={{
-                      display: "block",
-                      textAlign: "center",
-                      mt: 0.5,
-                      color: "text.secondary",
-                      fontSize: "0.7rem",
-                    }}
-                  >
-                    {getStatusText(guess.status)}
-                  </Typography>
                 </Grid>
               );
             })}
           </Grid>
         )}
 
-        {/* Summary */}
-        {!loading && guesses.length > 0 && (
-          <Box sx={{ mt: 3, pt: 2, borderTop: "1px solid #e0e0e0" }}>
-            <Typography variant="body2" color="text.secondary">
-              Total Questions: {guesses.length} | Correct:{" "}
-              {guesses.filter((g) => g.status === "correct").length} | Wrong:{" "}
-              {guesses.filter((g) => g.status === "wrong").length} | Skipped:{" "}
-              {guesses.filter((g) => g.status === "no guess").length}
-            </Typography>
+        {/* Legend */}
+        <Box sx={{ mt: 3 }}>
+          <Typography variant="subtitle2" sx={{ mb: 2, fontWeight: 600 }}>
+            Legend:
+          </Typography>
+          <Box
+            sx={{
+              display: "flex",
+              gap: 2,
+              flexWrap: "wrap",
+              alignItems: "center",
+            }}
+          >
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+              <Box
+                sx={{
+                  width: 20,
+                  height: 20,
+                  backgroundColor: "#4CAF50",
+                  borderRadius: 0,
+                  border: "1px solid #388E3C",
+                }}
+              />
+              <Typography variant="body2">Correct</Typography>
+            </Box>
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+              <Box
+                sx={{
+                  width: 20,
+                  height: 20,
+                  backgroundColor: "#F44336",
+                  borderRadius: 0,
+                  border: "1px solid #B71C1C",
+                }}
+              />
+              <Typography variant="body2">Wrong</Typography>
+            </Box>
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+              <Box
+                sx={{
+                  width: 20,
+                  height: 20,
+                  backgroundColor: "#9E9E9E",
+                  // borderRadius: 1,
+                  border: "1px solid #616161",
+                }}
+              />
+              <Typography variant="body2">Skipped/Unanswered</Typography>
+            </Box>
           </Box>
-        )}
+        </Box>
       </DialogContent>
     </Dialog>
   );

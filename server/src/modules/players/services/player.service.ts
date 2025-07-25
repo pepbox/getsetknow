@@ -61,6 +61,16 @@ class PlayerService {
     async updatePlayerById(playerId: string, updateData: Partial<IPlayer>): Promise<IPlayer | null> {
         return await this.playerModel.findByIdAndUpdate(playerId, updateData, { new: true });
     }
+    async updatePlayerScore(playerId: string, scoreDelta: number): Promise<IPlayer | null> {
+        const player = await this.playerModel.findById(playerId);
+        if (!player) {
+            return null;
+        }
+        const newScore = (player.score || 0) + scoreDelta;
+        player.score = newScore < 0 ? 0 : newScore;
+        await player.save();
+        return player;
+    }
 
 }
 

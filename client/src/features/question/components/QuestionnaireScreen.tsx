@@ -33,7 +33,7 @@ const QuestionnaireScreen: React.FC<QuestionnaireScreenProps> = ({
         .then(() => {
           console.log("Response stored successfully");
           if (currentQuestionIndex < questions.length - 1) {
-            dispatch(setCurrentStep(5 + currentQuestionIndex));
+            dispatch(setCurrentStep(currentQuestionIndex));
             setCurrentQuestionIndex(currentQuestionIndex + 1);
             // dispatch(nextQuestion());
             // setAnswer("");

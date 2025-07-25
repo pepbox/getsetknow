@@ -1,4 +1,4 @@
-import React from "react";
+import React,{ useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { Box, CircularProgress, Typography, Alert } from "@mui/material";
 import { RootState, AppDispatch } from "../../../app/store";
@@ -35,6 +35,7 @@ export interface GameArenaData {
 
 const GameArenaPage: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
+  const [showResult, setShowResult] = useState(false);
 
   // RTK Query hooks
   const {
@@ -233,7 +234,9 @@ const GameArenaPage: React.FC = () => {
       onNextCard={handleNextCard}
       onSkipCard={handleSkipCard}
       onClearSelection={handleClearSelection}
-      onNavigateToQuestion={handleNavigateToQuestion} // Add this prop
+      onNavigateToQuestion={handleNavigateToQuestion}
+      showResult={showResult}
+      setShowResult={setShowResult} // Add this prop
       guesses={guessesData?.data || []} // Pass guesses data
     />
   );

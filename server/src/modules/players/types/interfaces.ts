@@ -14,6 +14,7 @@ export interface IGuess extends Document {
     user: Types.ObjectId;
     personId: Types.ObjectId;
     guessedPersonId: Types.ObjectId;
+    attempts?: number;
     createdAt: Date;
     updatedAt: Date;
 }

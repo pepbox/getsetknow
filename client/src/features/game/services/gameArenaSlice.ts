@@ -73,6 +73,18 @@ const gameArenaSlice = createSlice({
       }
     },
 
+    replayLastCard: (state) => {
+      if (state.currentCardIndex > 0) {
+        // state.currentCardIndex -= 1;
+        state.lastGuessResult = null;
+        state.currentGuess = {
+          guessId: null,
+          guessedPersonId: null,
+        };
+        state.gameCompleted = false;
+      }
+    },
+
     skipCard: (state) => {
       if (state.currentCardIndex < state.gameCards.length - 1) {
         state.currentCardIndex += 1;
@@ -86,12 +98,12 @@ const gameArenaSlice = createSlice({
       }
     },
 
-    updateScore: (state, action: PayloadAction<{ correct: boolean }>) => {
+   updateScore: (state, action: PayloadAction<{ correct: boolean }>) => {
       if (action.payload.correct) {
         state.totalScore += 10; // Add points for correct guess
         state.peopleIKnow += 1;
       }
-    },
+    }, 
 
     resetGame: (state) => {
       state.currentCardIndex = 0;
@@ -225,6 +237,7 @@ export const {
   resetGame,
   setCurrentCardIndex,
   setGuessResult,
+  replayLastCard,
 } = gameArenaSlice.actions;
 
 export default gameArenaSlice.reducer;

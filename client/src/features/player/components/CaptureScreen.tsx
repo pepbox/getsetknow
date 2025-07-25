@@ -4,7 +4,7 @@ import { Box, Typography } from "@mui/material";
 import Webcam from "react-webcam";
 import GlobalButton from "../../../components/ui/button";
 import GameHeader from "../../../components/layout/GameHeader";
-import ProgressComponent from "../../../components/layout/ProgressComponent";
+// import ProgressComponent from "../../../components/layout/ProgressComponent";
 import { useAppDispatch } from "../../../app/hooks";
 import { setCurrentStep } from "../../game/services/gameSlice";
 import { useOnboardPlayerMutation } from "../services/player.api";
@@ -58,12 +58,12 @@ const CaptureScreen: React.FC = () => {
     >
       {/* Header */}
       <GameHeader />
-      <ProgressComponent />
+      {/* <ProgressComponent /> */}
 
       <Box
         sx={{
           bgcolor: "primary.main",
-          height: "270px",
+          height: "45vh",
         }}
       />
       {/* Main Content Container */}
@@ -73,7 +73,7 @@ const CaptureScreen: React.FC = () => {
           position: "absolute",
           top: "50%",
           left: "50%",
-          transform: "translate(-50%, -35%)",
+          transform: "translate(-50%, -45%)",
           display: "flex",
           flexDirection: "column",
           alignItems: "center",

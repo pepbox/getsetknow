@@ -190,8 +190,33 @@ export const submitGuess = async (
         const isCorrect = guess.personId.toString() === guessedPersonId;
 
         await playerService.updateGuessById(guessId, {
+            attempts: (guess.attempts || 0) + 1, // Increment attempts
             guessedPersonId: guessedPersonId
         });
+
+        if (isCorrect) {
+            // Update player score if the guess is correct
+            const attempts = guess.attempts ?? 0;
+            const player = await playerService.updatePlayerScore(guess.user.toString(), 100 - attempts * 10);
+            if (!player) {
+                res.status(StatusCodes.NOT_FOUND).json({
+                    success: false,
+                    message: "Player not found",
+                });
+                return;
+            }
+        }
+        //  else {
+        //     // Deduct 10 points if the guess is incorrect
+        //     const player = await playerService.updatePlayerScore(guess.user.toString(), -10);
+        //     if (!player) {
+        //         res.status(StatusCodes.NOT_FOUND).json({
+        //             success: false,
+        //             message: "Player not found",
+        //         });
+        //         return;
+        //     }
+        // }
 
         res.status(StatusCodes.OK).json({
             success: true,
@@ -343,3 +368,6 @@ export const getPlayerWithResponses = async (
         });
     }
 };
+
+
+

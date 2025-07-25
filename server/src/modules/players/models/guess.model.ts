@@ -15,6 +15,10 @@ const guessSchema = new Schema<IGuess>({
     guessedPersonId: {
         type: Schema.Types.ObjectId,
         ref: 'Player',
+    },
+    attempts: {
+        type: Number,
+        default: 0
     }
 }, {
     timestamps: true

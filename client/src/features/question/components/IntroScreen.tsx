@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Box, Typography } from "@mui/material";
 import GlobalButton from "../../../components/ui/button";
 import GameHeader from "../../../components/layout/GameHeader";
-import ProgressComponent from "../../../components/layout/ProgressComponent";
+// import ProgressComponent from "../../../components/layout/ProgressComponent";
 import { useAppDispatch } from "../../../app/hooks";
 import { setCurrentStep } from "../../game/services/gameSlice";
 
@@ -25,7 +25,7 @@ const IntroScreen: React.FC = () => {
       }}
     >
       <GameHeader />
-      <ProgressComponent />
+      {/* <ProgressComponent /> */}
 
       <Box
         sx={{
