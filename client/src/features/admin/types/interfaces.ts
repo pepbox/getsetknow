@@ -1,16 +1,25 @@
 
+// Admin Login Types
+export interface AdminLoginCredentials {
+    pin: string;
+}
+
+export interface AdminUser {
+    id: string;
+    name: string;
+}
+
 export interface PlayerTableProps {
     players: Player[];
-    gameStatus: boolean;
-    onChangeName?: (playerId: string) => void;
+    gameStatus: string;
+    transaction?: boolean;
+    onChangeName?: (playerId: string,name :string) => void;
     onViewResponses?: (playerId: string) => void;
 }
 
 // Type definitions
 export interface HeaderData {
-    currentLevel: number;
-    gameStatus: boolean;
-    enableTransactions: boolean;
+    gameStatus: string;
     adminName?: string;
 }
 
@@ -30,6 +39,7 @@ export interface DashboardHeaderProps {
     gameStatus?: boolean;
     onGameStatusChange?: () => void;
     onTransactionsChange?: (status: boolean) => void;
+    transaction?: boolean;
 }
 
 
@@ -37,8 +47,7 @@ export interface DashboardProps {
     headerData: HeaderData;
     players: Player[];
     onGameStatusChange?: (status: boolean) => void;
-    onTransactionsChange?: (status: boolean) => void;
-    onChangeName?: (playerId: string) => void;
+    onChangeName?: (playerId: string,name : string) => void;
     onViewResponses?: (playerId: string) => void;
 }
 

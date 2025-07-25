@@ -55,6 +55,13 @@ class PlayerService {
     async getGuessesByUserId(userId: Types.ObjectId): Promise<IGuess[]> {
         return await Guess.find({ user: userId });
     }
+    async getGuessesByPersonId(personId: Types.ObjectId): Promise<IGuess[]> {
+        return await Guess.find({ personId: personId });
+    }
+    async updatePlayerById(playerId: string, updateData: Partial<IPlayer>): Promise<IPlayer | null> {
+        return await this.playerModel.findByIdAndUpdate(playerId, updateData, { new: true });
+    }
+
 }
 
 

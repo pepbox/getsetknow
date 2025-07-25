@@ -4,6 +4,7 @@ export interface IPlayer extends Document {
     _id: Types.ObjectId;
     name: string;
     profilePhoto: string;
+    score?: number;
     session: Types.ObjectId;
     createdAt?: Date;
     updatedAt?: Date;

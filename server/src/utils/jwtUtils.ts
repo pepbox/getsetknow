@@ -3,12 +3,19 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-export const generateAccessToken = (id: string, role: "USER" | "ADMIN") => {
+export interface AccessTokenPayload {
+  id: string;
+  role: "USER" | "ADMIN";
+  sessionId: string;
+}
+
+export const generateAccessToken = (payload: AccessTokenPayload) => {
+  const { id, role, sessionId } = payload;
   return jwt.sign(
-    { id, role },
+    { id, role, sessionId },
     process.env.ACCESS_TOKEN_SECRET as string,
     {
-      expiresIn: parseInt(process.env.ACCESS_TOKEN_EXPIRY || '900', 10),
+      expiresIn: parseInt(process.env.ACCESS_TOKEN_EXPIRY || "900", 10),
     }
   );
 };

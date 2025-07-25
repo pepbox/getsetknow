@@ -7,19 +7,37 @@ import {
   FormControlLabel,
   Button,
 } from "@mui/material";
+import { useNavigate } from "react-router-dom";
 import { DashboardHeaderProps } from "../types/interfaces";
+import { useAdminAuth } from "../services/useAdminAuth";
 import LogoutIcon from "@mui/icons-material/Logout";
+import { useUpdateSessionMutation } from "../services/admin.Api";
 
 // Dashboard Header Component
 const DashboardHeader: React.FC<DashboardHeaderProps> = ({
   data,
-  gameStatus,
   onGameStatusChange,
   onTransactionsChange,
+  transaction = false, // Default value for transaction
 }) => {
+  const [UpdateSession] = useUpdateSessionMutation();
+  const { admin, logout } = useAdminAuth();
+  const navigate = useNavigate();
+
   const handleLogout = () => {
-    // implement logout logic here
-    console.log("Logging out...");
+    logout();
+    navigate("/admin/login");
+  };
+  const handleSesssionEnd = () => {
+    UpdateSession({ status: "ended" })
+      .unwrap()
+      .then(() => {
+        logout();
+        navigate("/admin/login");
+      })
+      .catch((error) => {
+        console.error("Failed to end session:", error);
+      });
   };
   return (
     <>
@@ -79,7 +97,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
             color="black"
             textAlign={"center"}
           >
-            Admin Name - {data.adminName}
+            Admin Name - {admin?.name || data.adminName || "Admin"}
           </Typography>
         </Box>
 
@@ -91,27 +109,54 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
             flexWrap: "wrap",
           }}
         >
-          <FormControlLabel
-            control={
-              <Switch
-                checked={gameStatus}
-                onChange={() => {
-                  if (onGameStatusChange) onGameStatusChange();
-                }}
-                color="success"
-              />
-            }
-            label={
-              <Typography variant="body2" color="text.secondary">
-                Game Status
-              </Typography>
-            }
-          />
+          <Button
+            variant="contained"
+            color="inherit" 
+            sx={{
+              display: data?.gameStatus === "playing" ? "none" : "block",
+              justifySelf: "flex-end",
+              backgroundColor: "#000",
+              color: "#fff",
+              borderRadius: "8px",
+              textTransform: "none",
+              fontWeight: 500,
+              boxShadow: "none",
+              "&:hover": {
+                backgroundColor: "#222",
+              },
+            }}
+            onClick={() => {
+              if (onGameStatusChange) onGameStatusChange();
+            }}
+          >
+            Start Game
+          </Button>
 
+          <Button
+            variant="contained"
+            color="inherit"
+            sx={{
+              justifySelf: "flex-end",
+              backgroundColor: "#000",
+              color: "#fff",
+              borderRadius: "8px",
+              textTransform: "none",
+              fontWeight: 500,
+              boxShadow: "none",
+              "&:hover": {
+                backgroundColor: "#222",
+              },
+            }}
+            onClick={() => {
+              handleSesssionEnd();
+            }}
+          >
+            End Session
+          </Button>
           <FormControlLabel
             control={
               <Switch
-                checked={data.enableTransactions}
+                checked={transaction}
                 onChange={(e) => onTransactionsChange?.(e.target.checked)}
                 color="primary"
               />

@@ -8,6 +8,7 @@ import { setCookieOptions } from '../../../utils/cookieOptions';
 import QuestionService from '../../questions/services/question.service';
 import { Question } from '../../questions/models/question.model';
 import { Types } from 'mongoose';
+import { NextFunction } from 'express';
 
 const playerService = new PlayerService(Player);
 const questionService = new QuestionService(Question);
@@ -38,7 +39,11 @@ export const onboardPlayer = async (
         };
 
         const player = await playerService.createPlayer(playerData);
-        const accessToken = generateAccessToken(player._id.toString(), "USER");
+        const accessToken = generateAccessToken({
+            id: player._id.toString(),
+            role: "USER",
+            sessionId: player.session.toString()
+        });
         const refreshToken = generateRefreshToken(player._id.toString());
 
         res.cookie("accessToken", accessToken, setCookieOptions);
@@ -241,5 +246,38 @@ export const getUserGuesses = async (
         res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
             message: "Internal Server Error",
         });
+    }
+};
+
+export const updatePlayer = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+) => {
+    try {
+        const { playerId, name, profilePhoto, score } = req.body;
+
+        const updateData: Partial<{ name: string; profilePhoto: string; score: number }> = {};
+        if (name !== undefined) updateData.name = name;
+        if (profilePhoto !== undefined) updateData.profilePhoto = profilePhoto;
+        if (score !== undefined) updateData.score = score;
+
+        if (!playerId) {
+            return next(new AppError("Player ID is required.", StatusCodes.BAD_REQUEST));
+        }
+
+        const updatedPlayer = await playerService.updatePlayerById(playerId, updateData);
+
+        if (!updatedPlayer) {
+            return next(new AppError("Player not found or update failed.", StatusCodes.NOT_FOUND));
+        }
+
+        res.status(StatusCodes.OK).json({
+            message: "Player updated successfully.",
+            data: updatedPlayer,
+        });
+    } catch (error) {
+        console.error("Error updating player:", error);
+        next(new AppError("Failed to update player.", StatusCodes.INTERNAL_SERVER_ERROR));
     }
 };

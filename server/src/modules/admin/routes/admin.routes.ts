@@ -1,18 +1,17 @@
 import express from 'express';
-// import asyncHandeler from 'express-async-handler';
-// import * as playerControllers from '../controllers/player.controller';
+import asyncHandeler from 'express-async-handler';
+import * as adminControllers from '../controllers/admin.controller';
+import * as playerControllers from '../../players/controllers/player.controller';
 // import * as questionControllers from '../../questions/controllers/question.controller';
-// import { authenticateUser } from '../../../middlewares/authMiddleware';
+import { authenticateUser, authorizeRoles } from '../../../middlewares/authMiddleware';
 
 const router = express.Router();
 
-// router.post('/onboardPlayer', asyncHandeler(playerControllers.onboardPlayer));
-// router.get('/fetchAllQuestions', authenticateUser, asyncHandeler(questionControllers.getAllQuestions));
-// router.post('/storeQuestionResponse', authenticateUser, asyncHandeler(questionControllers.storeQuestionResponse));
-// router.get('/getPlayersCards', authenticateUser, asyncHandeler(playerControllers.getPlayersCards));
-// router.get('/getPlayersBySession', authenticateUser, asyncHandeler(playerControllers.getPlayersBySession));
-// router.post('/submitGuess', authenticateUser, asyncHandeler(playerControllers.submitGuess));
-// router.get('/getUserGuesses', authenticateUser, asyncHandeler(playerControllers.getUserGuesses));
-
+router.post('/create', asyncHandeler(adminControllers.createAdmin));
+router.post('/login', asyncHandeler(adminControllers.loginAdmin));
+router.post('/logout', authenticateUser, authorizeRoles("ADMIN"), asyncHandeler(adminControllers.logoutAdmin));
+router.get('/fetch', authenticateUser, authorizeRoles("ADMIN"), asyncHandeler(adminControllers.fetchAdmin));
+router.get('/fetchDashboardData', authenticateUser, authorizeRoles("ADMIN"), asyncHandeler(adminControllers.fetchAdminDashboardData));
+router.put('/updatePlayer', authenticateUser, authorizeRoles("ADMIN"), asyncHandeler(playerControllers.updatePlayer));
 
 export default router;
