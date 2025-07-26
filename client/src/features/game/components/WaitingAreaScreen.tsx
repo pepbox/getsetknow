@@ -1,7 +1,7 @@
-import React, { useEffect } from "react";
+import React from "react";
 import { Box, Avatar, Typography } from "@mui/material";
 import { motion } from "framer-motion";
-import { useNavigate } from "react-router-dom";
+import { Navigate } from "react-router-dom";
 import { useAppSelector } from "../../../app/hooks";
 import { RootState } from "../../../app/store";
 
@@ -25,13 +25,6 @@ const WaitingAreaScreen: React.FC<CircularPlayerAnimationProps> = ({
   const isGameStarted = useAppSelector(
     (state: RootState) => state.game.isGameStarted
   );
-  const navigate = useNavigate();
-  useEffect(() => {
-    console.log("isGameStarted:", isGameStarted);
-    if (isGameStarted) {
-      navigate("/game/arena");
-    }
-  }, [isGameStarted]);
 
   const players: Player[] = [
     {
@@ -87,6 +80,10 @@ const WaitingAreaScreen: React.FC<CircularPlayerAnimationProps> = ({
       y: Math.sin(radian) * radius,
     };
   };
+  
+  if (isGameStarted) {
+    return <Navigate to="/game/arena" />;
+  }
 
   return (
     <Box

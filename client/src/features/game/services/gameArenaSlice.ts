@@ -23,15 +23,16 @@ export interface GameArenaState {
   };
   lastGuessResult: GuessResult | null;
   gameCompleted: boolean;
+  correctlyGuessedCards: string[]; // Array of guessIds that have been correctly guessed
 }
 
 const initialState: GameArenaState = {
   gameCards: [],
   players: [],
   currentCardIndex: 0,
-  totalScore: 120, // Using dummy data for now
-  peopleIKnow: 5,   // Using dummy data for now
-  peopleWhoKnowMe: 8, // Using dummy data for now
+  totalScore: 0,
+  peopleIKnow: 0,
+  peopleWhoKnowMe: 0,
   isLoading: false,
   error: null,
   currentGuess: {
@@ -40,6 +41,38 @@ const initialState: GameArenaState = {
   },
   lastGuessResult: null,
   gameCompleted: false,
+  correctlyGuessedCards: [],
+};
+
+// Helper function to find next unguessed card
+const findNextUnguessedCard = (
+  currentIndex: number,
+  gameCards: GameCard[],
+  correctlyGuessedCards: string[]
+): number => {
+  const totalCards = gameCards.length;
+
+  // Start searching from the next card after current
+  for (let i = 1; i <= totalCards; i++) {
+    const nextIndex = (currentIndex + i) % totalCards;
+    const nextCard = gameCards[nextIndex];
+
+    if (nextCard && !correctlyGuessedCards.includes(nextCard.guessId)) {
+      return nextIndex;
+    }
+  }
+
+  return currentIndex;
+};
+
+// Helper function to check if all cards are correctly guessed
+const areAllCardsGuessed = (
+  gameCards: GameCard[],
+  correctlyGuessedCards: string[]
+): boolean => {
+  return gameCards.length > 0 && gameCards.every(card =>
+    correctlyGuessedCards.includes(card.guessId)
+  );
 };
 
 const gameArenaSlice = createSlice({
@@ -61,14 +94,28 @@ const gameArenaSlice = createSlice({
     },
 
     nextCard: (state) => {
-      if (state.currentCardIndex < state.gameCards.length - 1) {
-        state.currentCardIndex += 1;
-        state.lastGuessResult = null;
+      // Check if all cards are correctly guessed
+      if (areAllCardsGuessed(state.gameCards, state.correctlyGuessedCards)) {
+        state.gameCompleted = true;
+        return;
+      }
+
+      // Find next unguessed card
+      const nextIndex = findNextUnguessedCard(
+        state.currentCardIndex,
+        state.gameCards,
+        state.correctlyGuessedCards
+      );
+
+      if (nextIndex !== state.currentCardIndex) {
+        state.currentCardIndex = nextIndex;
+        // state.lastGuessResult = null;
         state.currentGuess = {
           guessId: null,
           guessedPersonId: null,
         };
       } else {
+        // If we can't find any unguessed card, game is completed
         state.gameCompleted = true;
       }
     },
@@ -86,14 +133,29 @@ const gameArenaSlice = createSlice({
     },
 
     skipCard: (state) => {
-      if (state.currentCardIndex < state.gameCards.length - 1) {
-        state.currentCardIndex += 1;
+      // Check if all cards are correctly guessed
+      if (areAllCardsGuessed(state.gameCards, state.correctlyGuessedCards)) {
+        state.gameCompleted = true;
+        return;
+      }
+
+      // Find next unguessed card
+      const nextIndex = findNextUnguessedCard(
+        state.currentCardIndex,
+        state.gameCards,
+        state.correctlyGuessedCards
+      );
+
+      if (nextIndex !== state.currentCardIndex) {
+        state.currentCardIndex = nextIndex;
         state.lastGuessResult = null;
         state.currentGuess = {
           guessId: null,
           guessedPersonId: null,
         };
       } else {
+
+        // If we can't find any unguessed card, game is completed
         state.gameCompleted = true;
       }
     },
@@ -113,10 +175,40 @@ const gameArenaSlice = createSlice({
         guessedPersonId: null,
       };
       state.gameCompleted = false;
+      state.correctlyGuessedCards = [];
     },
 
     setGuessResult: (state, action: PayloadAction<GuessResult>) => {
       state.lastGuessResult = action.payload;
+
+      // If the guess is correct, add the guessId to correctly guessed cards
+      if (action.payload.correct && action.payload.guessedPersonId) {
+        const currentCard = state.gameCards[state.currentCardIndex];
+        if (currentCard && !state.correctlyGuessedCards.includes(currentCard.guessId)) {
+          state.correctlyGuessedCards.push(currentCard.guessId);
+        }
+      }
+    },
+
+    jumpToUnguessedCard: (state, action: PayloadAction<number>) => {
+      const targetIndex = action.payload;
+      if (targetIndex >= 0 && targetIndex < state.gameCards.length) {
+        const targetCard = state.gameCards[targetIndex];
+        // Only allow navigation to unguessed cards
+        if (targetCard && !state.correctlyGuessedCards.includes(targetCard.guessId)) {
+          state.currentCardIndex = targetIndex;
+          state.lastGuessResult = null;
+          state.currentGuess = {
+            guessId: null,
+            guessedPersonId: null,
+          };
+          state.gameCompleted = false;
+        }
+      }
+    },
+
+    initializeCorrectlyGuessedCards: (state, action: PayloadAction<string[]>) => {
+      state.correctlyGuessedCards = action.payload;
     },
   },
 
@@ -135,6 +227,7 @@ const gameArenaSlice = createSlice({
         (state, { payload }) => {
           state.isLoading = false;
           state.gameCards = payload;
+          state.gameCompleted = areAllCardsGuessed(payload, state.correctlyGuessedCards);
         }
       )
       .addMatcher(
@@ -181,12 +274,17 @@ const gameArenaSlice = createSlice({
         (state, { payload }) => {
           state.isLoading = false;
 
-          // Update score based on result
+
           if (payload.correct) {
             state.totalScore += 10;
             state.peopleIKnow += 1;
-          }
 
+            // Add to correctly guessed cards
+            const currentCard = state.gameCards[state.currentCardIndex];
+            if (currentCard && !state.correctlyGuessedCards.includes(currentCard.guessId)) {
+              state.correctlyGuessedCards.push(currentCard.guessId);
+            }
+          }
           // Set the guess result
           state.lastGuessResult = {
             correct: payload.correct,
@@ -262,6 +360,8 @@ export const {
   setCurrentCardIndex,
   setGuessResult,
   replayLastCard,
+  jumpToUnguessedCard,
+  initializeCorrectlyGuessedCards,
 } = gameArenaSlice.actions;
 
 export default gameArenaSlice.reducer;

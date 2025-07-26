@@ -1,6 +1,5 @@
 import React from "react";
-import { Box, Typography } from "@mui/material";
-import { theme } from "../../theme/theme";
+import { Box, Typography, useTheme } from "@mui/material";
 
 type BadgeProps = {
   title: string;
@@ -9,6 +8,7 @@ type BadgeProps = {
 };
 
 const Badge: React.FC<BadgeProps> = ({ title, image, progress }) => {
+  const theme = useTheme();
   return (
     <Box
       sx={{

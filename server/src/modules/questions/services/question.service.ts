@@ -37,7 +37,8 @@ class QuestionService {
             player: data.player,
         });
         if (existing) {
-            return existing; // Do not store duplicate response
+            existing.response = data.response;
+            return await existing.save(); // Update and return the updated response
         }
         const questionResponse = new QuestionResponse({
             question: data.question,

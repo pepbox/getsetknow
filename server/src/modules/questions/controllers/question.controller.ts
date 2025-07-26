@@ -10,6 +10,7 @@ const questionService = new QuestionService(Question);
 export const getAllQuestions = async (req: Request, res: Response) => {
     try {
         const questions: IQuestion[] = await questionService.getAllQuestions();
+        
         res.status(200).json(questions);
     } catch (error) {
         res.status(500).json({ message: 'Error fetching questions', error });
@@ -40,7 +41,6 @@ export const getQuestionById = async (req: Request, res: Response) => {
 export const storeQuestionResponse = async (req: Request, res: Response) => {
     try {
         const { question, response } = req.body;
-        // console.log("user : :" , req.user)
         const sessionId = req.user.sessionId;
         const player = req.user?.id;
         const questionResponse = await questionService.storeQuestionResponse({ question, player, response });

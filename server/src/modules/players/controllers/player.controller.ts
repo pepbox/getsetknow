@@ -294,12 +294,14 @@ export const getUserGuesses = async (
                 return {
                     guessId: guess._id,
                     status: "no guess",
+                    guessedPersonId: null, // No guess made yet
                 };
             }
             const isCorrect = guess.personId.toString() === guess.guessedPersonId.toString();
             return {
                 guessId: guess._id,
                 status: isCorrect ? "correct" : "wrong",
+                guessedPersonId: isCorrect ? guess.guessedPersonId : null,
             };
         });
 

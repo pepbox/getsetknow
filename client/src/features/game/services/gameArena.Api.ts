@@ -31,7 +31,6 @@ export const gameApi = api.injectEndpoints({
         method: 'GET',
       }),
       transformResponse: (response: { data: GameCard[] }) => response.data,
-      // providesTags: ['GameCards'],
     }),
 
     getPlayersBySession: builder.query<Player[], void>({
@@ -40,7 +39,6 @@ export const gameApi = api.injectEndpoints({
         method: 'GET',
       }),
       transformResponse: (response: { data: Player[] }) => response.data,
-      //   providesTags: ['Players'],
     }),
 
     submitGuess: builder.mutation<GuessSubmissionResponse, { guessId: string; guessedPersonId: string }>({

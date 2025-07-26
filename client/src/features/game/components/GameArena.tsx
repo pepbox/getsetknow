@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Box,
   Typography,
@@ -46,6 +46,7 @@ interface GameArenaProps {
     guessId: string;
     status: "correct" | "wrong" | "no guess";
   }>;
+  correctlyGuessedPlayerIds?: string[]; // Add this new prop to track correctly guessed players
 }
 
 const GameArena: React.FC<GameArenaProps> = ({
@@ -59,9 +60,10 @@ const GameArena: React.FC<GameArenaProps> = ({
   onSubmitGuess,
   onNextCard,
   onSkipCard,
-  // onClearSelection,
+  onClearSelection,
   onNavigateToQuestion, // New prop
   guesses,
+  correctlyGuessedPlayerIds = [], // New prop with default value
 }) => {
   const dispatch = useAppDispatch();
   const [knowsPerson, setKnowsPerson] = useState<boolean>(false);
@@ -72,6 +74,7 @@ const GameArena: React.FC<GameArenaProps> = ({
 
   const handleIKnowWhoThisIs = () => {
     setKnowsPerson(true);
+    setSearchText(""); // Clear search when opening drawer
   };
 
   const handleSkipModalOpen = () => setSkipModal(true);
@@ -129,6 +132,41 @@ const GameArena: React.FC<GameArenaProps> = ({
       key.charAt(0).toUpperCase() + key.slice(1).replace(/([A-Z])/g, " $1")
     );
   };
+
+  // Filter players: Remove correctly guessed players and apply search
+  const getFilteredPlayers = () => {
+    if (!data?.players) return [];
+
+    // First, filter out correctly guessed players
+    let availablePlayers = data.players.filter(
+      (player) =>
+        player._id &&
+        Array.isArray(correctlyGuessedPlayerIds) &&
+        !correctlyGuessedPlayerIds.includes(player?._id)
+    );
+
+    // Apply search filter
+    if (searchText.trim()) {
+      availablePlayers = availablePlayers.filter((player) =>
+        player.name.toLowerCase().includes(searchText.toLowerCase())
+      );
+    }
+
+    return availablePlayers;
+  };
+
+  const filteredPlayers = getFilteredPlayers();
+
+  // Clear selection if selected player is no longer available (was correctly guessed)
+  useEffect(() => {
+    if (
+      selectedPersonId &&
+      !filteredPlayers.some((player) => player._id === selectedPersonId)
+    ) {
+      // The selected player is no longer available, clear the selection
+      onClearSelection(); // Use the proper clear function
+    }
+  }, [selectedPersonId, filteredPlayers, onClearSelection]);
 
   // Show result screen if there's a guess result
   if (showResult) {
@@ -554,7 +592,10 @@ const GameArena: React.FC<GameArenaProps> = ({
         <Drawer
           anchor="bottom"
           open={knowsPerson}
-          onClose={() => setKnowsPerson(false)}
+          onClose={() => {
+            setKnowsPerson(false);
+            setSearchText(""); // Clear search when closing drawer
+          }}
           slotProps={{
             paper: {
               sx: {
@@ -571,7 +612,10 @@ const GameArena: React.FC<GameArenaProps> = ({
           }}
         >
           <IconButton
-            onClick={() => setKnowsPerson(false)}
+            onClick={() => {
+              setKnowsPerson(false);
+              setSearchText(""); // Clear search when closing drawer
+            }}
             sx={{
               position: "absolute",
               top: 8,
@@ -601,60 +645,87 @@ const GameArena: React.FC<GameArenaProps> = ({
                 }}
               />
             </Box>
-            {data?.players.map((player) => {
-              const isSelected = selectedPersonId === player._id;
-              return (
-                <Box
-                  key={player._id}
-                  onClick={() => handlePersonClick(player._id)}
+
+            {/* Show filtered players */}
+            {filteredPlayers.length > 0 ? (
+              filteredPlayers.map((player) => {
+                const isSelected = selectedPersonId === player._id;
+                return (
+                  <Box
+                    key={player._id}
+                    onClick={() => handlePersonClick(player._id)}
+                    sx={{
+                      display: "flex",
+                      alignItems: "center",
+                      px: 2,
+                      py: 1,
+                      mb: 1,
+                      borderRadius: 2,
+                      cursor: "pointer",
+                      bgcolor: isSelected ? "primary.main" : "transparent",
+                      transition: "background 0.2s",
+                      "&:hover": {
+                        bgcolor: isSelected ? "primary.main" : "grey.100",
+                      },
+                    }}
+                  >
+                    <Avatar
+                      alt={player.name}
+                      src={player.profilePhoto}
+                      sx={{
+                        width: 48,
+                        height: 48,
+                        bgcolor: "primary.main",
+                        mr: 2,
+                        border: isSelected ? "2px solid #fff" : undefined,
+                      }}
+                    >
+                      {!player.profilePhoto &&
+                        player.name
+                          .split(" ")
+                          .map((n) => n[0]?.toUpperCase())
+                          .join("")
+                          .slice(0, 2)}
+                    </Avatar>
+                    <Typography
+                      variant="subtitle1"
+                      sx={{
+                        color: isSelected ? "#fff" : "text.primary",
+                        fontWeight: 500,
+                        fontSize: "1rem",
+                        textAlign: "left",
+                        flex: 1,
+                      }}
+                    >
+                      {player.name}
+                    </Typography>
+                  </Box>
+                );
+              })
+            ) : (
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  py: 4,
+                  px: 2,
+                }}
+              >
+                <Typography
+                  variant="body1"
                   sx={{
-                    display: "flex",
-                    alignItems: "center",
-                    px: 2,
-                    py: 1,
-                    mb: 1,
-                    borderRadius: 2,
-                    cursor: "pointer",
-                    bgcolor: isSelected ? "primary.main" : "transparent",
-                    transition: "background 0.2s",
-                    "&:hover": {
-                      bgcolor: isSelected ? "primary.main" : "grey.100",
-                    },
+                    color: "text.secondary",
+                    textAlign: "center",
+                    fontStyle: "italic",
                   }}
                 >
-                  <Avatar
-                    alt={player.name}
-                    src={player.profilePhoto}
-                    sx={{
-                      width: 48,
-                      height: 48,
-                      bgcolor: "primary.main",
-                      mr: 2,
-                      border: isSelected ? "2px solid #fff" : undefined,
-                    }}
-                  >
-                    {!player.profilePhoto &&
-                      player.name
-                        .split(" ")
-                        .map((n) => n[0]?.toUpperCase())
-                        .join("")
-                        .slice(0, 2)}
-                  </Avatar>
-                  <Typography
-                    variant="subtitle1"
-                    sx={{
-                      color: isSelected ? "#fff" : "text.primary",
-                      fontWeight: 500,
-                      fontSize: "1rem",
-                      textAlign: "left",
-                      flex: 1,
-                    }}
-                  >
-                    {player.name}
-                  </Typography>
-                </Box>
-              );
-            })}
+                  {searchText.trim()
+                    ? `No players found matching "${searchText}"`
+                    : "No available players to select"}
+                </Typography>
+              </Box>
+            )}
 
             <Box
               sx={{
@@ -668,7 +739,7 @@ const GameArena: React.FC<GameArenaProps> = ({
             >
               <GlobalButton
                 onClick={handleSubmitModalOpen}
-                disabled={!selectedPersonId}
+                disabled={!selectedPersonId || filteredPlayers.length === 0}
                 sx={{ width: "100%", mx: "auto", my: "10px" }}
               >
                 Submit

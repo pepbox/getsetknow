@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { Box, Alert } from "@mui/material";
 import { RootState, AppDispatch } from "../../../app/store";
@@ -15,7 +15,8 @@ import {
   nextCard,
   skipCard,
   setGuessResult,
-  setCurrentCardIndex,
+  jumpToUnguessedCard,
+  initializeCorrectlyGuessedCards,
 } from "../services/gameArenaSlice";
 import GameArena from "../components/GameArena";
 import Loader from "../../../components/ui/Loader";
@@ -80,7 +81,46 @@ const GameArenaPage: React.FC = () => {
     currentGuess,
     lastGuessResult,
     gameCompleted,
+    correctlyGuessedCards,
   } = gameState;
+
+  // Auto-navigate to unguessed card when current card is already guessed
+  useEffect(() => {
+    const currentCard = gameCards[currentCardIndex];
+    if (
+      currentCard &&
+      correctlyGuessedCards.includes(currentCard.guessId) &&
+      !gameCompleted
+    ) {
+      dispatch(nextCard());
+    }
+  }, [
+    currentCardIndex,
+    gameCards,
+    correctlyGuessedCards,
+    gameCompleted,
+    dispatch,
+  ]);
+
+  // Initialize correctly guessed cards from backend data
+  useEffect(() => {
+    if (guessesData?.data && gameCards.length > 0) {
+      const correctGuessIds = guessesData.data
+        .filter((guess: any) => guess.status === "correct")
+        .map((guess: any) => guess.guessId)
+        .filter((id: string) => id);
+
+      const sortedCorrectGuessIds = [...correctGuessIds].sort();
+      const sortedCurrentlyGuessedCards = [...correctlyGuessedCards].sort();
+
+      if (
+        JSON.stringify(sortedCorrectGuessIds) !==
+        JSON.stringify(sortedCurrentlyGuessedCards)
+      ) {
+        dispatch(initializeCorrectlyGuessedCards(correctGuessIds));
+      }
+    }
+  }, [guessesData, gameCards, correctlyGuessedCards, dispatch]);
 
   // Loading and error states
   const isLoading =
@@ -94,7 +134,7 @@ const GameArenaPage: React.FC = () => {
   const currentCard = gameCards[currentCardIndex];
   const progressValue =
     gameCards.length > 0
-      ? ((currentCardIndex + 1) / gameCards.length) * 100
+      ? (correctlyGuessedCards.length / gameCards.length) * 100
       : 0;
 
   // Transform backend data to match GameArena component expectations
@@ -161,25 +201,39 @@ const GameArenaPage: React.FC = () => {
 
   // Add this new handler for question navigation
   const handleNavigateToQuestion = (questionIndex: number) => {
-    // Check if the question is already answered correctly
-    const guesses = guessesData?.data || [];
-    const targetGuess = guesses[questionIndex];
-
-    if (targetGuess && targetGuess.status === "correct") {
+    // Check if the question is already answered correctly using our local state
+    const targetCard = gameCards[questionIndex];
+    if (targetCard && correctlyGuessedCards.includes(targetCard.guessId)) {
       // Don't allow navigation to correctly answered questions
       return;
     }
 
-    // Navigate to the specific question
-    if (questionIndex >= 0 && questionIndex < gameCards.length) {
-      // Clear current selection and any guess results when navigating
-      dispatch(clearCurrentGuess());
-      // dispatch(setGuessResult({ correct: undefined, guessedPersonId: undefined }));
-
-      // Set the current card index to the selected question
-      dispatch(setCurrentCardIndex(questionIndex)); // You may need to create this action if it doesn't exist
-    }
+    // Use the new jumpToUnguessedCard action
+    dispatch(jumpToUnguessedCard(questionIndex));
   };
+
+  // Extract correctly guessed player IDs from guesses data
+  const getCorrectlyGuessedPlayerIds = (): string[] => {
+    if (!guessesData?.data || !gameCards.length) return [];
+
+    const correctPlayerIds: string[] = [];
+
+    guessesData.data.forEach((guess: any, index: number) => {
+      if (guess.status === "correct" && gameCards[index]) {
+        if (guess.guessedPersonId) {
+          correctPlayerIds.push(guess.guessedPersonId);
+        }
+        // Alternative: if the guess data contains the person information directly
+        else if (guess.correctPersonId) {
+          correctPlayerIds.push(guess.correctPersonId);
+        }
+      }
+    });
+
+    return [...new Set(correctPlayerIds)]; // Remove duplicates
+  };
+
+  const correctlyGuessedPlayerIds = getCorrectlyGuessedPlayerIds();
 
   // Loading state
   if (isLoading) {
@@ -229,6 +283,7 @@ const GameArenaPage: React.FC = () => {
       showResult={showResult}
       setShowResult={setShowResult} // Add this prop
       guesses={guessesData?.data || []} // Pass guesses data
+      correctlyGuessedPlayerIds={correctlyGuessedPlayerIds} // Pass correctly guessed player IDs
     />
   );
 };
