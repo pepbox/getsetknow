@@ -1,9 +1,9 @@
-import { Document, Types } from "mongoose";
+import mongoose, { Document, Types } from "mongoose";
 
 export interface IPlayer extends Document {
     _id: Types.ObjectId;
     name: string;
-    profilePhoto: string;
+    profilePhoto: mongoose.Types.ObjectId;
     score?: number;
     session: Types.ObjectId;
     createdAt?: Date;
