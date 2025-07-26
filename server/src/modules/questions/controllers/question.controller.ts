@@ -2,6 +2,8 @@ import { Request, Response } from 'express';
 import QuestionService from '../services/question.service';
 import { IQuestion } from '../types/interfaces';
 import { Question } from '../models/question.model';
+import { SessionEmitters } from '../../../services/socket/sessionEmitters';
+import { Events } from '../../../services/socket/enums/Events';
 
 const questionService = new QuestionService(Question);
 
@@ -39,8 +41,10 @@ export const storeQuestionResponse = async (req: Request, res: Response) => {
     try {
         const { question, response } = req.body;
         // console.log("user : :" , req.user)
-        const player = req.user?.id || "687df81aee46eaa7a14418f6";
+        const sessionId = req.user.sessionId;
+        const player = req.user?.id;
         const questionResponse = await questionService.storeQuestionResponse({ question, player, response });
+        SessionEmitters.toSessionAdmins(sessionId?.toString() ?? "", Events.PLAYERS_UPDATE, {});
         res.status(201).json(questionResponse);
     } catch (error) {
         res.status(500).json({ message: 'Error storing question response', error });

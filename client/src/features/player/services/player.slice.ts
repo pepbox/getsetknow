@@ -6,12 +6,14 @@ export interface IPlayer {
     name: string;
     profilePhoto?: string;
     session?: string;
+    isAuthenticated?: boolean;
 }
 
 const initialState = {
     player: null as IPlayer | null,
     isLoading: false,
     error: null as SerializedError | null,
+    isAuthenticated : false,
 };
 
 const playerSlice = createSlice({
@@ -38,10 +40,34 @@ const playerSlice = createSlice({
                 playerApi.endpoints.onboardPlayer.matchFulfilled,
                 (state) => {
                     state.isLoading = false;
+                    state.isAuthenticated = true;
                 }
             )
             .addMatcher(
                 playerApi.endpoints.onboardPlayer.matchRejected,
+                (state, { error }) => {
+                    state.isLoading = false;
+                    state.error = error;
+                }
+            );
+
+        builder
+            .addMatcher(
+                playerApi.endpoints.fetchPlayer.matchPending,
+                (state) => {
+                    state.isLoading = true;
+                    state.error = null;
+                }
+            )
+            .addMatcher(
+                playerApi.endpoints.fetchPlayer.matchFulfilled,
+                (state) => {
+                    state.isLoading = false;
+                    state.isAuthenticated = true;
+                }
+            )
+            .addMatcher(
+                playerApi.endpoints.fetchPlayer.matchRejected,
                 (state, { error }) => {
                     state.isLoading = false;
                     state.error = error;

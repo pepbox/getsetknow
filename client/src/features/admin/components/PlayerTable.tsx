@@ -177,7 +177,7 @@ const PlayerTable: React.FC<PlayerTableProps> = ({
     <>
       {isMobile ? (
         <Stack spacing={2}>
-          {players.map((player, index) => (
+          {players?.map((player, index) => (
             <Paper
               key={player.id}
               elevation={0}
@@ -188,7 +188,10 @@ const PlayerTable: React.FC<PlayerTableProps> = ({
               }}
             >
               {visibleColumns.map((col, colIdx) => (
-                <Box key={col.key} mb={colIdx < visibleColumns.length - 1 ? 1.5 : 0}>
+                <Box
+                  key={col.key}
+                  mb={colIdx < visibleColumns.length - 1 ? 1.5 : 0}
+                >
                   <Typography
                     variant="caption"
                     color="text.secondary"
@@ -196,13 +199,15 @@ const PlayerTable: React.FC<PlayerTableProps> = ({
                   >
                     {col.label}
                   </Typography>
-                  <Box mt={0.5}>{col.render(
-                    player,
-                    onChangeName,
-                    onViewResponses,
-                    transaction,
-                    openModal
-                  )}</Box>
+                  <Box mt={0.5}>
+                    {col.render(
+                      player,
+                      onChangeName,
+                      onViewResponses,
+                      transaction,
+                      openModal
+                    )}
+                  </Box>
                   {colIdx < visibleColumns.length - 1 && (
                     <Divider sx={{ my: 1 }} />
                   )}
@@ -228,7 +233,7 @@ const PlayerTable: React.FC<PlayerTableProps> = ({
               </TableRow>
             </TableHead>
             <TableBody>
-              {players.map((player, index) => (
+              {players?.map((player, index) => (
                 <TableRow
                   key={player.id}
                   sx={{ backgroundColor: getRowColor(index) }}
@@ -252,7 +257,12 @@ const PlayerTable: React.FC<PlayerTableProps> = ({
       )}
 
       {/* Name Change Modal */}
-      <Dialog open={modalOpen} onClose={handleCloseModal} maxWidth="sm" fullWidth>
+      <Dialog
+        open={modalOpen}
+        onClose={handleCloseModal}
+        maxWidth="sm"
+        fullWidth
+      >
         <DialogTitle>Change Player Name</DialogTitle>
         <DialogContent>
           <TextField

@@ -1,11 +1,13 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Navigate, useNavigate } from "react-router-dom";
 import { Alert, Box, Snackbar, TextField, Typography } from "@mui/material";
-import { useAppDispatch } from "../../../app/hooks";
+import { useAppDispatch, useAppSelector } from "../../../app/hooks";
 import GlobalButton from "../../../components/ui/button";
 import { setPlayer } from "../services/player.slice";
+import { RootState } from "../../../app/store";
 
 const HomeScreen: React.FC = () => {
+  const {isAuthenticated} = useAppSelector((state: RootState) => state.player);
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const [firstname, setFirstname] = React.useState<string>("");
@@ -30,6 +32,11 @@ const HomeScreen: React.FC = () => {
     setShowSnackbar(false);
   };
 
+
+  if(isAuthenticated)
+  {
+    return <Navigate to="/game/questionnaire" replace />;
+  }
   return (
     <Box
       position={"absolute"}

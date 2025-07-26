@@ -19,6 +19,8 @@ import {
 } from "../services/gameArenaSlice";
 import GameArena from "../components/GameArena";
 import Loader from "../../../components/ui/Loader";
+import { useAppSelector } from "../../../app/hooks";
+import { Navigate } from "react-router-dom";
 
 export interface GameArenaData {
   totalScore: number;
@@ -38,6 +40,7 @@ export interface GameArenaData {
 const GameArenaPage: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
   const [showResult, setShowResult] = useState(false);
+  const { isGameStarted } = useAppSelector((state: RootState) => state.game);
 
   // RTK Query hooks
   const {
@@ -206,6 +209,9 @@ const GameArenaPage: React.FC = () => {
         <Alert severity="info">No game data available</Alert>
       </Box>
     );
+  }
+  if (!isGameStarted) {
+    return <Navigate to="/game/waiting" replace />;
   }
 
   return (

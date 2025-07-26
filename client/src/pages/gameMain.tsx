@@ -5,8 +5,26 @@ import HomeScreen from "../features/player/components/HomeScreen";
 import IntroScreen from "../features/question/components/IntroScreen";
 import Questionnaire from "../features/question/pages/Questionnaire";
 import GameArenaPage from "../features/game/pages/GameArenaPage";
+import { useLazyFetchPlayerQuery } from "../features/player/services/player.api";
+import { RootState } from "../app/store";
+import { useEffect } from "react";
+import Loader from "../components/ui/Loader";
+import AuthWrapper from "../components/auth/AuthWrapper";
+import { useAppSelector } from "../app/rootReducer";
 
 const GameMain = () => {
+  const [fetchUser] = useLazyFetchPlayerQuery();
+  const { isLoading, isAuthenticated } = useAppSelector(
+    (state: RootState) => state.player
+  );
+
+  useEffect(() => {
+    fetchUser({});
+  }, [isAuthenticated]);
+
+  if (isLoading) {
+    return <Loader />;
+  }
   return (
     <div
       style={{
@@ -19,10 +37,17 @@ const GameMain = () => {
       <Routes>
         <Route path="/" element={<HomeScreen />} />
         <Route path="/capture" element={<CaptureScreen />} />
-        <Route path="/intro" element={<IntroScreen />} />
-        <Route path="/questionnaire" element={<Questionnaire />} />
-        <Route path="/waiting" element={<WaitingAreaScreen />} />
-        <Route path="/arena" element={<GameArenaPage />} />
+        <Route
+          path="/"
+          element={
+            <AuthWrapper userType={"player"} redirection="/" />
+          }
+        >
+          <Route path="/intro" element={<IntroScreen />} />
+          <Route path="/questionnaire" element={<Questionnaire />} />
+          <Route path="/waiting" element={<WaitingAreaScreen />} />
+          <Route path="/arena" element={<GameArenaPage />} />
+        </Route>
       </Routes>
     </div>
   );

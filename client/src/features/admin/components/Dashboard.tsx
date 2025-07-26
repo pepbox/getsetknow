@@ -29,8 +29,8 @@ const Dashboard: React.FC<DashboardProps> = ({
   const [pendingTransaction, setPendingTransaction] = useState<boolean>(false);
 
   useEffect(() => {
-    setGameStatus(headerData.gameStatus);
-  }, [headerData.gameStatus]);
+    setGameStatus(headerData?.gameStatus);
+  }, [headerData?.gameStatus]);
 
   const onGameStatusChange = () => {
     console.log("Game status changed:", !gameStatus);
@@ -91,7 +91,7 @@ const Dashboard: React.FC<DashboardProps> = ({
           </Button>
           <Button
             onClick={handleDialogConfirm}
-            color="primary"
+            color="secondary"
             variant="contained"
           >
             Confirm

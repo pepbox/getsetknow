@@ -2,7 +2,7 @@ import { api } from "../../../app/api";
 
 export const playerApi = api.injectEndpoints({
     endpoints: (builder) => ({
-        
+
         onboardPlayer: builder.mutation({
             query: (body) => ({
                 url: '/player/onboardPlayer',
@@ -11,10 +11,18 @@ export const playerApi = api.injectEndpoints({
             }),
         }),
 
-        
+        fetchPlayer: builder.query({
+            query: () => ({
+                url: '/player/fetchPlayer',
+                method: 'GET',
+            }),
+        }),
+
+
     }),
 });
 
 export const {
     useOnboardPlayerMutation,
+    useLazyFetchPlayerQuery,
 } = playerApi;

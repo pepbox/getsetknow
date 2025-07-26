@@ -7,6 +7,7 @@ import { authenticateUser } from '../../../middlewares/authMiddleware';
 const router = express.Router();
 
 router.post('/onboardPlayer', asyncHandeler(playerControllers.onboardPlayer));
+router.get('/fetchPlayer', authenticateUser, asyncHandeler(playerControllers.fetchPlayer));
 router.get('/fetchAllQuestions', authenticateUser, asyncHandeler(questionControllers.getAllQuestions));
 router.post('/storeQuestionResponse', authenticateUser, asyncHandeler(questionControllers.storeQuestionResponse));
 router.get('/getPlayersCards', authenticateUser, asyncHandeler(playerControllers.getPlayersCards));

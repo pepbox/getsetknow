@@ -1,3 +1,5 @@
+import { SerializedError } from "@reduxjs/toolkit";
+
 export interface IPlayer {
   id: string;
   name: string;
@@ -27,4 +29,6 @@ export interface GameState {
   currentPlayer: IPlayer | null;
   totalSteps: number;
   currentStep: number;
+  isLoading: boolean;
+  error: SerializedError | null;
 }

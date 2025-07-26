@@ -9,6 +9,8 @@ import QuestionService from '../../questions/services/question.service';
 import { Question } from '../../questions/models/question.model';
 import { Types } from 'mongoose';
 import { NextFunction } from 'express';
+import { SessionEmitters } from '../../../services/socket/sessionEmitters';
+import { Events } from '../../../services/socket/enums/Events';
 
 const playerService = new PlayerService(Player);
 const questionService = new QuestionService(Question);
@@ -48,7 +50,7 @@ export const onboardPlayer = async (
 
         res.cookie("accessToken", accessToken, setCookieOptions);
         res.cookie("refreshToken", refreshToken, { ...setCookieOptions, httpOnly: true });
-
+        SessionEmitters.toSessionAdmins(session.toString(), Events.PLAYERS_UPDATE, {});
         res.status(StatusCodes.CREATED).json({
             success: true,
             message: "Player onboarded successfully",
@@ -63,6 +65,41 @@ export const onboardPlayer = async (
                 message: "Internal Server Error",
             });
         }
+    }
+};
+
+export const fetchPlayer = async (
+    req: Request,
+    res: Response
+): Promise<void> => {
+    try {
+        const playerId = req.user?.id;
+        if (!playerId) {
+            res.status(StatusCodes.BAD_REQUEST).json({
+                success: false,
+                message: "Player ID is required",
+            });
+            return;
+        }
+
+        const player = await playerService.getPlayerById(playerId.toString());
+        if (!player) {
+            res.status(StatusCodes.NOT_FOUND).json({
+                success: false,
+                message: "Player not found",
+            });
+            return;
+        }
+
+        res.status(StatusCodes.OK).json({
+            success: true,
+            data: player,
+        });
+    } catch (error) {
+        console.error("Error fetching player:", error);
+        res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+            message: "Internal Server Error",
+        });
     }
 };
 
@@ -179,6 +216,7 @@ export const submitGuess = async (
 ): Promise<void> => {
     try {
         const { guessId, guessedPersonId } = req.body;
+        const sessionId = req.user?.sessionId;
 
         if (!guessId || !guessedPersonId) {
             res.status(StatusCodes.BAD_REQUEST).json({
@@ -217,8 +255,10 @@ export const submitGuess = async (
                 });
                 return;
             }
-        }
+            SessionEmitters.toUser(guess.personId?.toString() ?? "", Events.PLAYER_STAT_UPDATE, {});
 
+        }
+        SessionEmitters.toSessionAdmins(sessionId?.toString() ?? "", Events.PLAYERS_UPDATE, {});
         res.status(StatusCodes.OK).json({
             success: true,
             correct: isCorrect,

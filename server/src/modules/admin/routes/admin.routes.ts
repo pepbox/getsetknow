@@ -9,6 +9,7 @@ const router = express.Router();
 
 router.post('/create', asyncHandeler(adminControllers.createAdmin));
 router.post('/login', asyncHandeler(adminControllers.loginAdmin));
+router.get('/fetchAdmin', authenticateUser, asyncHandeler(adminControllers.fetchAdmin));
 router.post('/logout', authenticateUser, authorizeRoles("ADMIN"), asyncHandeler(adminControllers.logoutAdmin));
 router.get('/fetch', authenticateUser, authorizeRoles("ADMIN"), asyncHandeler(adminControllers.fetchAdmin));
 router.get('/fetchDashboardData', authenticateUser, authorizeRoles("ADMIN"), asyncHandeler(adminControllers.fetchAdminDashboardData));

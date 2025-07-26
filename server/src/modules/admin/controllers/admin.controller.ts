@@ -111,7 +111,7 @@ export const fetchAdmin = async (
 ) => {
 
     const sessionId = req.user?.sessionId;
-    if (!sessionId || req.user.sessionId != sessionId) {
+    if (!sessionId) {
         return next(new AppError("Session ID is required or does not match.", 400));
     }
 

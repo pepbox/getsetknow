@@ -1,6 +1,6 @@
 import React, { useState, useRef, KeyboardEvent, useEffect } from "react";
 import { Box, Typography, TextField, Container, Alert } from "@mui/material";
-import { useNavigate } from "react-router-dom";
+import { Navigate, useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import GlobalButton from "../../../components/ui/button";
 import { useAdminLoginMutation } from "../services/admin.Api";
@@ -126,6 +126,10 @@ const AdminLogin: React.FC = () => {
     }
   };
 
+  if (isAuthenticated) {
+    return <Navigate to="/admin/dashboard" replace />;
+  }
+
   return (
     <Box
       sx={{
@@ -248,13 +252,13 @@ const AdminLogin: React.FC = () => {
                 fontSize: { xs: "0.9rem", sm: "1rem" },
                 fontWeight: 600,
                 borderRadius: 2,
-                bgcolor: isPinComplete ? "#8e9097" : "rgba(142, 142, 147, 0.5)",
+                // bgcolor: isPinComplete ? "#8e9097" : "rgba(142, 142, 147, 0.5)",
                 minHeight: { xs: "44px", sm: "48px" },
-                "&:hover": {
-                  bgcolor: isPinComplete
-                    ? "#7a7d84"
-                    : "rgba(142, 142, 147, 0.5)",
-                },
+                // "&:hover": {
+                //   bgcolor: isPinComplete
+                //     ? "#7a7d84"
+                //     : "rgba(142, 142, 147, 0.5)",
+                // },
               }}
             >
               {isLoading ? "Logging in..." : "Login"}

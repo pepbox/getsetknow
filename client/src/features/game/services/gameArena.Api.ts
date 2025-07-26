@@ -17,6 +17,12 @@ export interface GuessSubmissionResponse {
   correct: boolean;
 }
 
+export interface Session {
+  _id: string;
+  name: string;
+  status?: string;
+}
+
 export const gameApi = api.injectEndpoints({
   endpoints: (builder) => ({
     getPlayersCards: builder.query<GameCard[], void>({
@@ -64,6 +70,14 @@ export const gameApi = api.injectEndpoints({
       providesTags: ['GameCards'],
     }),
 
+    getSession: builder.query<Session, void>({
+      query: () => ({
+        url: '/session/getSession',
+        method: 'GET',
+      }),
+      transformResponse: (response: { data: Session }) => response.data,
+      providesTags: ["GameSession"],
+    }),
   }),
 });
 
@@ -73,4 +87,5 @@ export const {
   useSubmitGuessMutation,
   useGetUserGuessesQuery,
   useGetPlayerStatsQuery,
+  useGetSessionQuery,
 } = gameApi;

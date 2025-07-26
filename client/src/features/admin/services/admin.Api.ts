@@ -24,6 +24,15 @@ export const adminApi = api.injectEndpoints({
         body: credentials,
       }),
     }),
+
+    fetchAdmin: builder.query({
+      query: () => ({
+        url: '/admin/fetchAdmin',
+        method: 'GET',
+      }),
+      transformResponse: (response: any) => response.data,
+    }),
+
     updateSession: builder.mutation({
       query: (updateData) => ({
         url: '/session/update',
@@ -41,6 +50,7 @@ export const adminApi = api.injectEndpoints({
       transformResponse: (response: any) => response.data,
       providesTags: ["AdminPlayer"],
     }),
+
     updatePlayer: builder.mutation({
       query: (updateData) => ({
         url: '/admin/updatePlayer',
@@ -68,4 +78,5 @@ export const { useAdminLoginMutation,
   useFetchDashboardDataQuery,
   useUpdatePlayerMutation,
   useLazyGetPlayerWithResponsesQuery,
+  useLazyFetchAdminQuery
 } = adminApi;

@@ -5,13 +5,12 @@ import {
   useLazyGetPlayerWithResponsesQuery,
   useUpdatePlayerMutation,
 } from "../services/admin.Api";
-import Loader from "../../../components/ui/Loader";
 import ErrorLayout from "../../../components/ui/Error";
 import Snackbar from "@mui/material/Snackbar";
 import Alert from "@mui/material/Alert";
 
 const DashboardPage: React.FC = () => {
-  const { data, isError, isLoading } = useFetchDashboardDataQuery(
+  const { data, isError } = useFetchDashboardDataQuery(
     {},
     {
       // pollingInterval: 10000, // Refetch every 30 seconds
@@ -86,21 +85,17 @@ const DashboardPage: React.FC = () => {
           });
           console.error("Failed to fetch player responses:", error);
         });
-      console.log("View responses for player:", playerId);
     },
   };
 
-  if (isLoading) {
-    return <Loader />;
-  }
   if (isError) {
     return <ErrorLayout />;
   }
   return (
     <>
       <Dashboard
-        headerData={data.headerData}
-        players={data.players}
+        headerData={data?.headerData}
+        players={data?.players}
         onChangeName={handlers?.onChangeName}
         onViewResponses={handlers?.onViewResponses}
         playerWithResponses={playerWithResponses}

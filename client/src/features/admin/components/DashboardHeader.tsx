@@ -12,6 +12,7 @@ import { DashboardHeaderProps } from "../types/interfaces";
 import { useAdminAuth } from "../services/useAdminAuth";
 import LogoutIcon from "@mui/icons-material/Logout";
 import { useUpdateSessionMutation } from "../services/admin.Api";
+import GlobalButton from "../../../components/ui/button";
 
 // Dashboard Header Component
 const DashboardHeader: React.FC<DashboardHeaderProps> = ({
@@ -97,7 +98,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
             color="black"
             textAlign={"center"}
           >
-            Admin Name - {admin?.name || data.adminName || "Admin"}
+            Admin Name - {admin?.name || data?.adminName || "Admin"}
           </Typography>
         </Box>
 
@@ -109,50 +110,26 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
             flexWrap: "wrap",
           }}
         >
-          <Button
-            variant="contained"
-            color="inherit" 
+          <GlobalButton
+            fullWidth={false}
             sx={{
               display: data?.gameStatus === "playing" ? "none" : "block",
-              justifySelf: "flex-end",
-              backgroundColor: "#000",
-              color: "#fff",
-              borderRadius: "8px",
-              textTransform: "none",
-              fontWeight: 500,
-              boxShadow: "none",
-              "&:hover": {
-                backgroundColor: "#222",
-              },
             }}
             onClick={() => {
               if (onGameStatusChange) onGameStatusChange();
             }}
           >
             Start Game
-          </Button>
+          </GlobalButton>
 
-          <Button
-            variant="contained"
-            color="inherit"
-            sx={{
-              justifySelf: "flex-end",
-              backgroundColor: "#000",
-              color: "#fff",
-              borderRadius: "8px",
-              textTransform: "none",
-              fontWeight: 500,
-              boxShadow: "none",
-              "&:hover": {
-                backgroundColor: "#222",
-              },
-            }}
+          <GlobalButton
+            fullWidth={false}
             onClick={() => {
               handleSesssionEnd();
             }}
           >
             End Session
-          </Button>
+          </GlobalButton>
           <FormControlLabel
             control={
               <Switch

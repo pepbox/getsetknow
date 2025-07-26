@@ -7,11 +7,13 @@ interface GlobalButtonProps {
   children: React.ReactNode;
   fullWidth?: boolean;
   sx?: object;
+  onKeyDown?: (event: React.KeyboardEvent<HTMLButtonElement>) => void;
 }
 
 const GlobalButton: React.FC<GlobalButtonProps> = ({
   onClick,
   disabled,
+  onKeyDown,
   children,
   fullWidth = true,
   sx = {},
@@ -22,6 +24,7 @@ const GlobalButton: React.FC<GlobalButtonProps> = ({
       type="submit"
       fullWidth={fullWidth}
       onClick={onClick}
+      onKeyDown={onKeyDown}
       disabled={disabled}
       color={"secondary"}
       sx={{

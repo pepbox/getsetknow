@@ -10,10 +10,6 @@ import {
   initializeAuth 
 } from '../services/adminSlice';
 
-/**
- * Custom hook for admin authentication
- * Provides admin state and authentication utilities
- */
 export const useAdminAuth = () => {
   const dispatch = useDispatch();
   

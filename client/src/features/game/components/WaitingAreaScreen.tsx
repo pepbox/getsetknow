@@ -3,6 +3,7 @@ import { Box, Avatar, Typography } from "@mui/material";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { useAppSelector } from "../../../app/hooks";
+import { RootState } from "../../../app/store";
 
 interface Player {
   id: number;
@@ -21,15 +22,14 @@ const WaitingAreaScreen: React.FC<CircularPlayerAnimationProps> = ({
   duration = 10,
   size = (Math.min(window.innerWidth, 480) / 2 - 25) / 2,
 }) => {
-  const isGameStarted =
-    useAppSelector((state) => state.game.isGameStarted) || true;
+  const isGameStarted = useAppSelector(
+    (state: RootState) => state.game.isGameStarted
+  );
   const navigate = useNavigate();
   useEffect(() => {
+    console.log("isGameStarted:", isGameStarted);
     if (isGameStarted) {
-      const timeout = setTimeout(() => {
-        navigate("/game/arena");
-      }, 6000);
-      return () => clearTimeout(timeout);
+      navigate("/game/arena");
     }
   }, [isGameStarted]);
 

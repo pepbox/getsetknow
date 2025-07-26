@@ -97,22 +97,41 @@ const adminSlice = createSlice({
 
         builder
             .addMatcher(
+                adminApi.endpoints.fetchAdmin.matchPending,
+                (state) => {
+                    state.error = null;
+                    state.isLoading = true;
+                }
+            )
+            .addMatcher(
+                adminApi.endpoints.fetchAdmin.matchFulfilled,
+                (state) => {
+                    state.isLoading = false;
+                    state.isAuthenticated = true;
+                }
+            )
+            .addMatcher(
+                adminApi.endpoints.fetchAdmin.matchRejected,
+                (state, { error }) => {
+                    state.error = error;
+                    state.isLoading = false;
+                }
+            );
+        builder
+            .addMatcher(
                 adminApi.endpoints.updateSession.matchPending,
                 (state) => {
-                    state.isLoading = true;
                     state.error = null;
                 }
             )
             .addMatcher(
                 adminApi.endpoints.updateSession.matchFulfilled,
-                (state) => {
-                    state.isLoading = false;
+                () => {
                 }
             )
             .addMatcher(
                 adminApi.endpoints.updateSession.matchRejected,
                 (state, { error }) => {
-                    state.isLoading = false;
                     state.error = error;
                 }
             );
@@ -121,20 +140,17 @@ const adminSlice = createSlice({
             .addMatcher(
                 adminApi.endpoints.fetchDashboardData.matchPending,
                 (state) => {
-                    state.isLoading = true;
                     state.error = null;
                 }
             )
             .addMatcher(
                 adminApi.endpoints.fetchDashboardData.matchFulfilled,
-                (state) => {
-                    state.isLoading = false;
+                () => {
                 }
             )
             .addMatcher(
                 adminApi.endpoints.fetchDashboardData.matchRejected,
                 (state, { error }) => {
-                    state.isLoading = false;
                     state.error = error;
                 }
             );
@@ -143,43 +159,40 @@ const adminSlice = createSlice({
             .addMatcher(
                 adminApi.endpoints.updatePlayer.matchPending,
                 (state) => {
-                    state.isLoading = true;
                     state.error = null;
                 }
             )
             .addMatcher(
                 adminApi.endpoints.updatePlayer.matchFulfilled,
-                (state) => {
-                    state.isLoading = false;
+                () => {
                 }
             )
             .addMatcher(
                 adminApi.endpoints.updatePlayer.matchRejected,
                 (state, { error }) => {
-                    state.isLoading = false;
                     state.error = error;
                 }
             );
-            
+
 
         builder
             .addMatcher(
                 adminApi.endpoints.getPlayerWithResponses.matchPending,
                 (state) => {
-                    state.isLoading = true;
+                    // state.isLoading = true;
                     state.error = null;
                 }
             )
             .addMatcher(
                 adminApi.endpoints.getPlayerWithResponses.matchFulfilled,
-                (state) => {
-                    state.isLoading = false;
+                () => {
+                    // state.isLoading = false;
                 }
             )
             .addMatcher(
                 adminApi.endpoints.getPlayerWithResponses.matchRejected,
                 (state, { error }) => {
-                    state.isLoading = false;
+                    // state.isLoading = false;
                     state.error = error;
                 }
             );

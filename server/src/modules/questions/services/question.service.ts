@@ -30,7 +30,15 @@ class QuestionService {
         question: string;
         player: Types.ObjectId;
         response: string;
-    }): Promise<IQuestionResponse> {
+    }): Promise<IQuestionResponse | null> {
+        // Check if a response already exists for this player and question
+        const existing = await QuestionResponse.findOne({
+            question: data.question,
+            player: data.player,
+        });
+        if (existing) {
+            return existing; // Do not store duplicate response
+        }
         const questionResponse = new QuestionResponse({
             question: data.question,
             player: data.player,

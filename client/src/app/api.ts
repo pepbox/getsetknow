@@ -79,6 +79,7 @@ export const api = createApi({
     tagTypes: [
         "GameCards",
         "AdminPlayer",
+        "GameSession"
     ],
     endpoints: () => ({}),
 });
