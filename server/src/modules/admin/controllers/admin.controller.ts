@@ -8,6 +8,7 @@ import PlayerService from '../../players/services/player.service';
 import { Player } from '../../players/models/player.model';
 import QuestionService from '../../questions/services/question.service';
 import { Question } from '../../questions/models/question.model';
+import { SessionStatus } from '../../session/types/enums';
 
 const adminService = new AdminServices();
 const sessionService = new SessionService();
@@ -75,7 +76,13 @@ export const loginAdmin = async (
             sessionId,
             password,
         });
-
+        const session = await sessionService.fetchSessionById(sessionId);
+        if (!session) {
+            return next(new AppError("Session not found.", 404));
+        }
+        if (session.status === SessionStatus.ENDED) {
+            return next(new AppError("Session has ended. Admin cannot log in.", 403));
+        }
         if (!admin) {
             return next(new AppError("Invalid session ID or password.", 401));
         }

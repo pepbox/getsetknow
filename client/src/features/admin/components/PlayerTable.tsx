@@ -200,7 +200,12 @@ const PlayerTable: React.FC<PlayerTableProps> = ({
       visible: (gameStatus) => gameStatus !== "playing",
       render: (player) => (
         <Chip
-          label={player.currentStatus || "pending"}
+          label={
+            player.questionsAnswered.split("/")[0] ===
+            player.questionsAnswered.split("/")[1]
+              ? "waiting"
+              : "pending"
+          }
           size="small"
           color={player.currentStatus === "pending" ? "warning" : "default"}
         />

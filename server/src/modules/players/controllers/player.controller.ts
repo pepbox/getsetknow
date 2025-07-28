@@ -14,6 +14,7 @@ import { Events } from '../../../services/socket/enums/Events';
 import { deleteFromS3 } from '../../../services/fileUpload';
 import SessionService from '../../session/services/session.service';
 import FileService from '../../files/services/fileService';
+import { SessionStatus } from '../../session/types/enums';
 
 const playerService = new PlayerService(Player);
 const questionService = new QuestionService(Question);
@@ -42,6 +43,7 @@ export const onboardPlayer = async (
             });
             return;
         }
+
         const fileService = new FileService();
 
         const sessionDoc = await SessionService.fetchSessionById(session);
@@ -49,6 +51,12 @@ export const onboardPlayer = async (
             deleteFromS3(req.file.key!);
             return next(new AppError("Session not found.", 404));
         }
+
+        if (sessionDoc.status === SessionStatus.ENDED) {
+            deleteFromS3(req.file.key!);
+            return next(new AppError("Session has ended. Player cannot be onboarded.", 403));
+        }
+
         const profileImageInfo = {
             originalName: req.file.originalname!,
             fileName: req.file.key!,

@@ -5,12 +5,13 @@ import ErrorLayout from "../../../components/ui/Error";
 import QuestionnaireScreen from "../components/QuestionnaireScreen";
 import { useAppDispatch, useAppSelector } from "../../../app/hooks";
 import { setCurrentStep, setTotalSteps } from "../../game/services/gameSlice";
-import { Navigate } from "react-router-dom";
+import { Navigate, useParams } from "react-router-dom";
 import { RootState } from "../../../app/store";
 
 const Questionnaire: React.FC = () => {
   const { data: questions, isError, isLoading } = useFetchAllQuestionsQuery({});
   const dispatch = useAppDispatch();
+  const { questionIndex } = useParams<{ questionIndex: string }>();
   const isGameStarted = useAppSelector(
     (state: RootState) => state.game.isGameStarted
   );
@@ -34,8 +35,17 @@ const Questionnaire: React.FC = () => {
     return <Navigate to={`/game/${sessionId}/arena`} replace />;
   }
 
+  // If no question index is provided, redirect to first question
+  if (!questionIndex && questions && questions.length > 0) {
+    return <Navigate to={`/game/${sessionId}/questionnaire/0`} replace />;
+  }
+
   return (
-    <QuestionnaireScreen questions={questions} sessionId={sessionId || ""} />
+    <QuestionnaireScreen 
+      questions={questions} 
+      sessionId={sessionId || ""} 
+      initialQuestionIndex={questionIndex ? parseInt(questionIndex, 10) : 0}
+    />
   );
 };
 
