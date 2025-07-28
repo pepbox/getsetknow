@@ -87,7 +87,7 @@ const PlayerResponsesModal: React.FC<PlayerResponsesModalProps> = ({
             <Avatar
               src={playerWithResponses.player.profilePhoto}
               alt={playerWithResponses.player.name}
-              sx={{ width: 40, height: 40 }}
+              sx={{ width: 100, height: 100 }}
             />
           )}
           <Box>

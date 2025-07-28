@@ -202,12 +202,13 @@ export const fetchAdminDashboardData = async (
 
             // Total score
             const totalScore = player.score || 0;
+
             return {
                 id: player._id.toString(),
                 name: player.name,
                 questionsAnswered,
                 currentStatus,
-                rank: 0, // Placeholder, will be set after sorting
+                rank: 0,
                 peopleYouKnow,
                 peopleWhoKnowYou,
                 totalScore,
@@ -216,16 +217,13 @@ export const fetchAdminDashboardData = async (
 
         let playersData = await Promise.all(playerDataPromises);
 
-        // Sort players by totalScore descending for rank
         playersData = playersData.sort((a, b) => b.totalScore - a.totalScore);
 
-        // Assign ranks
         playersData = playersData.map((player, idx) => ({
             ...player,
             rank: idx + 1,
         }));
 
-        // Prepare response
         const data = {
             headerData: {
                 adminName: admin.name,

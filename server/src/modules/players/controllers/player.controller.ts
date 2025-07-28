@@ -11,32 +11,59 @@ import { Types } from 'mongoose';
 import { NextFunction } from 'express';
 import { SessionEmitters } from '../../../services/socket/sessionEmitters';
 import { Events } from '../../../services/socket/enums/Events';
+import { deleteFromS3 } from '../../../services/fileUpload';
+import SessionService from '../../session/services/session.service';
+import FileService from '../../files/services/fileService';
 
 const playerService = new PlayerService(Player);
 const questionService = new QuestionService(Question);
+const fileService = new FileService();
+
 
 export const onboardPlayer = async (
     req: Request,
-    res: Response
+    res: Response,
+    next: NextFunction
 ): Promise<void> => {
     try {
         const { name,
             session,
-            // profilePhoto 
         } = req.body;
-        // const session = req.user?.sessionId;
+
+        if (!req.file) {
+            return next(new AppError("Profile image is required.", 400));
+        }
 
         if (!name || !session) {
+            deleteFromS3(req.file.key!);
             res.status(StatusCodes.BAD_REQUEST).json({
                 success: false,
                 message: "Name and session are required",
             });
             return;
         }
+        const fileService = new FileService();
+
+        const sessionDoc = await SessionService.fetchSessionById(session);
+        if (!sessionDoc) {
+            deleteFromS3(req.file.key!);
+            return next(new AppError("Session not found.", 404));
+        }
+        const profileImageInfo = {
+            originalName: req.file.originalname!,
+            fileName: req.file.key!,
+            size: req.file.size!,
+            mimetype: req.file.mimetype!,
+            location: req.file.location!,
+            bucket: req.file.bucket!,
+            etag: req.file.etag!,
+        };
+
+        const profileImage = await fileService.uploadFile(profileImageInfo);
 
         const playerData = {
             name,
-            // profilePhoto,
+            profilePhoto: profileImage._id,
             session,
         };
 
@@ -323,11 +350,10 @@ export const updatePlayer = async (
     next: NextFunction
 ) => {
     try {
-        const { playerId, name, profilePhoto, score } = req.body;
+        const { playerId, name, score } = req.body;
 
-        const updateData: Partial<{ name: string; profilePhoto: string; score: number }> = {};
+        const updateData: Partial<{ name: string; score: number }> = {};
         if (name !== undefined) updateData.name = name;
-        if (profilePhoto !== undefined) updateData.profilePhoto = profilePhoto;
         if (score !== undefined) updateData.score = score;
 
         if (!playerId) {
@@ -392,13 +418,19 @@ export const getPlayerWithResponses = async (
             }
         }
 
+        let profilePicture = "";
+        if (player.profilePhoto) {
+            const file = await fileService.getFileById(player.profilePhoto.toString());
+            profilePicture = file?.location || "";
+        }
+
         res.status(StatusCodes.OK).json({
             success: true,
             data: {
                 player: {
                     id: player._id,
                     name: player.name,
-                    profilePhoto: player.profilePhoto,
+                    profilePhoto: profilePicture,
                     score: player.score,
                 },
                 responses: mappedResponses,

@@ -65,7 +65,7 @@ const GameArenaPage: React.FC = () => {
   } = useGetUserGuessesQuery(
     {},
     {
-      skip: isLoadingCards || !gameCards.length, // <- Important part
+      skip: isLoadingCards || !gameCards.length,
     }
   );
 

@@ -1,10 +1,10 @@
-import React, { useRef, useCallback, useState } from "react";
+import React, { useRef, useCallback, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Box, Typography } from "@mui/material";
+import { CloudUpload } from "@mui/icons-material";
 import Webcam from "react-webcam";
 import GlobalButton from "../../../components/ui/button";
 import GameHeader from "../../../components/layout/GameHeader";
-// import ProgressComponent from "../../../components/layout/ProgressComponent";
 import { useAppDispatch } from "../../../app/hooks";
 import { setCurrentStep } from "../../game/services/gameSlice";
 import { useOnboardPlayerMutation } from "../services/player.api";
@@ -14,6 +14,7 @@ const CaptureScreen: React.FC = () => {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const webcamRef = useRef<Webcam>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
   const [OnboardPlayer] = useOnboardPlayerMutation();
   const playerName = useAppSelector((state) => state.player.player?.name);
@@ -24,24 +25,64 @@ const CaptureScreen: React.FC = () => {
       setCapturedImage(imageSrc);
       dispatch(setCurrentStep(2));
     }
-  }, [webcamRef]);
+  }, [webcamRef, dispatch]);
 
-  const handleConfirm = () => {
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      // Create preview URL for uploaded file
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        if (e.target?.result) {
+          setCapturedImage(e.target.result as string);
+          dispatch(setCurrentStep(2));
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleUploadClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  // Cleanup preview URL when component unmounts
+  useEffect(() => {
+    return () => {
+      if (capturedImage && capturedImage.startsWith('blob:')) {
+        URL.revokeObjectURL(capturedImage);
+      }
+    };
+  }, [capturedImage]);
+
+  const handleConfirm = async () => {
     if (!capturedImage) return;
-    OnboardPlayer({
-      name: playerName,
-      profilePhoto: capturedImage,
-      session: "687dedc3fbc85e571416e6c9",
-    })
-      .unwrap()
-      .then(() => {
-        console.log("Player onboarded successfully");
-        dispatch(setCurrentStep(3));
-        navigate("/game/intro");
-      })
-      .catch((error) => {
-        console.error("Error onboarding player:", error);
-      });
+    
+    try {
+      // Convert base64 to File object
+      const response = await fetch(capturedImage);
+      const blob = await response.blob();
+      const file = new File([blob], 'profile-picture.jpg', { type: 'image/jpeg' });
+      
+      // Create FormData
+      const formData = new FormData();
+      formData.append('name', playerName || '');
+      formData.append('session', "687dedc3fbc85e571416e6c9");
+      formData.append('profilePicture', file);
+      
+      OnboardPlayer(formData)
+        .unwrap()
+        .then(() => {
+          console.log("Player onboarded successfully");
+          dispatch(setCurrentStep(3));
+          navigate("/game/intro");
+        })
+        .catch((error) => {
+          console.error("Error onboarding player:", error);
+        });
+    } catch (error) {
+      console.error("Error preparing image data:", error);
+    }
   };
 
   const handleRetake = () => {
@@ -56,9 +97,7 @@ const CaptureScreen: React.FC = () => {
         flexDirection: "column",
       }}
     >
-      {/* Header */}
       <GameHeader />
-      {/* <ProgressComponent /> */}
 
       <Box
         sx={{
@@ -162,13 +201,36 @@ const CaptureScreen: React.FC = () => {
 
         {/* Buttons */}
         <Box sx={{ width: "100%", px: "20px" }}>
+          {/* Hidden file input */}
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            onChange={handleFileUpload}
+            style={{ display: 'none' }}
+          />
+          
           {capturedImage ? (
             <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
               <GlobalButton onClick={handleConfirm}>Confirm</GlobalButton>
               <GlobalButton onClick={handleRetake}>Retake</GlobalButton>
             </Box>
           ) : (
-            <GlobalButton onClick={capture}>Capture</GlobalButton>
+            <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+              <GlobalButton onClick={capture}>Capture</GlobalButton>
+              <GlobalButton 
+                onClick={handleUploadClick}
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: 1
+                }}
+              >
+                <CloudUpload sx={{ fontSize: 16 }} />
+                Upload Photo
+              </GlobalButton>
+            </Box>
           )}
         </Box>
       </Box>
