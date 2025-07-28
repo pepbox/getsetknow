@@ -3,7 +3,7 @@ import { api } from "../../../app/api";
 export interface GameCard {
   guessId: string;
   guessedPersonId?: string;
-  responses: Record<string, string>; 
+  responses: Record<string, string>;
 }
 
 export interface Player {
@@ -15,6 +15,9 @@ export interface Player {
 export interface GuessSubmissionResponse {
   success: boolean;
   correct: boolean;
+  profilePhoto?: string;
+  name?: string;
+  attempts?: number;
 }
 
 export interface Session {

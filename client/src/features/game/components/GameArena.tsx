@@ -30,6 +30,9 @@ interface GameArenaProps {
     currentGuessId: string;
     isLastGuessCorrect?: boolean;
     gameCompleted: boolean;
+    lastGuessPlayerPhoto?: string;
+    lastGuessPlayerName?: string;
+    lastGuessAttempts?: number;
   };
   progressValue: number;
   selectedPersonId: string | null;
@@ -236,22 +239,45 @@ const GameArena: React.FC<GameArenaProps> = ({
             justifyContent: "center",
           }}
         >
-          <Box
-            position={"absolute"}
-            bottom={0}
-            component="img"
-            sx={{
-              width: "300px",
-              height: "300px",
-              objectFit: "contain",
-            }}
-            src={
-              data?.isLastGuessCorrect
-                ? "/src/assets/guessedRight.png"
-                : "/src/assets/guessedWrong.png"
-            }
-            alt=" "
-          />
+          {data?.isLastGuessCorrect ? (
+            // Show player's actual photo when guess is correct
+            data?.lastGuessPlayerPhoto ? (
+              <Avatar
+                src={data.lastGuessPlayerPhoto}
+                sx={{
+                  width: 200,
+                  height: 200,
+                  border: "4px solid white",
+                }}
+              />
+            ) : (
+              <Avatar
+                sx={{
+                  width: 200,
+                  height: 200,
+                  border: "4px solid white",
+                  fontSize: "3rem",
+                  backgroundColor: "secondary.main",
+                }}
+              >
+                {data?.lastGuessPlayerName?.charAt(0) || "?"}
+              </Avatar>
+            )
+          ) : (
+            // Show wrong guess image
+            <Box
+              position={"absolute"}
+              bottom={0}
+              component="img"
+              sx={{
+                width: "300px",
+                height: "300px",
+                objectFit: "contain",
+              }}
+              src="/src/assets/guessedWrong.png"
+              alt=" "
+            />
+          )}
         </Box>
 
         <Box
@@ -276,12 +302,19 @@ const GameArena: React.FC<GameArenaProps> = ({
               <>
                 Wohoo! You guessed it right.
                 <br />
+                {data?.lastGuessPlayerName && (
+                  <>It was {data.lastGuessPlayerName}!</>
+                )}
+                <br />
                 Thanks for the participation.
               </>
             ) : (
               <>
                 Oops! Better luck next time.
                 <br />
+                {data?.lastGuessAttempts && (
+                  <>Attempts: {data.lastGuessAttempts}<br /></>
+                )}
                 Keep trying!
               </>
             )}
@@ -309,7 +342,7 @@ const GameArena: React.FC<GameArenaProps> = ({
                 },
               }}
             >
-              Replay
+              Retry
             </GlobalButton>
           )}
         </Box>

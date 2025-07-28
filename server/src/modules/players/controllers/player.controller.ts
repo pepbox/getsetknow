@@ -279,6 +279,7 @@ export const submitGuess = async (
             guessedPersonId: guessedPersonId
         });
 
+        let profilePicture = "";
         if (isCorrect) {
             // Update player score if the guess is correct
             const attempts = guess.attempts ?? 0;
@@ -291,13 +292,20 @@ export const submitGuess = async (
                 return;
             }
             SessionEmitters.toUser(guess.personId?.toString() ?? "", Events.PLAYER_STAT_UPDATE, {});
-
+            if (player.profilePhoto) {
+                const file = await fileService.getFileById(player.profilePhoto.toString());
+                profilePicture = file?.location || "";
+            }
         }
         SessionEmitters.toSessionAdmins(sessionId?.toString() ?? "", Events.PLAYERS_UPDATE, {});
         res.status(StatusCodes.OK).json({
             success: true,
             correct: isCorrect,
+            profilePhoto: profilePicture,
+            name: isCorrect ? (await playerService.getPlayerById(guess.personId.toString()))?.name : "",
+            attempts: guess.attempts || 0 + 1,
         });
+
     } catch (error) {
         console.error("Error submitting guess:", error);
         res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({

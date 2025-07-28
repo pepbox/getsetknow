@@ -40,7 +40,7 @@ const AdminLogin: React.FC = () => {
   useEffect(() => {
     dispatch(initializeAuth());
     if (isAuthenticated) {
-      navigate("/admin/dashboard");
+      navigate(`/admin/${sessionId}/dashboard`);
     }
   }, [dispatch, isAuthenticated, navigate]);
 

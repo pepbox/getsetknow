@@ -7,6 +7,7 @@ import { SessionEmitters } from "../../../services/socket/sessionEmitters";
 import { Events } from "../../../services/socket/enums/Events";
 import AdminServices from "../../admin/services/admin.service";
 import { Types } from "mongoose";
+import axios from "axios";
 
 
 const sessionService = new SessionService();
@@ -38,6 +39,15 @@ export const updateSession = async (
             return next(new AppError("Session not found.", 404));
         }
         SessionEmitters.toSession(sessionId.toString(), Events.SESSION_UPDATE, {});
+
+        await axios.post(
+            `${process.env.SUPER_ADMIN_SERVER_URL}/update`,
+            {
+                gameSessionId: sessionId.toString(),
+                status: "ENDED",
+                completedOn: new Date().toISOString(),
+            }
+        );
         res.status(200).json({
             message: "Session updated successfully.",
             data: {

@@ -35,7 +35,10 @@ const AdminMain = () => {
         <Route
           path="/"
           element={
-            <AuthWrapper userType={"admin"} redirection="/admin/login" />
+            <AuthWrapper
+              userType={"admin"}
+              redirection={`/admin/${sessionId}/login`}
+            />
           }
         >
           <Route path="/dashboard" element={<DashboardPage />} />

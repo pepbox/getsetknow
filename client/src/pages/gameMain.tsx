@@ -44,12 +44,18 @@ const GameMain = () => {
         <Route
           path="/"
           element={
-            <AuthWrapper userType={"player"} redirection={`/game/${sessionId}`} />
+            <AuthWrapper
+              userType={"player"}
+              redirection={`/game/${sessionId}`}
+            />
           }
         >
           <Route path="/intro" element={<IntroScreen />} />
           <Route path="/questionnaire" element={<Questionnaire />} />
-          <Route path="/questionnaire/:questionIndex" element={<Questionnaire />} />
+          <Route
+            path="/questionnaire/:questionIndex"
+            element={<Questionnaire />}
+          />
           <Route path="/waiting" element={<WaitingAreaScreen />} />
           <Route path="/arena" element={<GameArenaPage />} />
         </Route>

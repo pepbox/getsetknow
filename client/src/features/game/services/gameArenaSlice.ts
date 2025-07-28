@@ -6,6 +6,9 @@ export interface GuessResult {
   correct: boolean | null;
   guessedPersonId: string;
   actualPersonId?: string;
+  profilePhoto?: string;
+  name?: string;
+  attempts?: number;
 }
 
 export interface GameArenaState {
@@ -274,9 +277,8 @@ const gameArenaSlice = createSlice({
         (state, { payload }) => {
           state.isLoading = false;
 
-
           if (payload.correct) {
-            state.totalScore += 10;
+            state.totalScore += 100;
             state.peopleIKnow += 1;
 
             // Add to correctly guessed cards
@@ -285,10 +287,13 @@ const gameArenaSlice = createSlice({
               state.correctlyGuessedCards.push(currentCard.guessId);
             }
           }
-          // Set the guess result
+          // Set the guess result with additional data
           state.lastGuessResult = {
             correct: payload.correct,
             guessedPersonId: state.currentGuess.guessedPersonId || '',
+            profilePhoto: payload.profilePhoto,
+            name: payload.name,
+            attempts: payload.attempts || 0, 
           };
         }
       )
