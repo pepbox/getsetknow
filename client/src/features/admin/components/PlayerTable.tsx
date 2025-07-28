@@ -21,6 +21,7 @@ import {
   useMediaQuery,
   Stack,
   Divider,
+  TableSortLabel,
 } from "@mui/material";
 import React, { useState } from "react";
 import { PlayerTableProps } from "../types/interfaces";
@@ -29,6 +30,7 @@ import PlayerResponsesModal from "./PlayerResponsesModal"; // Import the modal c
 type Column = {
   key: string;
   label: string;
+  sortable?: boolean;
   visible: (gameStatus: string) => boolean;
   render: (
     player: any,
@@ -45,13 +47,15 @@ const PlayerTable: React.FC<PlayerTableProps> = ({
   transaction,
   onChangeName,
   onViewResponses,
-  playerWithResponses = null, // Default value for playerWithResponses
-  loadingResponses = false, // Add loading state prop
+  playerWithResponses = null,
+  loadingResponses = false,
 }) => {
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedPlayerId, setSelectedPlayerId] = useState<string>("");
   const [newName, setNewName] = useState<string>("");
   const [responsesModalOpen, setResponsesModalOpen] = useState(false);
+  const [sortField, setSortField] = useState<string>("");
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
 
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
@@ -88,16 +92,59 @@ const PlayerTable: React.FC<PlayerTableProps> = ({
     setResponsesModalOpen(false);
   };
 
+  const handleSort = (field: string) => {
+    if (sortField === field) {
+      setSortDirection(sortDirection === "asc" ? "desc" : "asc");
+    } else {
+      setSortField(field);
+      setSortDirection("asc");
+    }
+  };
+
+  const sortedPlayers = React.useMemo(() => {
+    if (!sortField || !players) return players;
+
+    return [...players].sort((a, b) => {
+      let aValue = (a as any)[sortField];
+      let bValue = (b as any)[sortField];
+
+      if (typeof aValue === "number" && typeof bValue === "number") {
+        return sortDirection === "asc" ? aValue - bValue : bValue - aValue;
+      }
+
+      // Handle string values
+      if (typeof aValue === "string" && typeof bValue === "string") {
+        const comparison = aValue
+          .toLowerCase()
+          .localeCompare(bValue.toLowerCase());
+        return sortDirection === "asc" ? comparison : -comparison;
+      }
+
+      // Handle mixed or undefined values
+      if (aValue === undefined && bValue === undefined) return 0;
+      if (aValue === undefined) return 1;
+      if (bValue === undefined) return -1;
+
+      // Convert to string for comparison
+      const aStr = String(aValue).toLowerCase();
+      const bStr = String(bValue).toLowerCase();
+      const comparison = aStr.localeCompare(bStr);
+      return sortDirection === "asc" ? comparison : -comparison;
+    });
+  }, [players, sortField, sortDirection]);
+
   const columns: Column[] = [
     {
       key: "name",
       label: "Player Name",
+      sortable: true,
       visible: () => true,
       render: (player) => player.name,
     },
     {
       key: "changeName",
       label: "Change name",
+      sortable: false,
       visible: (gameStatus) => gameStatus !== "playing",
       render: (player, _onChangeName, _, transaction, openModal) => (
         <IconButton
@@ -112,30 +159,35 @@ const PlayerTable: React.FC<PlayerTableProps> = ({
     {
       key: "questionsAnswered",
       label: "Questions Answered",
+      sortable: true,
       visible: (gameStatus) => gameStatus !== "playing",
       render: (player) => player.questionsAnswered,
     },
     {
       key: "rank",
       label: "Rank",
+      sortable: true,
       visible: (gameStatus) => gameStatus === "playing",
       render: (player) => player.rank,
     },
     {
       key: "peopleYouKnow",
       label: "People you know",
+      sortable: true,
       visible: (gameStatus) => gameStatus === "playing",
       render: (player) => player.peopleYouKnow,
     },
     {
       key: "peopleWhoKnowYou",
       label: "People who know you",
+      sortable: true,
       visible: (gameStatus) => gameStatus === "playing",
       render: (player) => player.peopleWhoKnowYou,
     },
     {
       key: "totalScore",
       label: "Total Score",
+      sortable: true,
       visible: (gameStatus) => gameStatus === "playing",
       render: (player) => (
         <Typography fontWeight="medium">{player.totalScore}</Typography>
@@ -144,6 +196,7 @@ const PlayerTable: React.FC<PlayerTableProps> = ({
     {
       key: "currentStatus",
       label: "Current Status",
+      sortable: true,
       visible: (gameStatus) => gameStatus !== "playing",
       render: (player) => (
         <Chip
@@ -156,6 +209,7 @@ const PlayerTable: React.FC<PlayerTableProps> = ({
     {
       key: "viewResponses",
       label: "View Responses",
+      sortable: false,
       visible: (gameStatus) => gameStatus !== "playing",
       render: (player) => (
         <Button
@@ -175,9 +229,25 @@ const PlayerTable: React.FC<PlayerTableProps> = ({
 
   return (
     <>
+      {!isMobile && visibleColumns.some((col) => col.sortable) && (
+        <Box mb={1}>
+          <Typography
+            variant="caption"
+            color="text.secondary"
+            sx={{
+              fontStyle: "italic",
+              display: "flex",
+              alignItems: "center",
+              gap: 0.5,
+            }}
+          >
+            💡 Click on column headers to sort the table
+          </Typography>
+        </Box>
+      )}
       {isMobile ? (
         <Stack spacing={2}>
-          {players?.map((player, index) => (
+          {sortedPlayers?.map((player, index) => (
             <Paper
               key={player.id}
               elevation={0}
@@ -227,13 +297,41 @@ const PlayerTable: React.FC<PlayerTableProps> = ({
               <TableRow>
                 {visibleColumns.map((col) => (
                   <TableCell key={col.key} sx={{ fontWeight: "bold" }}>
-                    {col.label}
+                    {col.sortable ? (
+                      <TableSortLabel
+                        active={sortField === col.key}
+                        direction={
+                          sortField === col.key ? sortDirection : "asc"
+                        }
+                        onClick={() => handleSort(col.key)}
+                        sx={{
+                          cursor: "pointer",
+                          "&:hover": {
+                            color: "primary.main",
+                          },
+                          "&.Mui-active": {
+                            color: "primary.main",
+                            fontWeight: "bold",
+                          },
+                          "& .MuiTableSortLabel-icon": {
+                            opacity: sortField === col.key ? 1 : 0.5,
+                          },
+                          "&:hover .MuiTableSortLabel-icon": {
+                            opacity: 1,
+                          },
+                        }}
+                      >
+                        {col.label}
+                      </TableSortLabel>
+                    ) : (
+                      col.label
+                    )}
                   </TableCell>
                 ))}
               </TableRow>
             </TableHead>
             <TableBody>
-              {players?.map((player, index) => (
+              {sortedPlayers?.map((player, index) => (
                 <TableRow
                   key={player.id}
                   sx={{ backgroundColor: getRowColor(index) }}

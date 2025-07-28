@@ -17,6 +17,8 @@ import FileService from '../../files/services/fileService';
 
 const playerService = new PlayerService(Player);
 const questionService = new QuestionService(Question);
+const fileService = new FileService();
+
 
 export const onboardPlayer = async (
     req: Request,
@@ -416,13 +418,19 @@ export const getPlayerWithResponses = async (
             }
         }
 
+        let profilePicture = "";
+        if (player.profilePhoto) {
+            const file = await fileService.getFileById(player.profilePhoto.toString());
+            profilePicture = file?.location || "";
+        }
+
         res.status(StatusCodes.OK).json({
             success: true,
             data: {
                 player: {
                     id: player._id,
                     name: player.name,
-                    profilePhoto: player.profilePhoto,
+                    profilePhoto: profilePicture,
                     score: player.score,
                 },
                 responses: mappedResponses,
