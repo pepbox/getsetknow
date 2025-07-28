@@ -3,7 +3,7 @@ import { api } from "../../../app/api";
 export interface GameCard {
   guessId: string;
   guessedPersonId?: string;
-  responses: Record<string, string>; // keyAspect -> response mapping
+  responses: Record<string, string>; 
 }
 
 export interface Player {

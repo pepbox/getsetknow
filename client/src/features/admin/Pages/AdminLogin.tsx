@@ -12,6 +12,7 @@ import {
   initializeAuth,
 } from "../services/adminSlice";
 import { RootState } from "../../../app/store";
+import { useAppSelector } from "../../../app/hooks";
 
 const AdminLogin: React.FC = () => {
   const [pin, setPin] = useState<string[]>(["", "", "", ""]);
@@ -19,6 +20,7 @@ const AdminLogin: React.FC = () => {
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  const { sessionId } = useAppSelector((state: RootState) => state.game);
 
   // Redux state
   const isAuthenticated = useSelector((state: RootState) =>
@@ -102,13 +104,13 @@ const AdminLogin: React.FC = () => {
     try {
       const result = await adminLogin({
         password: fullPin,
-        sessionId: "687dedc3fbc85e571416e6c9",
+        sessionId: sessionId || "",
       }).unwrap();
 
       if (result.success) {
         // The Redux slice will handle the state updates via extraReducers
         // Navigate to admin dashboard
-        navigate("/admin/dashboard");
+        navigate(`/admin/${sessionId}/dashboard`);
       } else {
         setLocalError(result.message || "Login failed");
       }
@@ -127,7 +129,7 @@ const AdminLogin: React.FC = () => {
   };
 
   if (isAuthenticated) {
-    return <Navigate to="/admin/dashboard" replace />;
+    return <Navigate to={`/admin/${sessionId}/dashboard`} replace />;
   }
 
   return (

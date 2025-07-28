@@ -136,10 +136,10 @@ export const getPlayersCards = async (
     res: Response
 ): Promise<void> => {
     try {
-        const sessionId = req.user?.sessionId || "687dedc3fbc85e571416e6c9";
+        const sessionId = req.user?.sessionId;
         const currentUserId = req.user?.id;
 
-        if (!sessionId) {
+        if (!sessionId || !currentUserId) {
             res.status(StatusCodes.BAD_REQUEST).json({
                 success: false,
                 message: "Session ID is required",
@@ -205,10 +205,10 @@ export const getPlayersBySession = async (
     res: Response
 ): Promise<void> => {
     try {
-        const sessionId = req.user?.sessionId || "687dedc3fbc85e571416e6c9";
+        const sessionId = req.user?.sessionId;
         const currentUserId = req.user?.id;
 
-        if (!sessionId) {
+        if (!sessionId || !currentUserId) {
             res.status(StatusCodes.BAD_REQUEST).json({
                 success: false,
                 message: "Session ID is required",

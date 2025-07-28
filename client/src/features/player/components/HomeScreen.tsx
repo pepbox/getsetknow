@@ -7,12 +7,15 @@ import { setPlayer } from "../services/player.slice";
 import { RootState } from "../../../app/store";
 
 const HomeScreen: React.FC = () => {
-  const {isAuthenticated} = useAppSelector((state: RootState) => state.player);
+  const { isAuthenticated } = useAppSelector(
+    (state: RootState) => state.player
+  );
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const [firstname, setFirstname] = React.useState<string>("");
   const [lastname, setLastname] = React.useState<string>("");
   const [showSnackbar, setShowSnackbar] = useState(false);
+  const { sessionId } = useAppSelector((state: RootState) => state.game);
 
   const handleStart = () => {
     if (!firstname || !lastname) {
@@ -25,24 +28,22 @@ const HomeScreen: React.FC = () => {
         name: playerName,
       })
     );
-    navigate("/game/capture");
+    navigate(`/game/${sessionId}/capture`);
   };
 
   const handleCloseSnackbar = () => {
     setShowSnackbar(false);
   };
 
-
-  if(isAuthenticated)
-  {
-    return <Navigate to="/game/questionnaire" replace />;
+  if (isAuthenticated) {
+    return <Navigate to={`/game/${sessionId}/intro`} replace />;
   }
   return (
     <Box
       position={"absolute"}
       sx={{
         top: 0,
-        left: 0,  
+        left: 0,
         width: "100%",
         height: "100%",
         overflowY: "hidden",

@@ -1,8 +1,9 @@
-import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { GameState } from '../../../types';
-import { gameApi } from './gameArena.Api';
+import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+import { GameState } from "../../../types";
+import { gameApi } from "./gameArena.Api";
 
 const initialState: GameState = {
+  sessionId: null,
   isGameStarted: false,
   currentPlayer: null,
   totalSteps: 0,
@@ -12,7 +13,7 @@ const initialState: GameState = {
 };
 
 const gameSlice = createSlice({
-  name: 'game',
+  name: "game",
   initialState,
   reducers: {
     setTotalSteps: (state, action: PayloadAction<number>) => {
@@ -27,21 +28,22 @@ const gameSlice = createSlice({
     resetGame: (_state) => {
       return initialState;
     },
+    setSessionId: (state, action: PayloadAction<string | null>) => {
+      state.sessionId = action.payload;
+    },
   },
   extraReducers: (builder) => {
     builder
-      .addMatcher(
-        gameApi.endpoints.getSession.matchPending,
-        (state) => {
-          state.isLoading = true;
-          state.error = null;
-        }
-      )
+      .addMatcher(gameApi.endpoints.getSession.matchPending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
       .addMatcher(
         gameApi.endpoints.getSession.matchFulfilled,
         (state, { payload }) => {
           state.isLoading = false;
-          state.isGameStarted = payload.status === 'playing';
+          state.isGameStarted = payload.status === "playing";
+          state.sessionId = payload._id;
         }
       )
       .addMatcher(
@@ -50,15 +52,11 @@ const gameSlice = createSlice({
           state.isLoading = false;
           state.error = error;
         }
-      )
+      );
   },
 });
 
-export const {
-  setTotalSteps,
-  setCurrentStep,
-  startGame,
-  resetGame,
-} = gameSlice.actions;
+export const { setTotalSteps, setCurrentStep, startGame, resetGame, setSessionId } =
+  gameSlice.actions;
 
 export default gameSlice.reducer;

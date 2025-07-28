@@ -25,6 +25,7 @@ const WaitingAreaScreen: React.FC<CircularPlayerAnimationProps> = ({
   const isGameStarted = useAppSelector(
     (state: RootState) => state.game.isGameStarted
   );
+  const { sessionId } = useAppSelector((state: RootState) => state.game);
 
   const players: Player[] = [
     {
@@ -80,9 +81,9 @@ const WaitingAreaScreen: React.FC<CircularPlayerAnimationProps> = ({
       y: Math.sin(radian) * radius,
     };
   };
-  
+
   if (isGameStarted) {
-    return <Navigate to="/game/arena" />;
+    return <Navigate to={`/game/${sessionId}/arena`} />;
   }
 
   return (

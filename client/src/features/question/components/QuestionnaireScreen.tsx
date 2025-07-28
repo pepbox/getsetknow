@@ -11,9 +11,11 @@ import { useStoreQuestionResponseMutation } from "../services/questions.api";
 
 interface QuestionnaireScreenProps {
   questions: IQuestion[];
+  sessionId?: string;
 }
 const QuestionnaireScreen: React.FC<QuestionnaireScreenProps> = ({
   questions = [],
+  sessionId = "",
 }) => {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
@@ -38,7 +40,7 @@ const QuestionnaireScreen: React.FC<QuestionnaireScreenProps> = ({
             // dispatch(nextQuestion());
             // setAnswer("");
           } else {
-            navigate("/game/waiting");
+            navigate(`/game/${sessionId}/waiting`);
           }
         })
         .catch((error) => {

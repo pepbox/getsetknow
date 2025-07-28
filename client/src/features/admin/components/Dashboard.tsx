@@ -18,7 +18,7 @@ const Dashboard: React.FC<DashboardProps> = ({
   players,
   onChangeName,
   onViewResponses,
-  playerWithResponses = null, // Default value for playerWithResponses
+  playerWithResponses = null, 
 }) => {
   const [UpdateSession] = useUpdateSessionMutation();
   const [gameStatus, setGameStatus] = useState<string>("pending");

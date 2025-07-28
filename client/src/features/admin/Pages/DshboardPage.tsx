@@ -10,13 +10,7 @@ import Snackbar from "@mui/material/Snackbar";
 import Alert from "@mui/material/Alert";
 
 const DashboardPage: React.FC = () => {
-  const { data, isError } = useFetchDashboardDataQuery(
-    {},
-    {
-      // pollingInterval: 10000, // Refetch every 30 seconds
-      // refetchOnFocus: true, // Refetch when window regains focus
-    }
-  );
+  const { data, isError } = useFetchDashboardDataQuery({});
   const [UpdatePlayer] = useUpdatePlayerMutation();
   const [getPlayerWithResponses, { isLoading: loadingResponses }] =
     useLazyGetPlayerWithResponsesQuery();

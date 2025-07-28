@@ -1,5 +1,5 @@
 import React from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { Box, Typography } from "@mui/material";
 import GlobalButton from "../../../components/ui/button";
 import GameHeader from "../../../components/layout/GameHeader";
@@ -10,10 +10,11 @@ import { setCurrentStep } from "../../game/services/gameSlice";
 const IntroScreen: React.FC = () => {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
+  const sessionId = useParams<{ sessionId: string }>().sessionId;
 
   const handleJumpIn = () => {
     dispatch(setCurrentStep(4));
-    navigate("/game/questionnaire");
+    navigate(`/game/${sessionId}/questionnaire`);
   };
 
   return (

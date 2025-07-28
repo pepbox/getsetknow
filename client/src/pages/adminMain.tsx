@@ -1,4 +1,4 @@
-import { Route, Routes } from "react-router-dom";
+import { Route, Routes, useParams } from "react-router-dom";
 import DashboardPage from "../features/admin/Pages/DshboardPage";
 import AdminLogin from "../features/admin/Pages/AdminLogin";
 import Box from "@mui/material/Box";
@@ -8,12 +8,17 @@ import { RootState } from "../app/store";
 import { useEffect } from "react";
 import Loader from "../components/ui/Loader";
 import AuthWrapper from "../components/auth/AuthWrapper";
+import { useAppDispatch } from "../app/rootReducer";
+import { setSessionId } from "../features/game/services/gameSlice";
 
 const AdminMain = () => {
   const [FetchAdmin] = useLazyFetchAdminQuery();
   const { isLoading, isAuthenticated } = useAppSelector(
     (state: RootState) => state.player
   );
+  const dispatch = useAppDispatch();
+  const sessionId = useParams<{ sessionId: string }>().sessionId;
+  dispatch(setSessionId(sessionId ?? ""));
 
   useEffect(() => {
     FetchAdmin({});
@@ -35,7 +40,7 @@ const AdminMain = () => {
         >
           <Route path="/dashboard" element={<DashboardPage />} />
         </Route>
-        <Route path="/" element={<AdminLogin />} />
+        <Route path={`/${sessionId}`} element={<AdminLogin />} />
       </Routes>
     </Box>
   );

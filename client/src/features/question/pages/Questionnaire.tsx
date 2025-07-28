@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { useFetchAllQuestionsQuery } from "../services/questions.api";
 import Loader from "../../../components/ui/Loader";
 import ErrorLayout from "../../../components/ui/Error";
@@ -14,6 +14,14 @@ const Questionnaire: React.FC = () => {
   const isGameStarted = useAppSelector(
     (state: RootState) => state.game.isGameStarted
   );
+  const { sessionId } = useAppSelector((state: RootState) => state.game);
+
+  useEffect(() => {
+    if (questions && questions.length > 0) {
+      dispatch(setCurrentStep(0));
+      dispatch(setTotalSteps(questions.length - 1));
+    }
+  }, [questions, dispatch]);
 
   if (isLoading) {
     return <Loader />;
@@ -21,13 +29,14 @@ const Questionnaire: React.FC = () => {
   if (isError || !questions || questions.length === 0) {
     return <ErrorLayout />;
   }
-  dispatch(setCurrentStep(0));
-  dispatch(setTotalSteps(questions.length - 1));
+
   if (isGameStarted) {
-    return <Navigate to="/game/arena" replace />;
+    return <Navigate to={`/game/${sessionId}/arena`} replace />;
   }
 
-  return <QuestionnaireScreen questions={questions} />;
+  return (
+    <QuestionnaireScreen questions={questions} sessionId={sessionId || ""} />
+  );
 };
 
 export default Questionnaire;
