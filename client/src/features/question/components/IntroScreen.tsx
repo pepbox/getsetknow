@@ -7,6 +7,7 @@ import GameHeader from "../../../components/layout/GameHeader";
 import { useAppDispatch, useAppSelector } from "../../../app/hooks";
 import { setCurrentStep } from "../../game/services/gameSlice";
 import { RootState } from "../../../app/store";
+import introScreen from "../../../assets/introScreen.png";
 
 const IntroScreen: React.FC = () => {
   const navigate = useNavigate();
@@ -54,7 +55,7 @@ const IntroScreen: React.FC = () => {
             height: "300px",
             objectFit: "contain",
           }}
-          src="/src/assets/introScreen.png"
+          src={introScreen}
           alt="Character 1"
         />
       </Box>

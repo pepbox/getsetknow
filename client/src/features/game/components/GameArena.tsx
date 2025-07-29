@@ -17,6 +17,7 @@ import QuestionsNavigationModal from "./QuestionsNavigationModal";
 import { useAppDispatch, useAppSelector } from "../../../app/hooks";
 import { replayLastCard } from "../services/gameArenaSlice";
 import { RootState } from "../../../app/store";
+import guessedWrong from "../../../assets/guessedWrong.png";
 
 interface GameArenaProps {
   data: {
@@ -292,7 +293,7 @@ const GameArena: React.FC<GameArenaProps> = ({
                 height: "300px",
                 objectFit: "contain",
               }}
-              src="/src/assets/guessedWrong.png"
+              src={guessedWrong}
               alt=" "
             />
           )}

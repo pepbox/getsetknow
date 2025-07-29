@@ -5,6 +5,7 @@ import { useAppDispatch, useAppSelector } from "../../../app/hooks";
 import GlobalButton from "../../../components/ui/button";
 import { setPlayer } from "../services/player.slice";
 import { RootState } from "../../../app/store";
+import homescreenBanner from "../../../assets/homescreenBanner.png";
 
 const HomeScreen: React.FC = () => {
   const { isAuthenticated } = useAppSelector(
@@ -105,7 +106,7 @@ const HomeScreen: React.FC = () => {
           maxHeight: "380px",
           objectFit: "cover",
         }}
-        src="/src/assets/homescreenBanner.png"
+        src={homescreenBanner}
         alt="Game image"
       />
 
