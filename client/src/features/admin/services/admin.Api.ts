@@ -70,7 +70,7 @@ export const adminApi = api.injectEndpoints({
 
     getPlayerWithResponses: builder.query({
       query: (playerId: string) => ({
-        url: `/admin/getPlayerWithResponses${playerId}`,
+        url: `/admin/getPlayerWithResponses/${playerId}`,
         method: 'GET',
       }),
       transformResponse: (response: any) => response.data,

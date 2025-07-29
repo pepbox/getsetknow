@@ -5,6 +5,7 @@ import HomeScreen from "../features/player/components/HomeScreen";
 import IntroScreen from "../features/question/components/IntroScreen";
 import Questionnaire from "../features/question/pages/Questionnaire";
 import GameArenaPage from "../features/game/pages/GameArenaPage";
+import GameCompletionPage from "../features/game/pages/GameCompletionPage";
 import { useLazyFetchPlayerQuery } from "../features/player/services/player.api";
 import { RootState } from "../app/store";
 import { useEffect } from "react";
@@ -61,6 +62,7 @@ const GameMain = () => {
           />
           <Route path="/waiting" element={<WaitingAreaScreen />} />
           <Route path="/arena" element={<GameArenaPage />} />
+          <Route path="/completion" element={<GameCompletionPage />} />
         </Route>
       </Routes>
     </div>

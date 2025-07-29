@@ -22,5 +22,6 @@ router.get('/getPlayersBySession', authenticateUser, asyncHandeler(playerControl
 router.post('/submitGuess', authenticateUser, asyncHandeler(playerControllers.submitGuess));
 router.get('/getUserGuesses', authenticateUser, asyncHandeler(playerControllers.getUserGuesses));
 router.get('/getPlayerStats', authenticateUser, asyncHandeler(playerControllers.getPlayerStats));
+router.get('/getGameCompletionData', authenticateUser, asyncHandeler(playerControllers.getGameCompletionData));
 
 export default router;

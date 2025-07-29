@@ -10,11 +10,13 @@ import {
   Drawer,
 } from "@mui/material";
 import AssignmentTurnedInOutlinedIcon from "@mui/icons-material/AssignmentTurnedInOutlined";
+import { Navigate } from "react-router-dom";
 import GlobalButton from "../../../components/ui/button";
 import ConfirmationModal from "./ConfirmationModa";
 import QuestionsNavigationModal from "./QuestionsNavigationModal";
-import { useAppDispatch } from "../../../app/hooks";
+import { useAppDispatch, useAppSelector } from "../../../app/hooks";
 import { replayLastCard } from "../services/gameArenaSlice";
+import { RootState } from "../../../app/store";
 
 interface GameArenaProps {
   data: {
@@ -70,6 +72,7 @@ const GameArena: React.FC<GameArenaProps> = ({
   correctlyGuessedPlayerIds = [], // New prop with default value
 }) => {
   const dispatch = useAppDispatch();
+  const { sessionId } = useAppSelector((state: RootState) => state.game);
   const [knowsPerson, setKnowsPerson] = useState<boolean>(false);
   const [skipModal, setSkipModal] = useState(false);
   const [submitModal, setSubmitModal] = useState(false);
@@ -362,28 +365,7 @@ const GameArena: React.FC<GameArenaProps> = ({
 
   // Game completed screen
   if (data?.gameCompleted) {
-    return (
-      <Box
-        sx={{
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          justifyContent: "center",
-          height: "100vh",
-          p: 2,
-        }}
-      >
-        <Typography variant="h4" sx={{ mb: 4, textAlign: "center" }}>
-          Game Completed!
-        </Typography>
-        <Typography variant="h6" sx={{ mb: 2 }}>
-          Final Score: {data?.totalScore}
-        </Typography>
-        <Typography variant="body1">
-          People you know: {data?.peopleIKnow}
-        </Typography>
-      </Box>
-    );
+    return <Navigate to={`/game/${sessionId}/completion`} replace />;
   }
 
   return (

@@ -9,7 +9,7 @@ export interface GuessResult {
   profilePhoto?: string;
   name?: string;
   attempts?: number;
-  score?: number; 
+  score?: number;
 }
 
 export interface GameArenaState {
@@ -294,7 +294,7 @@ const gameArenaSlice = createSlice({
             guessedPersonId: state.currentGuess.guessedPersonId || '',
             profilePhoto: payload.profilePhoto,
             name: payload.name,
-            attempts: payload.attempts || 0, 
+            attempts: payload.attempts || 0,
             score: payload.score || 0,
           };
         }
@@ -351,7 +351,21 @@ const gameArenaSlice = createSlice({
           state.isLoading = false;
           state.error = error;
         }
+      );
+    builder
+      .addMatcher(gameApi.endpoints.getSession.matchPending, () => {
+      })
+      .addMatcher(
+        gameApi.endpoints.getSession.matchFulfilled,
+        (state, { payload }) => {
+          state.gameCompleted = payload.status === 'ended';
+        }
       )
+      .addMatcher(
+        gameApi.endpoints.getSession.matchRejected,
+        () => {
+        }
+      );
 
 
   },

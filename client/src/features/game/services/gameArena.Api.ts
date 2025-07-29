@@ -10,6 +10,7 @@ export interface Player {
   _id: string;
   name: string;
   profilePhoto?: string;
+  score?: number;
 }
 
 export interface GuessSubmissionResponse {
@@ -25,6 +26,18 @@ export interface Session {
   _id: string;
   name: string;
   status?: string;
+}
+
+export interface GameCompletionData {
+  currentPlayer: {
+    _id: string;
+    name: string;
+    profilePhoto?: string;
+    score: number;
+  };
+  peopleYouKnow: Player[];
+  peopleWhoKnowYou: Player[];
+  totalPlayers: number;
 }
 
 export const gameApi = api.injectEndpoints({
@@ -80,6 +93,14 @@ export const gameApi = api.injectEndpoints({
       transformResponse: (response: { data: Session }) => response.data,
       providesTags: ["GameSession"],
     }),
+
+    getGameCompletionData: builder.query<GameCompletionData, void>({
+      query: () => ({
+        url: '/player/getGameCompletionData',
+        method: 'GET',
+      }),
+      transformResponse: (response: { data: GameCompletionData }) => response.data,
+    }),
   }),
 });
 
@@ -90,4 +111,5 @@ export const {
   useGetUserGuessesQuery,
   useGetPlayerStatsQuery,
   useGetSessionQuery,
+  useGetGameCompletionDataQuery,
 } = gameApi;
