@@ -14,6 +14,7 @@ import { Events } from '../../../services/socket/enums/Events';
 import { deleteFromS3 } from '../../../services/fileUpload';
 import SessionService from '../../session/services/session.service';
 import FileService from '../../files/services/fileService';
+import { SessionStatus } from '../../session/types/enums';
 
 const playerService = new PlayerService(Player);
 const questionService = new QuestionService(Question);
@@ -42,6 +43,7 @@ export const onboardPlayer = async (
             });
             return;
         }
+
         const fileService = new FileService();
 
         const sessionDoc = await SessionService.fetchSessionById(session);
@@ -49,6 +51,12 @@ export const onboardPlayer = async (
             deleteFromS3(req.file.key!);
             return next(new AppError("Session not found.", 404));
         }
+
+        if (sessionDoc.status === SessionStatus.ENDED) {
+            deleteFromS3(req.file.key!);
+            return next(new AppError("Session has ended. Player cannot be onboarded.", 403));
+        }
+
         const profileImageInfo = {
             originalName: req.file.originalname!,
             fileName: req.file.key!,
@@ -136,10 +144,10 @@ export const getPlayersCards = async (
     res: Response
 ): Promise<void> => {
     try {
-        const sessionId = req.user?.sessionId || "687dedc3fbc85e571416e6c9";
+        const sessionId = req.user?.sessionId;
         const currentUserId = req.user?.id;
 
-        if (!sessionId) {
+        if (!sessionId || !currentUserId) {
             res.status(StatusCodes.BAD_REQUEST).json({
                 success: false,
                 message: "Session ID is required",
@@ -205,10 +213,10 @@ export const getPlayersBySession = async (
     res: Response
 ): Promise<void> => {
     try {
-        const sessionId = req.user?.sessionId || "687dedc3fbc85e571416e6c9";
+        const sessionId = req.user?.sessionId;
         const currentUserId = req.user?.id;
 
-        if (!sessionId) {
+        if (!sessionId || !currentUserId) {
             res.status(StatusCodes.BAD_REQUEST).json({
                 success: false,
                 message: "Session ID is required",
@@ -223,6 +231,15 @@ export const getPlayersBySession = async (
         for (let i = filteredPlayers.length - 1; i > 0; i--) {
             const j = Math.floor(Math.random() * (i + 1));
             [filteredPlayers[i], filteredPlayers[j]] = [filteredPlayers[j], filteredPlayers[i]];
+        }
+        // Add profilePhoto URL to each player
+        for (const player of filteredPlayers) {
+            let profilePhotoUrl = "";
+            if (player.profilePhoto) {
+                const file = await fileService.getFileById(player.profilePhoto.toString());
+                profilePhotoUrl = file?.location || "";
+            }
+            (player as any).profilePhotoUrl = profilePhotoUrl;
         }
 
         res.status(StatusCodes.OK).json({
@@ -266,15 +283,12 @@ export const submitGuess = async (
         // Check if the guess is correct
         const isCorrect = guess.personId.toString() === guessedPersonId;
 
-        await playerService.updateGuessById(guessId, {
-            attempts: (guess.attempts || 0) + 1, // Increment attempts
-            guessedPersonId: guessedPersonId
-        });
-
+        let profilePicture = "";
+        let score = 0;
         if (isCorrect) {
             // Update player score if the guess is correct
-            const attempts = guess.attempts ?? 0;
-            const player = await playerService.updatePlayerScore(guess.user.toString(), 100 - attempts * 10);
+            score = 100 - (guess.attempts || 0) * 10;
+            const player = await playerService.updatePlayerScore(guess.user.toString(), score);
             if (!player) {
                 res.status(StatusCodes.NOT_FOUND).json({
                     success: false,
@@ -283,13 +297,27 @@ export const submitGuess = async (
                 return;
             }
             SessionEmitters.toUser(guess.personId?.toString() ?? "", Events.PLAYER_STAT_UPDATE, {});
-
+            if (guess.personId) {
+                const file = await fileService.getFileById(guess.personId.toString());
+                profilePicture = file?.location || "";
+            }
         }
+
+        const updatedAttempts = (guess.attempts ?? 0) + 1;
+        await playerService.updateGuessById(guessId, {
+            attempts: updatedAttempts, // Increment attempts
+            guessedPersonId: guessedPersonId
+        });
         SessionEmitters.toSessionAdmins(sessionId?.toString() ?? "", Events.PLAYERS_UPDATE, {});
         res.status(StatusCodes.OK).json({
             success: true,
             correct: isCorrect,
+            profilePhoto: profilePicture,
+            name: isCorrect ? (await playerService.getPlayerById(guess.personId.toString()))?.name : "",
+            attempts: updatedAttempts,
+            score: score,
         });
+
     } catch (error) {
         console.error("Error submitting guess:", error);
         res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
@@ -500,6 +528,118 @@ export const getPlayerStats = async (
     } catch (error) {
         console.error("Error fetching player stats:", error);
         res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+            message: "Internal Server Error",
+        });
+    }
+};
+
+export const getGameCompletionData = async (
+    req: Request,
+    res: Response
+): Promise<void> => {
+    try {
+        const currentUserId = req.user?.id;
+        const sessionId = req.user?.sessionId;
+
+        if (!currentUserId || !sessionId) {
+            res.status(StatusCodes.BAD_REQUEST).json({
+                success: false,
+                message: "User ID and session ID are required",
+            });
+            return;
+        }
+
+        // Get current player details
+        const currentPlayer = await playerService.getPlayerById(currentUserId.toString());
+        if (!currentPlayer) {
+            res.status(StatusCodes.NOT_FOUND).json({
+                success: false,
+                message: "Player not found",
+            });
+            return;
+        }
+
+        // Get current player's profile photo URL
+        let currentPlayerProfilePhoto = "";
+        if (currentPlayer.profilePhoto) {
+            const file = await fileService.getFileById(currentPlayer.profilePhoto.toString());
+            currentPlayerProfilePhoto = file?.location || "";
+        }
+
+        // Get all players in session
+        const allPlayers = await playerService.getPlayersBySession(new Types.ObjectId(sessionId));
+        const totalPlayers = allPlayers.length;
+
+        // Get people you know (players you guessed correctly)
+        const guessesByUser = await playerService.getGuessesByUserId(new Types.ObjectId(currentUserId));
+        const correctGuessesByUser = guessesByUser.filter(
+            (guess: any) =>
+                guess.guessedPersonId &&
+                guess.personId.toString() === guess.guessedPersonId.toString()
+        );
+
+        const peopleYouKnow = [];
+        for (const guess of correctGuessesByUser) {
+            const player = await playerService.getPlayerById(guess.personId.toString());
+            if (player) {
+                let profilePhoto = "";
+                if (player.profilePhoto) {
+                    const file = await fileService.getFileById(player.profilePhoto.toString());
+                    profilePhoto = file?.location || "";
+                }
+                peopleYouKnow.push({
+                    _id: player._id,
+                    name: player.name,
+                    profilePhoto,
+                    score: player.score || 0,
+                });
+            }
+        }
+
+        // Get people who know you (players who guessed you correctly)
+        const guessesByPerson = await playerService.getGuessesByPersonId(new Types.ObjectId(currentUserId));
+        const correctGuessesByPerson = guessesByPerson.filter(
+            (guess: any) =>
+                guess.guessedPersonId &&
+                guess.personId.toString() === guess.guessedPersonId.toString()
+        );
+
+        const peopleWhoKnowYou = [];
+        for (const guess of correctGuessesByPerson) {
+            const player = await playerService.getPlayerById(guess.user.toString());
+            if (player) {
+                let profilePhoto = "";
+                if (player.profilePhoto) {
+                    const file = await fileService.getFileById(player.profilePhoto.toString());
+                    profilePhoto = file?.location || "";
+                }
+                peopleWhoKnowYou.push({
+                    _id: player._id,
+                    name: player.name,
+                    profilePhoto,
+                    score: player.score || 0,
+                });
+            }
+        }
+
+        res.status(StatusCodes.OK).json({
+            success: true,
+            data: {
+                currentPlayer: {
+                    _id: currentPlayer._id,
+                    name: currentPlayer.name,
+                    profilePhoto: currentPlayerProfilePhoto,
+                    score: currentPlayer.score || 0,
+                },
+                peopleYouKnow,
+                peopleWhoKnowYou,
+                totalPlayers,
+            },
+        });
+    } catch (error) {
+        console.error("Error fetching game completion data:", error);
+        res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+            success: false,
             message: "Internal Server Error",
         });
     }

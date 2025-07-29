@@ -14,6 +14,7 @@ export interface PlayerTableProps {
     gameStatus: string;
     transaction?: boolean;
     onChangeName?: (playerId: string, name: string) => void;
+    onChangeScore?: (playerId: string, newScore: number) => void;
     onViewResponses?: (playerId: string) => void;
     playerWithResponses?: {
         player: {
@@ -77,6 +78,7 @@ export interface DashboardProps {
     players: Player[];
     onGameStatusChange?: (status: boolean) => void;
     onChangeName?: (playerId: string, name: string) => void;
+    onChangeScore?: (playerId: string, newScore: number) => void;
     onViewResponses?: (playerId: string) => void;
     loadingResponses?: boolean;
 }

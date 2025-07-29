@@ -3,24 +3,41 @@ import { api } from "../../../app/api";
 export interface GameCard {
   guessId: string;
   guessedPersonId?: string;
-  responses: Record<string, string>; // keyAspect -> response mapping
+  responses: Record<string, string>;
 }
 
 export interface Player {
   _id: string;
   name: string;
   profilePhoto?: string;
+  score?: number;
 }
 
 export interface GuessSubmissionResponse {
   success: boolean;
   correct: boolean;
+  profilePhoto?: string;
+  name?: string;
+  attempts?: number;
+  score?: number;
 }
 
 export interface Session {
   _id: string;
   name: string;
   status?: string;
+}
+
+export interface GameCompletionData {
+  currentPlayer: {
+    _id: string;
+    name: string;
+    profilePhoto?: string;
+    score: number;
+  };
+  peopleYouKnow: Player[];
+  peopleWhoKnowYou: Player[];
+  totalPlayers: number;
 }
 
 export const gameApi = api.injectEndpoints({
@@ -76,6 +93,14 @@ export const gameApi = api.injectEndpoints({
       transformResponse: (response: { data: Session }) => response.data,
       providesTags: ["GameSession"],
     }),
+
+    getGameCompletionData: builder.query<GameCompletionData, void>({
+      query: () => ({
+        url: '/player/getGameCompletionData',
+        method: 'GET',
+      }),
+      transformResponse: (response: { data: GameCompletionData }) => response.data,
+    }),
   }),
 });
 
@@ -86,4 +111,5 @@ export const {
   useGetUserGuessesQuery,
   useGetPlayerStatsQuery,
   useGetSessionQuery,
+  useGetGameCompletionDataQuery,
 } = gameApi;

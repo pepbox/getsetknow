@@ -11,8 +11,14 @@ import { useNavigate } from "react-router-dom";
 import { DashboardHeaderProps } from "../types/interfaces";
 import { useAdminAuth } from "../services/useAdminAuth";
 import LogoutIcon from "@mui/icons-material/Logout";
-import { useUpdateSessionMutation } from "../services/admin.Api";
+import {
+  useAdminLogoutMutation,
+  useUpdateSessionMutation,
+} from "../services/admin.Api";
 import GlobalButton from "../../../components/ui/button";
+import { useAppDispatch, useAppSelector } from "../../../app/rootReducer";
+import { RootState } from "../../../app/store";
+import { clearAdmin } from "../services/adminSlice";
 
 // Dashboard Header Component
 const DashboardHeader: React.FC<DashboardHeaderProps> = ({
@@ -21,20 +27,30 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
   onTransactionsChange,
   transaction = false, // Default value for transaction
 }) => {
+  const [AdminLogout] = useAdminLogoutMutation();
   const [UpdateSession] = useUpdateSessionMutation();
-  const { admin, logout } = useAdminAuth();
+  const { admin } = useAdminAuth();
   const navigate = useNavigate();
+  const { sessionId } = useAppSelector((state: RootState) => state.game);
+  const dispatch = useAppDispatch();
 
   const handleLogout = () => {
-    logout();
-    navigate("/admin/login");
+    AdminLogout({})
+      .unwrap()
+      .then(() => {
+        navigate(`/admin/${sessionId}/login`);
+        dispatch(clearAdmin());
+      })
+      .catch((error) => {
+        console.error("Logout failed:", error);
+      });
   };
   const handleSesssionEnd = () => {
     UpdateSession({ status: "ended" })
       .unwrap()
       .then(() => {
-        logout();
-        navigate("/admin/login");
+        navigate(`/admin/${sessionId}/login`);
+        dispatch(clearAdmin());
       })
       .catch((error) => {
         console.error("Failed to end session:", error);

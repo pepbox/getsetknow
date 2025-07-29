@@ -10,11 +10,13 @@ import {
   Drawer,
 } from "@mui/material";
 import AssignmentTurnedInOutlinedIcon from "@mui/icons-material/AssignmentTurnedInOutlined";
+import { Navigate } from "react-router-dom";
 import GlobalButton from "../../../components/ui/button";
 import ConfirmationModal from "./ConfirmationModa";
 import QuestionsNavigationModal from "./QuestionsNavigationModal";
-import { useAppDispatch } from "../../../app/hooks";
+import { useAppDispatch, useAppSelector } from "../../../app/hooks";
 import { replayLastCard } from "../services/gameArenaSlice";
+import { RootState } from "../../../app/store";
 
 interface GameArenaProps {
   data: {
@@ -30,6 +32,10 @@ interface GameArenaProps {
     currentGuessId: string;
     isLastGuessCorrect?: boolean;
     gameCompleted: boolean;
+    lastGuessPlayerPhoto?: string;
+    lastGuessPlayerName?: string;
+    lastGuessAttempts?: number;
+    lastGuessScore?: number;
   };
   progressValue: number;
   selectedPersonId: string | null;
@@ -66,6 +72,7 @@ const GameArena: React.FC<GameArenaProps> = ({
   correctlyGuessedPlayerIds = [], // New prop with default value
 }) => {
   const dispatch = useAppDispatch();
+  const { sessionId } = useAppSelector((state: RootState) => state.game);
   const [knowsPerson, setKnowsPerson] = useState<boolean>(false);
   const [skipModal, setSkipModal] = useState(false);
   const [submitModal, setSubmitModal] = useState(false);
@@ -236,22 +243,59 @@ const GameArena: React.FC<GameArenaProps> = ({
             justifyContent: "center",
           }}
         >
-          <Box
-            position={"absolute"}
-            bottom={0}
-            component="img"
-            sx={{
-              width: "300px",
-              height: "300px",
-              objectFit: "contain",
-            }}
-            src={
-              data?.isLastGuessCorrect
-                ? "/src/assets/guessedRight.png"
-                : "/src/assets/guessedWrong.png"
-            }
-            alt=" "
-          />
+          {data?.isLastGuessCorrect ? (
+            // Show player's actual photo when guess is correct
+            data?.lastGuessPlayerPhoto ? (
+              <>
+                <Avatar
+                  src={data.lastGuessPlayerPhoto}
+                  sx={{
+                    width: 200,
+                    height: 200,
+                    border: "4px solid white",
+                  }}
+                />
+                {data?.lastGuessPlayerName && (
+                  <Typography variant="h4" sx={{ mt: 2 }}>
+                    {data.lastGuessPlayerName}
+                  </Typography>
+                )}
+              </>
+            ) : (
+              <>
+                <Avatar
+                  sx={{
+                    width: 200,
+                    height: 200,
+                    border: "4px solid white",
+                    fontSize: "3rem",
+                    backgroundColor: "secondary.main",
+                  }}
+                >
+                  {data?.lastGuessPlayerName?.charAt(0) || "?"}
+                </Avatar>
+                {data?.lastGuessPlayerName && (
+                  <Typography variant="h4" sx={{ mt: 2 }}>
+                    {data.lastGuessPlayerName}
+                  </Typography>
+                )}
+              </>
+            )
+          ) : (
+            // Show wrong guess image
+            <Box
+              position={"absolute"}
+              bottom={0}
+              component="img"
+              sx={{
+                width: "300px",
+                height: "300px",
+                objectFit: "contain",
+              }}
+              src="/src/assets/guessedWrong.png"
+              alt=" "
+            />
+          )}
         </Box>
 
         <Box
@@ -265,9 +309,9 @@ const GameArena: React.FC<GameArenaProps> = ({
           }}
         >
           <Typography
-            variant="h6"
+            variant="h5"
             sx={{
-              fontWeight: "bold",
+              // fontWeight: "bold",
               textAlign: "center",
               mb: 2,
             }}
@@ -276,13 +320,15 @@ const GameArena: React.FC<GameArenaProps> = ({
               <>
                 Wohoo! You guessed it right.
                 <br />
-                Thanks for the participation.
+                Score: {data.lastGuessScore}
               </>
             ) : (
               <>
                 Oops! Better luck next time.
                 <br />
                 Keep trying!
+                <br />
+                Attempts: {data.lastGuessAttempts ?? 1}
               </>
             )}
           </Typography>
@@ -309,7 +355,7 @@ const GameArena: React.FC<GameArenaProps> = ({
                 },
               }}
             >
-              Replay
+              Retry
             </GlobalButton>
           )}
         </Box>
@@ -319,28 +365,7 @@ const GameArena: React.FC<GameArenaProps> = ({
 
   // Game completed screen
   if (data?.gameCompleted) {
-    return (
-      <Box
-        sx={{
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          justifyContent: "center",
-          height: "100vh",
-          p: 2,
-        }}
-      >
-        <Typography variant="h4" sx={{ mb: 4, textAlign: "center" }}>
-          Game Completed!
-        </Typography>
-        <Typography variant="h6" sx={{ mb: 2 }}>
-          Final Score: {data?.totalScore}
-        </Typography>
-        <Typography variant="body1">
-          People you know: {data?.peopleIKnow}
-        </Typography>
-      </Box>
-    );
+    return <Navigate to={`/game/${sessionId}/completion`} replace />;
   }
 
   return (
@@ -564,10 +589,10 @@ const GameArena: React.FC<GameArenaProps> = ({
           open={skipModal}
           onClose={handleSkipModalClose}
           mainText="Are you sure you want to skip and jump to next player?"
-          primaryButtonText="No"
-          secondaryButtonText="Yes"
-          onPrimaryClick={handleSkipModalClose}
-          onSecondaryClick={handleSkipConfirm}
+          primaryButtonText="Yes"
+          secondaryButtonText="No"
+          onPrimaryClick={handleSkipConfirm}
+          onSecondaryClick={handleSkipModalClose}
         />
         <ConfirmationModal
           open={submitModal}
@@ -601,9 +626,11 @@ const GameArena: React.FC<GameArenaProps> = ({
               sx: {
                 m: "16px",
                 position: "fixed",
-                height: "auto",
+                height: "calc(100% - 64px)",
                 borderRadius: 2,
                 p: "8px 8px 0  8px",
+                display: "flex",
+                flexDirection: "column",
               },
             },
           }}
@@ -627,7 +654,16 @@ const GameArena: React.FC<GameArenaProps> = ({
             <span style={{ fontSize: 24, fontWeight: "bold" }}>×</span>
           </IconButton>
 
-          <Box sx={{ mt: 4, mb: 2, position: "relative" }}>
+          <Box
+            sx={{
+              mt: 4,
+              mb: 2,
+              position: "relative",
+              flex: 1,
+              display: "flex",
+              flexDirection: "column",
+            }}
+          >
             <Box sx={{ mb: 2 }}>
               <input
                 type="text"
@@ -647,85 +683,88 @@ const GameArena: React.FC<GameArenaProps> = ({
             </Box>
 
             {/* Show filtered players */}
-            {filteredPlayers.length > 0 ? (
-              filteredPlayers.map((player) => {
-                const isSelected = selectedPersonId === player._id;
-                return (
-                  <Box
-                    key={player._id}
-                    onClick={() => handlePersonClick(player._id)}
-                    sx={{
-                      display: "flex",
-                      alignItems: "center",
-                      px: 2,
-                      py: 1,
-                      mb: 1,
-                      borderRadius: 2,
-                      cursor: "pointer",
-                      bgcolor: isSelected ? "primary.main" : "transparent",
-                      transition: "background 0.2s",
-                      "&:hover": {
-                        bgcolor: isSelected ? "primary.main" : "grey.100",
-                      },
-                    }}
-                  >
-                    <Avatar
-                      alt={player.name}
-                      src={player.profilePhoto}
+            <Box sx={{ flex: 1, overflowY: "auto" }}>
+              {filteredPlayers.length > 0 ? (
+                filteredPlayers.map((player) => {
+                  const isSelected = selectedPersonId === player._id;
+                  return (
+                    <Box
+                      key={player._id}
+                      onClick={() => handlePersonClick(player._id)}
                       sx={{
-                        width: 48,
-                        height: 48,
-                        bgcolor: "primary.main",
-                        mr: 2,
-                        border: isSelected ? "2px solid #fff" : undefined,
+                        display: "flex",
+                        alignItems: "center",
+                        px: 2,
+                        py: 1,
+                        mb: 1,
+                        borderRadius: 2,
+                        cursor: "pointer",
+                        bgcolor: isSelected ? "primary.main" : "transparent",
+                        transition: "background 0.2s",
+                        "&:hover": {
+                          bgcolor: isSelected ? "primary.main" : "grey.100",
+                        },
                       }}
                     >
-                      {!player.profilePhoto &&
-                        player.name
-                          .split(" ")
-                          .map((n) => n[0]?.toUpperCase())
-                          .join("")
-                          .slice(0, 2)}
-                    </Avatar>
-                    <Typography
-                      variant="subtitle1"
-                      sx={{
-                        color: isSelected ? "#fff" : "text.primary",
-                        fontWeight: 500,
-                        fontSize: "1rem",
-                        textAlign: "left",
-                        flex: 1,
-                      }}
-                    >
-                      {player.name}
-                    </Typography>
-                  </Box>
-                );
-              })
-            ) : (
-              <Box
-                sx={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  py: 4,
-                  px: 2,
-                }}
-              >
-                <Typography
-                  variant="body1"
+                      <Avatar
+                        alt={player.name}
+                        src={player.profilePhoto}
+                        sx={{
+                          width: 48,
+                          height: 48,
+                          bgcolor: "primary.main",
+                          mr: 2,
+                          border: isSelected ? "2px solid #fff" : undefined,
+                        }}
+                      >
+                        {!player.profilePhoto &&
+                          player.name
+                            .split(" ")
+                            .map((n) => n[0]?.toUpperCase())
+                            .join("")
+                            .slice(0, 2)}
+                      </Avatar>
+                      <Typography
+                        variant="subtitle1"
+                        sx={{
+                          color: isSelected ? "#fff" : "text.primary",
+                          fontWeight: 500,
+                          fontSize: "1rem",
+                          textAlign: "left",
+                          flex: 1,
+                        }}
+                      >
+                        {player.name}
+                      </Typography>
+                    </Box>
+                  );
+                })
+              ) : (
+                <Box
                   sx={{
-                    color: "text.secondary",
-                    textAlign: "center",
-                    fontStyle: "italic",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    py: 4,
+                    px: 2,
+                    minHeight: "120px",
                   }}
                 >
-                  {searchText.trim()
-                    ? `No players found matching "${searchText}"`
-                    : "No available players to select"}
-                </Typography>
-              </Box>
-            )}
+                  <Typography
+                    variant="body1"
+                    sx={{
+                      color: "text.secondary",
+                      textAlign: "center",
+                      fontStyle: "italic",
+                    }}
+                  >
+                    {searchText.trim()
+                      ? `No players found matching "${searchText}"`
+                      : "No available players to select"}
+                  </Typography>
+                </Box>
+              )}
+            </Box>
 
             <Box
               sx={{
@@ -735,6 +774,7 @@ const GameArena: React.FC<GameArenaProps> = ({
                 bgcolor: "white",
                 zIndex: 10,
                 pt: 2,
+                pb: 2,
               }}
             >
               <GlobalButton
@@ -748,8 +788,6 @@ const GameArena: React.FC<GameArenaProps> = ({
           </Box>
         </Drawer>
 
-        {/* Action Buttons */}
-        {/* <Box height={"50px"} /> */}
         <Box
           sx={{
             display: "flex",
@@ -763,15 +801,6 @@ const GameArena: React.FC<GameArenaProps> = ({
             width: "100%",
           }}
         >
-          {/* {!selectedPersonId && ( */}
-          <GlobalButton
-            onClick={handleIKnowWhoThisIs}
-            sx={{ minWidth: "200px", mx: "auto" }}
-          >
-            I know who this is
-          </GlobalButton>
-          {/* // )} */}
-
           {/* {!selectedPersonId && ( */}
           <GlobalButton
             onClick={handleSkipModalOpen}
@@ -789,6 +818,16 @@ const GameArena: React.FC<GameArenaProps> = ({
           >
             Skip
           </GlobalButton>
+          <GlobalButton
+            onClick={handleIKnowWhoThisIs}
+            sx={{ minWidth: "200px", mx: "auto" }}
+          >
+            I know who this is
+          </GlobalButton>
+          {/* // )} */}
+
+          {/* {!selectedPersonId && ( */}
+
           {/* )} */}
           {/* {selectedPersonId && (
             <GlobalButton

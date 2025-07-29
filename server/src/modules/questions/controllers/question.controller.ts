@@ -10,7 +10,7 @@ const questionService = new QuestionService(Question);
 export const getAllQuestions = async (req: Request, res: Response) => {
     try {
         const questions: IQuestion[] = await questionService.getAllQuestions();
-        
+
         res.status(200).json(questions);
     } catch (error) {
         res.status(500).json({ message: 'Error fetching questions', error });
@@ -43,6 +43,10 @@ export const storeQuestionResponse = async (req: Request, res: Response) => {
         const { question, response } = req.body;
         const sessionId = req.user.sessionId;
         const player = req.user?.id;
+        if (!sessionId || !player) {
+            res.status(400).json({ message: 'Session ID and Player ID are required' });
+            return;
+        }
         const questionResponse = await questionService.storeQuestionResponse({ question, player, response });
         SessionEmitters.toSessionAdmins(sessionId?.toString() ?? "", Events.PLAYERS_UPDATE, {});
         res.status(201).json(questionResponse);

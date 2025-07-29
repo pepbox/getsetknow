@@ -10,13 +10,7 @@ import Snackbar from "@mui/material/Snackbar";
 import Alert from "@mui/material/Alert";
 
 const DashboardPage: React.FC = () => {
-  const { data, isError } = useFetchDashboardDataQuery(
-    {},
-    {
-      // pollingInterval: 10000, // Refetch every 30 seconds
-      // refetchOnFocus: true, // Refetch when window regains focus
-    }
-  );
+  const { data, isError } = useFetchDashboardDataQuery({});
   const [UpdatePlayer] = useUpdatePlayerMutation();
   const [getPlayerWithResponses, { isLoading: loadingResponses }] =
     useLazyGetPlayerWithResponsesQuery();
@@ -63,6 +57,27 @@ const DashboardPage: React.FC = () => {
       console.log("Change name for player:", playerId);
     },
 
+    onChangeScore: (playerId: string, newScore: number) => {
+      UpdatePlayer({ playerId, score: newScore })
+        .unwrap()
+        .then(() => {
+          setSnackbar({
+            open: true,
+            message: "Player score updated successfully",
+            severity: "success",
+          });
+        })
+        .catch((error) => {
+          setSnackbar({
+            open: true,
+            message: "Failed to update player score",
+            severity: "error",
+          });
+          console.error("Failed to update player score:", error);
+        });
+      console.log("Change score for player:", playerId, "New score:", newScore);
+    },
+
     onViewResponses: (playerId: string) => {
       getPlayerWithResponses(playerId)
         .unwrap()
@@ -97,6 +112,7 @@ const DashboardPage: React.FC = () => {
         headerData={data?.headerData}
         players={data?.players}
         onChangeName={handlers?.onChangeName}
+        onChangeScore={handlers?.onChangeScore}
         onViewResponses={handlers?.onViewResponses}
         playerWithResponses={playerWithResponses}
         loadingResponses={loadingResponses}

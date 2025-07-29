@@ -36,6 +36,10 @@ export interface GameArenaData {
   currentGuessId: string;
   isLastGuessCorrect?: boolean;
   gameCompleted: boolean;
+  lastGuessPlayerPhoto?: string;
+  lastGuessPlayerName?: string;
+  lastGuessAttempts?: number;
+  lastGuessScore?: number;
 }
 
 const GameArenaPage: React.FC = () => {
@@ -152,6 +156,10 @@ const GameArenaPage: React.FC = () => {
         currentGuessId: currentCard.guessId,
         isLastGuessCorrect: lastGuessResult?.correct ?? undefined,
         gameCompleted,
+        lastGuessPlayerPhoto: lastGuessResult?.profilePhoto,
+        lastGuessPlayerName: lastGuessResult?.name,
+        lastGuessAttempts: lastGuessResult?.attempts,
+        lastGuessScore: lastGuessResult?.score || 0,
       }
     : null;
 
@@ -179,8 +187,20 @@ const GameArenaPage: React.FC = () => {
           setGuessResult({
             correct: result.correct,
             guessedPersonId: currentGuess.guessedPersonId,
+            profilePhoto: result.profilePhoto,
+            name: result.name,
+            attempts: result.attempts,
+            score: result.score,
           })
         );
+
+        // Refetch user guesses to get updated attempt count for wrong guesses
+        if (!result.correct) {
+          // Wait a bit for the backend to update, then refetch
+          setTimeout(() => {
+            // This will trigger a refetch due to invalidated tags
+          }, 100);
+        }
       } catch (error) {
         console.error("Error submitting guess:", error);
       }

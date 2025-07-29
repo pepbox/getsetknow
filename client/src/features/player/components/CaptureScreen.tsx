@@ -1,5 +1,5 @@
 import React, { useRef, useCallback, useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { Navigate, useNavigate } from "react-router-dom";
 import { Box, Typography } from "@mui/material";
 import { CloudUpload } from "@mui/icons-material";
 import Webcam from "react-webcam";
@@ -9,6 +9,7 @@ import { useAppDispatch } from "../../../app/hooks";
 import { setCurrentStep } from "../../game/services/gameSlice";
 import { useOnboardPlayerMutation } from "../services/player.api";
 import { useAppSelector } from "../../../app/hooks";
+import { RootState } from "../../../app/store";
 
 const CaptureScreen: React.FC = () => {
   const navigate = useNavigate();
@@ -18,6 +19,10 @@ const CaptureScreen: React.FC = () => {
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
   const [OnboardPlayer] = useOnboardPlayerMutation();
   const playerName = useAppSelector((state) => state.player.player?.name);
+  const { sessionId } = useAppSelector((state: RootState) => state.game);
+  const isAuthenticated = useAppSelector(
+    (state: RootState) => state.player.isAuthenticated
+  );
 
   const capture = useCallback(() => {
     const imageSrc = webcamRef.current?.getScreenshot();
@@ -49,7 +54,7 @@ const CaptureScreen: React.FC = () => {
   // Cleanup preview URL when component unmounts
   useEffect(() => {
     return () => {
-      if (capturedImage && capturedImage.startsWith('blob:')) {
+      if (capturedImage && capturedImage.startsWith("blob:")) {
         URL.revokeObjectURL(capturedImage);
       }
     };
@@ -57,25 +62,27 @@ const CaptureScreen: React.FC = () => {
 
   const handleConfirm = async () => {
     if (!capturedImage) return;
-    
+
     try {
       // Convert base64 to File object
       const response = await fetch(capturedImage);
       const blob = await response.blob();
-      const file = new File([blob], 'profile-picture.jpg', { type: 'image/jpeg' });
-      
+      const file = new File([blob], "profile-picture.jpg", {
+        type: "image/jpeg",
+      });
+
       // Create FormData
       const formData = new FormData();
-      formData.append('name', playerName || '');
-      formData.append('session', "687dedc3fbc85e571416e6c9");
-      formData.append('profilePicture', file);
-      
+      formData.append("name", playerName || "");
+      formData.append("session", sessionId || "");
+      formData.append("profilePicture", file);
+
       OnboardPlayer(formData)
         .unwrap()
         .then(() => {
           console.log("Player onboarded successfully");
           dispatch(setCurrentStep(3));
-          navigate("/game/intro");
+          navigate(`/game/${sessionId}/intro`);
         })
         .catch((error) => {
           console.error("Error onboarding player:", error);
@@ -89,7 +96,10 @@ const CaptureScreen: React.FC = () => {
     dispatch(setCurrentStep(1));
     setCapturedImage(null);
   };
-
+  if (isAuthenticated) {
+    return <Navigate to={`/game/${sessionId}/intro`} replace />;
+  }
+  
   return (
     <Box
       sx={{
@@ -207,9 +217,9 @@ const CaptureScreen: React.FC = () => {
             type="file"
             accept="image/*"
             onChange={handleFileUpload}
-            style={{ display: 'none' }}
+            style={{ display: "none" }}
           />
-          
+
           {capturedImage ? (
             <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
               <GlobalButton onClick={handleConfirm}>Confirm</GlobalButton>
@@ -218,13 +228,13 @@ const CaptureScreen: React.FC = () => {
           ) : (
             <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
               <GlobalButton onClick={capture}>Capture</GlobalButton>
-              <GlobalButton 
+              <GlobalButton
                 onClick={handleUploadClick}
                 sx={{
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  gap: 1
+                  gap: 1,
                 }}
               >
                 <CloudUpload sx={{ fontSize: 16 }} />

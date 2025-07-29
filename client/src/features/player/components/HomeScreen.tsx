@@ -7,42 +7,78 @@ import { setPlayer } from "../services/player.slice";
 import { RootState } from "../../../app/store";
 
 const HomeScreen: React.FC = () => {
-  const {isAuthenticated} = useAppSelector((state: RootState) => state.player);
+  const { isAuthenticated } = useAppSelector(
+    (state: RootState) => state.player
+  );
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const [firstname, setFirstname] = React.useState<string>("");
   const [lastname, setLastname] = React.useState<string>("");
   const [showSnackbar, setShowSnackbar] = useState(false);
+  const { sessionId } = useAppSelector((state: RootState) => state.game);
+
+  const MAX_NAME_LENGTH = 20;
+
+  // Validation function to check if input contains only letters and spaces
+  const validateName = (name: string): string => {
+    if (name.length > MAX_NAME_LENGTH) {
+      return `Name must be ${MAX_NAME_LENGTH} characters or less`;
+    }
+    if (!/^[a-zA-Z\s]*$/.test(name)) {
+      return "Name can only contain letters and spaces";
+    }
+    return "";
+  };
+
+  const handleFirstnameChange = (value: string) => {
+    // Only allow letters and spaces, and respect character limit
+    if (/^[a-zA-Z\s]*$/.test(value) && value.length <= MAX_NAME_LENGTH) {
+      setFirstname(value);
+    }
+  };
+
+  const handleLastnameChange = (value: string) => {
+    // Only allow letters and spaces, and respect character limit
+    if (/^[a-zA-Z\s]*$/.test(value) && value.length <= MAX_NAME_LENGTH) {
+      setLastname(value);
+    }
+  };
 
   const handleStart = () => {
-    if (!firstname || !lastname) {
+    const firstnameValidation = validateName(firstname.trim());
+    const lastnameValidation = validateName(lastname.trim());
+
+    if (!firstname.trim() || !lastname.trim()) {
       setShowSnackbar(true);
       return;
     }
-    const playerName = `${firstname} ${lastname}`;
+
+    if (firstnameValidation || lastnameValidation) {
+      return;
+    }
+
+    const playerName = `${firstname.trim()} ${lastname.trim()}`;
     dispatch(
       setPlayer({
         name: playerName,
       })
     );
-    navigate("/game/capture");
+    navigate(`/game/${sessionId}/capture`);
   };
 
   const handleCloseSnackbar = () => {
     setShowSnackbar(false);
   };
 
-
-  if(isAuthenticated)
-  {
-    return <Navigate to="/game/questionnaire" replace />;
+  if (isAuthenticated) {
+    return <Navigate to={`/game/${sessionId}/intro`} replace />;
   }
   return (
     <Box
       position={"absolute"}
       sx={{
         top: 0,
-        left: 0,  
+        left: 0,
         width: "100%",
         height: "100%",
         overflowY: "hidden",
@@ -101,13 +137,13 @@ const HomeScreen: React.FC = () => {
               placeholder="First Name"
               variant="outlined"
               value={firstname}
-              onChange={(e) => setFirstname(e.target.value)}
+              onChange={(e) => handleFirstnameChange(e.target.value)}
             />
             <TextField
               placeholder="Last Name"
               variant="outlined"
               value={lastname}
-              onChange={(e) => setLastname(e.target.value)}
+              onChange={(e) => handleLastnameChange(e.target.value)}
             />
           </Box>
           <Box
@@ -122,7 +158,7 @@ const HomeScreen: React.FC = () => {
             <GlobalButton
               fullWidth
               onClick={handleStart}
-              disabled={!firstname || !lastname}
+              disabled={!firstname.trim() || !lastname.trim()}
             >
               Start
             </GlobalButton>

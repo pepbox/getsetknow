@@ -14,7 +14,7 @@ export default class AdminServices {
         password,
         name,
     }: {
-        sessionId: Types.ObjectId ;
+        sessionId: Types.ObjectId;
         password: string;
         name: string;
     }) {
@@ -98,5 +98,23 @@ export default class AdminServices {
             throw new Error("Admin not found");
         }
         return { ...admin.toObject(), password: undefined };
+    }
+    async updateAdmin(
+        sessionId: mongoose.Types.ObjectId | string,
+        update: Partial<{ name: string; password: string }>
+    ) {
+        const options: any = {};
+        if (this.session) {
+            options.session = this.session;
+        }
+        const admin = await adminModel.findOneAndUpdate(
+            { sessionId: sessionId },
+            { $set: update },
+            { new: true, ...options }
+        );
+        if (!admin) {
+            throw new Error("Admin not found");
+        }
+        return { ...admin, password: undefined };
     }
 }

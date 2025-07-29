@@ -25,6 +25,14 @@ export const adminApi = api.injectEndpoints({
       }),
     }),
 
+    adminLogout: builder.mutation({
+      query: () => ({
+        url: '/admin/logout',
+        method: 'POST',
+      }),
+    }),
+
+
     fetchAdmin: builder.query({
       query: () => ({
         url: '/admin/fetchAdmin',
@@ -62,7 +70,7 @@ export const adminApi = api.injectEndpoints({
 
     getPlayerWithResponses: builder.query({
       query: (playerId: string) => ({
-        url: `/admin/getPlayerWithResponses${playerId}`,
+        url: `/admin/getPlayerWithResponses/${playerId}`,
         method: 'GET',
       }),
       transformResponse: (response: any) => response.data,
@@ -73,7 +81,9 @@ export const adminApi = api.injectEndpoints({
 
 });
 
-export const { useAdminLoginMutation,
+export const { 
+  useAdminLoginMutation,
+  useAdminLogoutMutation,
   useUpdateSessionMutation,
   useFetchDashboardDataQuery,
   useUpdatePlayerMutation,

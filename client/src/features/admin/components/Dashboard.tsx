@@ -17,8 +17,9 @@ const Dashboard: React.FC<DashboardProps> = ({
   headerData,
   players,
   onChangeName,
+  onChangeScore,
   onViewResponses,
-  playerWithResponses = null, // Default value for playerWithResponses
+  playerWithResponses = null, 
 }) => {
   const [UpdateSession] = useUpdateSessionMutation();
   const [gameStatus, setGameStatus] = useState<string>("pending");
@@ -73,6 +74,7 @@ const Dashboard: React.FC<DashboardProps> = ({
           gameStatus={gameStatus}
           transaction={transaction}
           onChangeName={onChangeName}
+          onChangeScore={onChangeScore}
           onViewResponses={onViewResponses}
           playerWithResponses={playerWithResponses}
         />

@@ -1,20 +1,27 @@
 import React from "react";
-import { useNavigate } from "react-router-dom";
+import { Navigate, useNavigate, useParams } from "react-router-dom";
 import { Box, Typography } from "@mui/material";
 import GlobalButton from "../../../components/ui/button";
 import GameHeader from "../../../components/layout/GameHeader";
 // import ProgressComponent from "../../../components/layout/ProgressComponent";
-import { useAppDispatch } from "../../../app/hooks";
+import { useAppDispatch, useAppSelector } from "../../../app/hooks";
 import { setCurrentStep } from "../../game/services/gameSlice";
+import { RootState } from "../../../app/store";
 
 const IntroScreen: React.FC = () => {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
-
+  const sessionId = useParams<{ sessionId: string }>().sessionId;
+  const GameCompleted = useAppSelector(
+    (state: RootState) => state.gameArena.gameCompleted
+  );
   const handleJumpIn = () => {
     dispatch(setCurrentStep(4));
-    navigate("/game/questionnaire");
+    navigate(`/game/${sessionId}/questionnaire`);
   };
+  if (GameCompleted) {
+    return <Navigate to={`/game/${sessionId}/completion`} replace />;
+  }
 
   return (
     <Box
