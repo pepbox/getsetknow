@@ -274,16 +274,12 @@ export const submitGuess = async (
         // Check if the guess is correct
         const isCorrect = guess.personId.toString() === guessedPersonId;
 
-        await playerService.updateGuessById(guessId, {
-            attempts: (guess.attempts || 0) + 1, // Increment attempts
-            guessedPersonId: guessedPersonId
-        });
-
         let profilePicture = "";
+        let score = 0;
         if (isCorrect) {
             // Update player score if the guess is correct
-            const attempts = guess.attempts ?? 0;
-            const player = await playerService.updatePlayerScore(guess.user.toString(), 100 - attempts * 10);
+            score = 100 - (guess.attempts || 0) * 10;
+            const player = await playerService.updatePlayerScore(guess.user.toString(), score);
             if (!player) {
                 res.status(StatusCodes.NOT_FOUND).json({
                     success: false,
@@ -292,18 +288,25 @@ export const submitGuess = async (
                 return;
             }
             SessionEmitters.toUser(guess.personId?.toString() ?? "", Events.PLAYER_STAT_UPDATE, {});
-            if (player.profilePhoto) {
-                const file = await fileService.getFileById(player.profilePhoto.toString());
+            if (guess.personId) {
+                const file = await fileService.getFileById(guess.personId.toString());
                 profilePicture = file?.location || "";
             }
         }
+
+        const updatedAttempts = (guess.attempts ?? 0) + 1;
+        await playerService.updateGuessById(guessId, {
+            attempts: updatedAttempts, // Increment attempts
+            guessedPersonId: guessedPersonId
+        });
         SessionEmitters.toSessionAdmins(sessionId?.toString() ?? "", Events.PLAYERS_UPDATE, {});
         res.status(StatusCodes.OK).json({
             success: true,
             correct: isCorrect,
             profilePhoto: profilePicture,
             name: isCorrect ? (await playerService.getPlayerById(guess.personId.toString()))?.name : "",
-            attempts: guess.attempts || 0 + 1,
+            attempts: updatedAttempts,
+            score: score,
         });
 
     } catch (error) {

@@ -1,5 +1,5 @@
 import React, { useRef, useCallback, useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { Navigate, useNavigate } from "react-router-dom";
 import { Box, Typography } from "@mui/material";
 import { CloudUpload } from "@mui/icons-material";
 import Webcam from "react-webcam";
@@ -20,6 +20,9 @@ const CaptureScreen: React.FC = () => {
   const [OnboardPlayer] = useOnboardPlayerMutation();
   const playerName = useAppSelector((state) => state.player.player?.name);
   const { sessionId } = useAppSelector((state: RootState) => state.game);
+  const isAuthenticated = useAppSelector(
+    (state: RootState) => state.player.isAuthenticated
+  );
 
   const capture = useCallback(() => {
     const imageSrc = webcamRef.current?.getScreenshot();
@@ -93,7 +96,10 @@ const CaptureScreen: React.FC = () => {
     dispatch(setCurrentStep(1));
     setCapturedImage(null);
   };
-
+  if (isAuthenticated) {
+    return <Navigate to={`/game/${sessionId}/intro`} replace />;
+  }
+  
   return (
     <Box
       sx={{

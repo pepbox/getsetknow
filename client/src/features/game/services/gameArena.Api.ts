@@ -18,6 +18,7 @@ export interface GuessSubmissionResponse {
   profilePhoto?: string;
   name?: string;
   attempts?: number;
+  score?: number;
 }
 
 export interface Session {

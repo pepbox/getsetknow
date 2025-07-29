@@ -20,7 +20,10 @@ const GameMain = () => {
   );
   const dispatch = useAppDispatch();
   const sessionId = useParams<{ sessionId: string }>().sessionId;
-  dispatch(setSessionId(sessionId ?? ""));
+
+  useEffect(() => {
+    dispatch(setSessionId(sessionId ?? ""));
+  }, [dispatch, sessionId]);
 
   useEffect(() => {
     fetchUser({});

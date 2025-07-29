@@ -9,6 +9,7 @@ export interface GuessResult {
   profilePhoto?: string;
   name?: string;
   attempts?: number;
+  score?: number; 
 }
 
 export interface GameArenaState {
@@ -294,6 +295,7 @@ const gameArenaSlice = createSlice({
             profilePhoto: payload.profilePhoto,
             name: payload.name,
             attempts: payload.attempts || 0, 
+            score: payload.score || 0,
           };
         }
       )

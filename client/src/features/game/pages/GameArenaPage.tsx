@@ -39,6 +39,7 @@ export interface GameArenaData {
   lastGuessPlayerPhoto?: string;
   lastGuessPlayerName?: string;
   lastGuessAttempts?: number;
+  lastGuessScore?: number;
 }
 
 const GameArenaPage: React.FC = () => {
@@ -157,8 +158,8 @@ const GameArenaPage: React.FC = () => {
         gameCompleted,
         lastGuessPlayerPhoto: lastGuessResult?.profilePhoto,
         lastGuessPlayerName: lastGuessResult?.name,
-        lastGuessAttempts:
-          lastGuessResult?.correct === false ? lastGuessResult?.attempts : 0,
+        lastGuessAttempts: lastGuessResult?.attempts,
+        lastGuessScore: lastGuessResult?.score || 0,
       }
     : null;
 
@@ -189,6 +190,7 @@ const GameArenaPage: React.FC = () => {
             profilePhoto: result.profilePhoto,
             name: result.name,
             attempts: result.attempts,
+            score: result.score,
           })
         );
 

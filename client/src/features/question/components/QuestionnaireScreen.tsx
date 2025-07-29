@@ -60,6 +60,38 @@ const QuestionnaireScreen: React.FC<QuestionnaireScreenProps> = ({
 
   const currentQuestion = questions[currentQuestionIndex];
 
+  // Constants for input limits
+  const MAX_WORDS = 5;
+  const MAX_CHARACTERS = 30;
+
+  // Helper function to count words
+  const countWords = (text: string): number => {
+    return text
+      .trim()
+      .split(/\s+/)
+      .filter((word) => word.length > 0).length;
+  };
+
+  // Function to handle input validation and limiting
+  const handleInputChange = (value: string) => {
+    // Check character limit
+    if (value.length > MAX_CHARACTERS) {
+      return; // Don't update if exceeds character limit
+    }
+
+    // Check word limit
+    if (countWords(value) > MAX_WORDS) {
+      return; // Don't update if exceeds word limit
+    }
+
+    // Update the answer if within limits
+    setAnswers((prev) => {
+      const updated = [...prev];
+      updated[currentQuestionIndex] = value;
+      return updated;
+    });
+  };
+
   const handleSubmit = () => {
     if ((answers[currentQuestionIndex] || "").trim()) {
       StoreQuestionResponse({
@@ -160,13 +192,7 @@ const QuestionnaireScreen: React.FC<QuestionnaireScreenProps> = ({
           <TextField
             fullWidth
             value={answers[currentQuestionIndex] || ""}
-            onChange={(e) =>
-              setAnswers((prev) => {
-                const updated = [...prev];
-                updated[currentQuestionIndex] = e.target.value;
-                return updated;
-              })
-            }
+            onChange={(e) => handleInputChange(e.target.value)}
             placeholder="Your answer..."
             sx={{
               "& .MuiOutlinedInput-root": {
