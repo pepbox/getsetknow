@@ -17,6 +17,7 @@ const Dashboard: React.FC<DashboardProps> = ({
   headerData,
   players,
   onChangeName,
+  onChangeScore,
   onViewResponses,
   playerWithResponses = null, 
 }) => {
@@ -73,6 +74,7 @@ const Dashboard: React.FC<DashboardProps> = ({
           gameStatus={gameStatus}
           transaction={transaction}
           onChangeName={onChangeName}
+          onChangeScore={onChangeScore}
           onViewResponses={onViewResponses}
           playerWithResponses={playerWithResponses}
         />

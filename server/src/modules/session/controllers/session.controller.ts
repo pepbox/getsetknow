@@ -8,10 +8,13 @@ import { Events } from "../../../services/socket/enums/Events";
 import AdminServices from "../../admin/services/admin.service";
 import { Types } from "mongoose";
 import axios from "axios";
+import PlayerService from "../../players/services/player.service";
+import { Player } from "../../players/models/player.model";
 
 
 const sessionService = new SessionService();
 const adminService = new AdminServices();
+const playerService = new PlayerService(Player);
 
 
 export const updateSession = async (
@@ -39,15 +42,20 @@ export const updateSession = async (
             return next(new AppError("Session not found.", 404));
         }
         SessionEmitters.toSession(sessionId.toString(), Events.SESSION_UPDATE, {});
-
-        await axios.post(
-            `${process.env.SUPER_ADMIN_SERVER_URL}/update`,
-            {
-                gameSessionId: sessionId.toString(),
-                status: "ENDED",
-                completedOn: new Date().toISOString(),
-            }
-        );
+        if (updateData.status === "ended") {
+            // Notify the super admin server about the session end
+            const players = await playerService.getPlayersBySession(sessionId as Types.ObjectId);
+            await axios.post(
+                `${process.env.SUPER_ADMIN_SERVER_URL}/update`,
+                {
+                    gameSessionId: sessionId.toString(),
+                    status: "ENDED",
+                    completedOn: new Date().toISOString(),
+                    totalPlayers: players.length,
+                    totalTeams: "0",
+                }
+            );
+        }
         res.status(200).json({
             message: "Session updated successfully.",
             data: {

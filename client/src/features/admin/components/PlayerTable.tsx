@@ -22,10 +22,11 @@ import {
   Stack,
   Divider,
   TableSortLabel,
+  Tooltip,
 } from "@mui/material";
 import React, { useState } from "react";
 import { PlayerTableProps } from "../types/interfaces";
-import PlayerResponsesModal from "./PlayerResponsesModal"; // Import the modal component
+import PlayerResponsesModal from "./PlayerResponsesModal";
 
 type Column = {
   key: string;
@@ -37,7 +38,9 @@ type Column = {
     onChangeName?: (id: string, name: string) => void,
     onViewResponses?: (id: string) => void,
     transaction?: boolean,
-    openModal?: (playerId: string, currentName: string) => void
+    openNameModal?: (playerId: string, currentName: string) => void,
+    onChangeScore?: (id: string, newScore: number) => void,
+    openScoreModal?: (playerId: string, currentScore: number) => void
   ) => React.ReactNode;
 };
 
@@ -46,6 +49,7 @@ const PlayerTable: React.FC<PlayerTableProps> = ({
   gameStatus,
   transaction,
   onChangeName,
+  onChangeScore,
   onViewResponses,
   playerWithResponses = null,
   loadingResponses = false,
@@ -57,6 +61,13 @@ const PlayerTable: React.FC<PlayerTableProps> = ({
   const [sortField, setSortField] = useState<string>("");
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
 
+  // Score change modal state
+  const [scoreModalOpen, setScoreModalOpen] = useState(false);
+  const [selectedPlayerIdForScore, setSelectedPlayerIdForScore] =
+    useState<string>("");
+  const [currentScore, setCurrentScore] = useState<number>(0);
+  const [scoreAdjustment, setScoreAdjustment] = useState<string>("");
+
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
@@ -64,6 +75,13 @@ const PlayerTable: React.FC<PlayerTableProps> = ({
     setSelectedPlayerId(playerId);
     setNewName(currentName);
     setModalOpen(true);
+  };
+
+  const openScoreModal = (playerId: string, playerCurrentScore: number) => {
+    setSelectedPlayerIdForScore(playerId);
+    setCurrentScore(playerCurrentScore);
+    setScoreAdjustment("");
+    setScoreModalOpen(true);
   };
 
   const handleChangeName = () => {
@@ -75,10 +93,29 @@ const PlayerTable: React.FC<PlayerTableProps> = ({
     }
   };
 
+  const handleChangeScore = () => {
+    const adjustment = parseInt(scoreAdjustment);
+    if (onChangeScore && selectedPlayerIdForScore && !isNaN(adjustment)) {
+      const newScore = Math.max(0, currentScore + adjustment); // Ensure score doesn't go below 0
+      onChangeScore(selectedPlayerIdForScore, newScore);
+      setScoreModalOpen(false);
+      setSelectedPlayerIdForScore("");
+      setCurrentScore(0);
+      setScoreAdjustment("");
+    }
+  };
+
   const handleCloseModal = () => {
     setModalOpen(false);
     setSelectedPlayerId("");
     setNewName("");
+  };
+
+  const handleCloseScoreModal = () => {
+    setScoreModalOpen(false);
+    setSelectedPlayerIdForScore("");
+    setCurrentScore(0);
+    setScoreAdjustment("");
   };
 
   const handleViewResponses = (playerId: string) => {
@@ -146,14 +183,18 @@ const PlayerTable: React.FC<PlayerTableProps> = ({
       label: "Change name",
       sortable: false,
       visible: (gameStatus) => gameStatus !== "playing",
-      render: (player, _onChangeName, _, transaction, openModal) => (
-        <IconButton
-          size="small"
-          disabled={!transaction}
-          onClick={() => openModal?.(player.id, player.name)}
-        >
-          <EditIcon fontSize="small" />
-        </IconButton>
+      render: (player, _onChangeName, _, transaction, openNameModal) => (
+        <Tooltip title={!transaction ? "Enable transactions first" : ""}>
+          <span>
+            <IconButton
+              size="small"
+              disabled={!transaction}
+              onClick={() => openNameModal?.(player.id, player.name)}
+            >
+              <EditIcon fontSize="small" />
+            </IconButton>
+          </span>
+        </Tooltip>
       ),
     },
     {
@@ -191,6 +232,35 @@ const PlayerTable: React.FC<PlayerTableProps> = ({
       visible: (gameStatus) => gameStatus === "playing",
       render: (player) => (
         <Typography fontWeight="medium">{player.totalScore}</Typography>
+      ),
+    },
+    {
+      key: "changeScore",
+      label: "Change Score",
+      sortable: false,
+      visible: (gameStatus) => gameStatus === "playing",
+      render: (
+        player,
+        _onChangeName,
+        _,
+        transaction,
+        _openNameModal,
+        _onChangeScore,
+        openScoreModal
+      ) => (
+        <Tooltip title={!transaction ? "Enable transactions first" : ""}>
+          <span>
+            <IconButton
+              size="small"
+              disabled={!transaction}
+              onClick={() =>
+                openScoreModal?.(player.id, player.totalScore || 0)
+              }
+            >
+              <EditIcon fontSize="small" />
+            </IconButton>
+          </span>
+        </Tooltip>
       ),
     },
     {
@@ -280,7 +350,9 @@ const PlayerTable: React.FC<PlayerTableProps> = ({
                       onChangeName,
                       onViewResponses,
                       transaction,
-                      openModal
+                      openModal,
+                      onChangeScore,
+                      openScoreModal
                     )}
                   </Box>
                   {colIdx < visibleColumns.length - 1 && (
@@ -348,7 +420,9 @@ const PlayerTable: React.FC<PlayerTableProps> = ({
                         onChangeName,
                         onViewResponses,
                         transaction,
-                        openModal
+                        openModal,
+                        onChangeScore,
+                        openScoreModal
                       )}
                     </TableCell>
                   ))}
@@ -383,6 +457,52 @@ const PlayerTable: React.FC<PlayerTableProps> = ({
           <Button onClick={handleCloseModal}>Cancel</Button>
           <Button onClick={handleChangeName} variant="contained">
             Change Name
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Score Change Modal */}
+      <Dialog
+        open={scoreModalOpen}
+        onClose={handleCloseScoreModal}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle>Change Player Score</DialogTitle>
+        <DialogContent>
+          <Box sx={{ mb: 2 }}>
+            <Typography variant="body2" color="text.secondary">
+              Current Score: <strong>{currentScore}</strong>
+            </Typography>
+          </Box>
+          <TextField
+            autoFocus
+            margin="dense"
+            label="Score Adjustment (e.g., +50 or -30)"
+            type="number"
+            fullWidth
+            variant="outlined"
+            value={scoreAdjustment}
+            onChange={(e) => setScoreAdjustment(e.target.value)}
+            placeholder="Enter positive or negative number"
+            helperText={
+              scoreAdjustment && !isNaN(parseInt(scoreAdjustment))
+                ? `New Score: ${Math.max(
+                    0,
+                    currentScore + parseInt(scoreAdjustment)
+                  )}`
+                : "Enter a number to see preview"
+            }
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseScoreModal}>Cancel</Button>
+          <Button
+            onClick={handleChangeScore}
+            variant="contained"
+            disabled={!scoreAdjustment || isNaN(parseInt(scoreAdjustment))}
+          >
+            Change Score
           </Button>
         </DialogActions>
       </Dialog>
