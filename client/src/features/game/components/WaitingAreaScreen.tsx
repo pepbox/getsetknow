@@ -1,9 +1,17 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Box, Avatar, Typography } from "@mui/material";
 import { motion } from "framer-motion";
-import { Navigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useAppSelector } from "../../../app/hooks";
 import { RootState } from "../../../app/store";
+import artist from "../../../assets/artist.png";
+import music from "../../../assets/music.png";
+import dance from "../../../assets/Dance.png";
+import adventure from "../../../assets/adventure.png";
+import uiux from "../../../assets/uiux.png";
+import foodie from "../../../assets/foodie.png";
+import photographer from "../../../assets/photographer.png";
+import music2 from "../../../assets/music2.png";
 
 interface Player {
   id: number;
@@ -25,48 +33,52 @@ const WaitingAreaScreen: React.FC<CircularPlayerAnimationProps> = ({
   const isGameStarted = useAppSelector(
     (state: RootState) => state.game.isGameStarted
   );
+  const GameCompleted = useAppSelector(
+    (state: RootState) => state.gameArena.gameCompleted
+  );
   const { sessionId } = useAppSelector((state: RootState) => state.game);
+  const navigate = useNavigate();
 
   const players: Player[] = [
     {
       id: 1,
       name: "Artist",
-      imageUrl: "/src/assets/artist.png",
+      imageUrl: artist,
     },
     {
       id: 2,
       name: "Music",
-      imageUrl: "/src/assets/music.png",
+      imageUrl: music,
     },
     {
       id: 3,
       name: "Dance",
-      imageUrl: "/src/assets/Dance.png",
+      imageUrl: dance,
     },
     {
       id: 4,
       name: "Adventurer",
-      imageUrl: "/src/assets/adventure.png",
+      imageUrl: adventure,
     },
     {
       id: 5,
       name: "UI/UX",
-      imageUrl: "/src/assets/uiux.png",
+      imageUrl: uiux,
     },
     {
       id: 6,
       name: "Foodie",
-      imageUrl: "/src/assets/foodie.png",
+      imageUrl: foodie,
     },
     {
       id: 7,
       name: "Photographer",
-      imageUrl: "/src/assets/photographer.png",
+      imageUrl: photographer,
     },
     {
       id: 8,
       name: "Developer",
-      imageUrl: "/src/assets/music2.png",
+      imageUrl: music2,
     },
   ];
   // Ensure we only use 8 players
@@ -82,9 +94,13 @@ const WaitingAreaScreen: React.FC<CircularPlayerAnimationProps> = ({
     };
   };
 
-  if (isGameStarted) {
-    return <Navigate to={`/game/${sessionId}/arena`} />;
-  }
+  useEffect(() => {
+    if (GameCompleted) {
+      navigate(`/game/${sessionId}/completion`, { replace: true });
+    } else if (isGameStarted) {
+      navigate(`/game/${sessionId}/arena`, { replace: true });
+    }
+  }, [GameCompleted, isGameStarted, navigate, sessionId]);
 
   return (
     <Box

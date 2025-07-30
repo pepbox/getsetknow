@@ -105,8 +105,6 @@ const QuestionnaireScreen: React.FC<QuestionnaireScreenProps> = ({
             dispatch(setCurrentStep(currentQuestionIndex + 1));
             setCurrentQuestionIndex(currentQuestionIndex + 1);
           } else {
-            // Clear localStorage when questionnaire is completed
-            localStorage.removeItem(STORAGE_KEY);
             navigate(`/game/${sessionId}/waiting`);
           }
         })

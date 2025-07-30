@@ -72,7 +72,7 @@ const HomeScreen: React.FC = () => {
   };
 
   if (isAuthenticated) {
-    return <Navigate to={`/game/${sessionId}/intro`} replace />;
+    return <Navigate to={`/game/${sessionId}/questionnaire`} replace />;
   }
   return (
     <Box
