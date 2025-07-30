@@ -44,6 +44,11 @@ const gameSlice = createSlice({
           state.isLoading = false;
           state.isGameStarted = payload.status === "playing";
           state.sessionId = payload._id;
+          if (payload.status === 'ended') {
+            console.log("Game has ended, clearing localStorage");
+            const STORAGE_KEY = `questionnaire_answers_${state.sessionId}`;
+            localStorage.removeItem(STORAGE_KEY);
+          }
         }
       )
       .addMatcher(

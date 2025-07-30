@@ -334,14 +334,12 @@ const GameArena: React.FC<GameArenaProps> = ({
             )}
           </Typography>
 
-          {!data?.gameCompleted && (
-            <GlobalButton
-              onClick={handleNextClick}
-              sx={{ maxWidth: "300px", mx: "auto" }}
-            >
-              Next Player
-            </GlobalButton>
-          )}
+          <GlobalButton
+            onClick={handleNextClick}
+            sx={{ maxWidth: "300px", mx: "auto" }}
+          >
+            Next Player
+          </GlobalButton>
 
           {!data?.isLastGuessCorrect && (
             <GlobalButton

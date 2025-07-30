@@ -1,9 +1,8 @@
-import React from "react";
-import { Navigate, useNavigate, useParams } from "react-router-dom";
+import React, { useEffect } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import { Box, Typography } from "@mui/material";
 import GlobalButton from "../../../components/ui/button";
 import GameHeader from "../../../components/layout/GameHeader";
-// import ProgressComponent from "../../../components/layout/ProgressComponent";
 import { useAppDispatch, useAppSelector } from "../../../app/hooks";
 import { setCurrentStep } from "../../game/services/gameSlice";
 import { RootState } from "../../../app/store";
@@ -16,13 +15,22 @@ const IntroScreen: React.FC = () => {
   const GameCompleted = useAppSelector(
     (state: RootState) => state.gameArena.gameCompleted
   );
+  const isGameStarted = useAppSelector(
+    (state: RootState) => state.game.isGameStarted
+  );
+
   const handleJumpIn = () => {
     dispatch(setCurrentStep(4));
     navigate(`/game/${sessionId}/questionnaire`);
   };
-  if (GameCompleted) {
-    return <Navigate to={`/game/${sessionId}/completion`} replace />;
-  }
+
+  useEffect(() => {
+    if (GameCompleted) {
+      navigate(`/game/${sessionId}/completion`, { replace: true });
+    } else if (isGameStarted) {
+      navigate(`/game/${sessionId}/arena`, { replace: true });
+    }
+  }, [GameCompleted, isGameStarted, navigate, sessionId]);
 
   return (
     <Box
@@ -33,7 +41,6 @@ const IntroScreen: React.FC = () => {
       }}
     >
       <GameHeader />
-      {/* <ProgressComponent /> */}
 
       <Box
         sx={{

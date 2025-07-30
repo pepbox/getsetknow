@@ -27,7 +27,7 @@ export interface GameArenaState {
   };
   lastGuessResult: GuessResult | null;
   gameCompleted: boolean;
-  correctlyGuessedCards: string[]; // Array of guessIds that have been correctly guessed
+  correctlyGuessedCards: string[];
 }
 
 const initialState: GameArenaState = {
@@ -47,6 +47,7 @@ const initialState: GameArenaState = {
   gameCompleted: false,
   correctlyGuessedCards: [],
 };
+
 
 // Helper function to find next unguessed card
 const findNextUnguessedCard = (
@@ -101,6 +102,7 @@ const gameArenaSlice = createSlice({
       // Check if all cards are correctly guessed
       if (areAllCardsGuessed(state.gameCards, state.correctlyGuessedCards)) {
         state.gameCompleted = true;
+        console.log("All cards guessed, game completed ate next card 1 ");
         return;
       }
 
@@ -118,10 +120,12 @@ const gameArenaSlice = createSlice({
           guessId: null,
           guessedPersonId: null,
         };
-      } else {
-        // If we can't find any unguessed card, game is completed
-        state.gameCompleted = true;
       }
+      // else {
+      //   // If we can't find any unguessed card, game is completed
+      //   console.log("All cards guessed, game completed ate next card 2 ");
+      //   state.gameCompleted = true;
+      // }
     },
 
     replayLastCard: (state) => {
@@ -157,11 +161,12 @@ const gameArenaSlice = createSlice({
           guessId: null,
           guessedPersonId: null,
         };
-      } else {
-
-        // If we can't find any unguessed card, game is completed
-        state.gameCompleted = true;
       }
+      // else {
+
+      //   // If we can't find any unguessed card, game is completed
+      //   state.gameCompleted = true;
+      // }
     },
 
     updateScore: (state, action: PayloadAction<{ correct: boolean }>) => {
@@ -359,6 +364,7 @@ const gameArenaSlice = createSlice({
         gameApi.endpoints.getSession.matchFulfilled,
         (state, { payload }) => {
           state.gameCompleted = payload.status === 'ended';
+
         }
       )
       .addMatcher(
