@@ -49,9 +49,7 @@ const Questionnaire: React.FC = () => {
   if (!questionIndex && questions && questions.length > 0) {
     return <Navigate to={`/game/${sessionId}/questionnaire/0`} replace />;
   }
-  console.log("Parsed Answers:", parsedAnswers);
   if (parsedAnswers.length === questions.length) {
-    console.log("All questions answered, redirecting to waiting area");
     return <Navigate to={`/game/${sessionId}/waiting`} replace />;
   }
 

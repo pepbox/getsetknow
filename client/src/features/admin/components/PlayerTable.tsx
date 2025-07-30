@@ -285,7 +285,7 @@ const PlayerTable: React.FC<PlayerTableProps> = ({
       key: "viewResponses",
       label: "View Responses",
       sortable: false,
-      visible: (gameStatus) => gameStatus !== "playing",
+      visible: () => true,
       render: (player) => (
         <Button
           variant="text"
@@ -301,7 +301,7 @@ const PlayerTable: React.FC<PlayerTableProps> = ({
   const getRowColor = (index: number) =>
     index % 2 === 0 ? "#11111108" : "#11111100";
   const visibleColumns = columns.filter((col) => col.visible(gameStatus));
-
+  
   return (
     <>
       {!isMobile && visibleColumns.some((col) => col.sortable) && (
