@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { Box, Typography, Paper, Chip, IconButton } from "@mui/material";
-import { ArrowBackIos, ArrowForwardIos } from "@mui/icons-material";
+import { Box, Typography, Paper } from "@mui/material";
 import GlobalButton from "../../../components/ui/button";
 import GameHeader from "../../../components/layout/GameHeader";
 import { useAppDispatch, useAppSelector } from "../../../app/hooks";
@@ -110,6 +109,7 @@ const IntroScreen: React.FC = () => {
           overflow: "hidden",
           gap: 0,
           p: 2,
+          minHeight: "400px",
         }}
       >
         {/* Left Side - Game Path */}
@@ -220,19 +220,18 @@ const IntroScreen: React.FC = () => {
           <Paper
             elevation={4}
             sx={{
-              p: 2,
+              p: 3,
               bgcolor: "white",
               borderRadius: 2,
               width: "100%",
-              maxWidth: "200px",
+              maxWidth: "280px", // Increased max width
               boxShadow: "0 4px 16px rgba(0,0,0,0.15)",
             }}
           >
             <Typography
-              variant="h5"
+              variant="h6"
               sx={{
-                fontWeight: "bold",
-                mb: gameSteps[currentStep].id === 1 ? 1 : 2,
+                mb: 1,
                 textAlign: "center",
               }}
             >
@@ -242,9 +241,11 @@ const IntroScreen: React.FC = () => {
             <Typography
               variant="body1"
               sx={{
+                fontSize: "14px",
                 color: "text.secondary",
                 textAlign: "center",
                 mb: gameSteps[currentStep].id === 1 ? 1 : 0,
+                display: gameSteps[currentStep].id === 1 ? "none" : "block",
               }}
             >
               {gameSteps[currentStep].description}
@@ -253,42 +254,6 @@ const IntroScreen: React.FC = () => {
             {/* Scoring Info for Guess Step */}
             {gameSteps[currentStep].id === 1 && (
               <Box sx={{ mt: 1 }}>
-                <Typography
-                  variant="subtitle2"
-                  sx={{
-                    fontWeight: "bold",
-                    mb: 1,
-                    textAlign: "center",
-                  }}
-                >
-                  Scoring System:
-                </Typography>
-                <Box
-                  sx={{
-                    display: "flex",
-                    justifyContent: "center",
-                    flexWrap: "wrap",
-                    gap: 1,
-                    mb: 2,
-                  }}
-                >
-                  <Chip
-                    label="Correct: 100 pts"
-                    sx={{
-                      bgcolor: "#4FD1C5",
-                      color: "white",
-                      fontWeight: "bold",
-                    }}
-                  />
-                  <Chip
-                    label="Target: 50 pts"
-                    sx={{
-                      bgcolor: "#FED7AA",
-                      color: "#1C1C1E",
-                      fontWeight: "bold",
-                    }}
-                  />
-                </Box>
                 {/* <Typography
                   variant="body2"
                   sx={{
@@ -307,9 +272,22 @@ const IntroScreen: React.FC = () => {
                     fontStyle: "italic",
                   }}
                 >
-                  Example: If you guess a person correctly in 3 attempts, you
-                  earn <b>70 pts</b> (100 - 10 × 3), and the person you guessed
-                  receives <b>50 pts</b>.
+                  Example: If you guess a person correctly then you earn{" "}
+                  <b>100 pts</b>, and the person you guessed receives{" "}
+                  <b>50 pts</b>.
+                </Typography>
+
+                <Typography
+                  variant="subtitle2"
+                  sx={{
+                    mt: 1,
+                    fontSize: "10px",
+                    color: "text.secondary",
+                    textAlign: "center",
+                    fontStyle: "italic",
+                  }}
+                >
+                  Note: For every wrong guess, you lose 10 points.
                 </Typography>
               </Box>
             )}
@@ -329,71 +307,62 @@ const IntroScreen: React.FC = () => {
           gap: 2,
         }}
       >
-        {/* Navigation Arrows */}
-        <Box
-          sx={{
-            display: "flex",
-            alignItems: "center",
-            gap: 2,
-            mb: 2,
-          }}
-        >
-          <IconButton
-            onClick={handlePrevStep}
+        {/* Show Back/Next buttons or Jump In button */}
+        {allStepsViewed ? (
+          <GlobalButton
+            onClick={handleJumpIn}
+            sx={{
+              maxWidth: "300px",
+            }}
+          >
+            Jump in
+          </GlobalButton>
+        ) : (
+          <Box
             sx={{
               display: "flex",
-              justifyContent: "center",
-              alignContent: "center",
-              bgcolor: currentStep === 0 ? "grey.300" : "primary.main",
-              color: "white",
-              "&:hover": {
-                bgcolor: currentStep === 0 ? "grey.300" : "primary.dark",
-              },
+              alignItems: "center",
+              gap: 3,
+              width: "100%",
+              maxWidth: "300px",
+              justifyContent: "space-between",
             }}
           >
-            <ArrowBackIos />
-          </IconButton>
+            <GlobalButton
+              onClick={handlePrevStep}
+              disabled={currentStep === 0}
+              sx={{
+                flex: 1,
+                maxWidth: "120px",
+                opacity: currentStep === 0 ? 0.5 : 1,
+              }}
+            >
+              Back
+            </GlobalButton>
 
-          <Typography
-            variant="body2"
-            sx={{
-              minWidth: "80px",
-              textAlign: "center",
-              fontWeight: "bold",
-            }}
-          >
-            {currentStep + 1} of 4
-          </Typography>
+            <Typography
+              variant="body2"
+              sx={{
+                fontWeight: "bold",
+                color: "text.secondary",
+              }}
+            >
+              {currentStep + 1} of 4
+            </Typography>
 
-          <IconButton
-            onClick={handleNextStep}
-            sx={{
-              display: "flex",
-              justifyContent: "center",
-              alignContent: "center",
-              bgcolor: currentStep === 3 ? "grey.400" : "primary.main",
-              color: "white",
-              "&:hover": {
-                bgcolor: currentStep === 3 ? "grey.300" : "primary.dark",
-              },
-            }}
-          >
-            <ArrowForwardIos />
-          </IconButton>
-        </Box>
-
-        <GlobalButton
-          onClick={handleJumpIn}
-          disabled={!allStepsViewed}
-          sx={{
-            maxWidth: "300px",
-            opacity: allStepsViewed ? 1 : 0.5,
-          }}
-        >
-          {allStepsViewed
-            ? "Jump in"
-            : `View all steps (${viewedSteps.size}/4)`}
-        </GlobalButton>
+            <GlobalButton
+              onClick={handleNextStep}
+              disabled={currentStep === 3}
+              sx={{
+                flex: 1,
+                maxWidth: "120px",
+                opacity: currentStep === 3 ? 0.5 : 1,
+              }}
+            >
+              Next
+            </GlobalButton>
+          </Box>
+        )}
       </Box>
     </Box>
   );
