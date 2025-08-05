@@ -17,6 +17,7 @@ class PlayerService {
             name: data.name,
             profilePhoto: data.profilePhoto,
             session: data.session,
+            team: data.team,
         });
         return await player.save();
     }

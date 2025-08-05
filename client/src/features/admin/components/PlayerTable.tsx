@@ -96,7 +96,7 @@ const PlayerTable: React.FC<PlayerTableProps> = ({
   const handleChangeScore = () => {
     const adjustment = parseInt(scoreAdjustment);
     if (onChangeScore && selectedPlayerIdForScore && !isNaN(adjustment)) {
-      const newScore = Math.max(0, currentScore + adjustment); // Ensure score doesn't go below 0
+      const newScore = Math.max(0, currentScore + adjustment);
       onChangeScore(selectedPlayerIdForScore, newScore);
       setScoreModalOpen(false);
       setSelectedPlayerIdForScore("");
@@ -277,7 +277,12 @@ const PlayerTable: React.FC<PlayerTableProps> = ({
               : "pending"
           }
           size="small"
-          color={player.currentStatus === "pending" ? "warning" : "default"}
+          color={
+            player.questionsAnswered.split("/")[0] ===
+            player.questionsAnswered.split("/")[1]
+              ? "primary"
+              : "warning"
+          }
         />
       ),
     },
@@ -288,8 +293,17 @@ const PlayerTable: React.FC<PlayerTableProps> = ({
       visible: () => true,
       render: (player) => (
         <Button
-          variant="text"
+          variant="outlined"
           size="small"
+          sx={{
+            padding: "2px 4px",
+            color: "black",
+            borderColor: "black",
+            "&:hover": {
+              backgroundColor: "#f5f5f5",
+              borderColor: "black",
+            },
+          }}
           onClick={() => handleViewResponses(player.id)}
         >
           Show
@@ -301,7 +315,7 @@ const PlayerTable: React.FC<PlayerTableProps> = ({
   const getRowColor = (index: number) =>
     index % 2 === 0 ? "#11111108" : "#11111100";
   const visibleColumns = columns.filter((col) => col.visible(gameStatus));
-  
+
   return (
     <>
       {!isMobile && visibleColumns.some((col) => col.sortable) && (

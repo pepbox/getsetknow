@@ -19,6 +19,7 @@ const CaptureScreen: React.FC = () => {
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
   const [OnboardPlayer] = useOnboardPlayerMutation();
   const playerName = useAppSelector((state) => state.player.player?.name);
+  const teamNumber = useAppSelector((state) => state.player.player?.teamNumber);
   const { sessionId } = useAppSelector((state: RootState) => state.game);
   const isAuthenticated = useAppSelector(
     (state: RootState) => state.player.isAuthenticated
@@ -76,6 +77,7 @@ const CaptureScreen: React.FC = () => {
       formData.append("name", playerName || "");
       formData.append("session", sessionId || "");
       formData.append("profilePicture", file);
+      formData.append("teamNumber", teamNumber?.toString() || "");
 
       OnboardPlayer(formData)
         .unwrap()
@@ -99,7 +101,7 @@ const CaptureScreen: React.FC = () => {
   if (isAuthenticated) {
     return <Navigate to={`/game/${sessionId}/intro`} replace />;
   }
-  
+
   return (
     <Box
       sx={{

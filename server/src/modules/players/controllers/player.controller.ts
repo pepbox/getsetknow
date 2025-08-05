@@ -15,10 +15,12 @@ import { deleteFromS3 } from '../../../services/fileUpload';
 import SessionService from '../../session/services/session.service';
 import FileService from '../../files/services/fileService';
 import { SessionStatus } from '../../session/types/enums';
+import TeamService from '../../teams/services/team.service';
 
 const playerService = new PlayerService(Player);
 const questionService = new QuestionService(Question);
 const fileService = new FileService();
+const teamService = new TeamService();
 
 
 export const onboardPlayer = async (
@@ -29,6 +31,7 @@ export const onboardPlayer = async (
     try {
         const { name,
             session,
+            teamNumber
         } = req.body;
 
         if (!req.file) {
@@ -68,11 +71,13 @@ export const onboardPlayer = async (
         };
 
         const profileImage = await fileService.uploadFile(profileImageInfo);
+        const team = await teamService.fetchTeamByNumber(teamNumber, session);
 
         const playerData = {
             name,
             profilePhoto: profileImage._id,
             session,
+            team: team._id,
         };
 
         const player = await playerService.createPlayer(playerData);

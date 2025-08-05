@@ -6,4 +6,5 @@ export interface ISession extends Document {
     createdAt: Date;
     updatedAt: Date;
     status?: SessionStatus;
+    numberOfTeams?: number | null;
 }

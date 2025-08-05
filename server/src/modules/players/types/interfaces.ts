@@ -5,6 +5,7 @@ export interface IPlayer extends Document {
     name: string;
     profilePhoto: mongoose.Types.ObjectId;
     score?: number;
+    team?: mongoose.Types.ObjectId;
     session: Types.ObjectId;
     createdAt?: Date;
     updatedAt?: Date;

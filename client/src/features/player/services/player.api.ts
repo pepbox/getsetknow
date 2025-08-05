@@ -19,10 +19,20 @@ export const playerApi = api.injectEndpoints({
         }),
 
 
+        getAllTeams: builder.query({
+            query: (sessionId) => ({
+                url: `/player/getAllTeams/${sessionId}`,
+                method: 'GET',
+            }),
+            transformResponse: (response: { data: any[] }) => response.data,
+        }),
+
+
     }),
 });
 
 export const {
     useOnboardPlayerMutation,
     useLazyFetchPlayerQuery,
+    useGetAllTeamsQuery,
 } = playerApi;
