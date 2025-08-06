@@ -21,6 +21,7 @@ const DashboardPage: React.FC = () => {
       name: string;
       profilePhoto: string;
       score: number;
+      team: number;
     };
     responses: any[];
   } | null>(null);
@@ -88,6 +89,7 @@ const DashboardPage: React.FC = () => {
               name: response.player.name,
               profilePhoto: response.player.profilePhoto,
               score: response.player.score,
+              team: response.player.team,
             },
             responses: response.responses,
           });

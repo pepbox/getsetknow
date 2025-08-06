@@ -27,6 +27,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
   onGameStatusChange,
   onTransactionsChange,
   transaction = false, // Default value for transaction
+  isCheckingReadiness = false, // Default value for checking readiness
 }) => {
   const [AdminLogout] = useAdminLogoutMutation();
   const [UpdateSession] = useUpdateSessionMutation();
@@ -159,11 +160,12 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
             sx={{
               display: data?.gameStatus === "playing" ? "none" : "block",
             }}
+            disabled={isCheckingReadiness}
             onClick={() => {
               if (onGameStatusChange) onGameStatusChange();
             }}
           >
-            Start Game
+            {isCheckingReadiness ? "Checking Players..." : "Start Game"}
           </GlobalButton>
 
           <GlobalButton

@@ -48,6 +48,7 @@ export interface Player {
     peopleYouKnow?: string;
     peopleWhoKnowYou?: string;
     totalScore?: number;
+    team?: string | number;
 }
 
 export interface DashboardHeaderProps {
@@ -56,6 +57,7 @@ export interface DashboardHeaderProps {
     onGameStatusChange?: () => void;
     onTransactionsChange?: (status: boolean) => void;
     transaction?: boolean;
+    isCheckingReadiness?: boolean;
 }
 
 

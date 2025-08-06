@@ -14,6 +14,7 @@ router.post('/logout', asyncHandeler(adminControllers.logoutAdmin));
 router.get('/fetch', authenticateUser, authorizeRoles("ADMIN"), asyncHandeler(adminControllers.fetchAdmin));
 router.get('/fetchDashboardData', authenticateUser, authorizeRoles("ADMIN"), asyncHandeler(adminControllers.fetchAdminDashboardData));
 router.get('/fetchLeaderboardData', authenticateUser, authorizeRoles("ADMIN"), asyncHandeler(adminControllers.fetchLeaderboardData));
+router.get('/checkPlayersReadiness', authenticateUser, authorizeRoles("ADMIN"), asyncHandeler(adminControllers.checkPlayersReadiness));
 router.put('/updatePlayer', authenticateUser, authorizeRoles("ADMIN"), asyncHandeler(playerControllers.updatePlayer));
 router.get('/getPlayerWithResponses/:playerId', authenticateUser, authorizeRoles("ADMIN"), asyncHandeler(playerControllers.getPlayerWithResponses));
 

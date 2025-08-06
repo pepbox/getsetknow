@@ -107,7 +107,6 @@ export const createSession = async (
     try {
         const { name, adminName, adminPin: password, gameConfig } = req.body;
         const { numberOfTeams } = gameConfig;
-
         const newSession = await sessionService.createSession({
             name,
             numberOfTeams: numberOfTeams || null,

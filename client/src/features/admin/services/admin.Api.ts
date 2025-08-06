@@ -86,6 +86,14 @@ export const adminApi = api.injectEndpoints({
       // providesTags: ["AdminPlayer"],
     }),
 
+    checkPlayersReadiness: builder.query({
+      query: () => ({
+        url: '/admin/checkPlayersReadiness',
+        method: 'GET',
+      }),
+      transformResponse: (response: any) => response.data,
+    }),
+
   }),
 
 });
@@ -98,5 +106,6 @@ export const {
   useFetchLeaderboardDataQuery,
   useUpdatePlayerMutation,
   useLazyGetPlayerWithResponsesQuery,
-  useLazyFetchAdminQuery
+  useLazyFetchAdminQuery,
+  useLazyCheckPlayersReadinessQuery
 } = adminApi;

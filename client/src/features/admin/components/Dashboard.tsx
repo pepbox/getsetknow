@@ -11,7 +11,8 @@ import {
 } from "@mui/material";
 import DashboardHeader from "./DashboardHeader";
 import PlayerTable from "./PlayerTable";
-import { useUpdateSessionMutation } from "../services/admin.Api";
+import ForceStartModal from "./ForceStartModal";
+import { useUpdateSessionMutation, useLazyCheckPlayersReadinessQuery } from "../services/admin.Api";
 
 const Dashboard: React.FC<DashboardProps> = ({
   headerData,
@@ -19,22 +20,54 @@ const Dashboard: React.FC<DashboardProps> = ({
   onChangeName,
   onChangeScore,
   onViewResponses,
-  playerWithResponses = null, 
+  playerWithResponses = null,
 }) => {
   const [UpdateSession] = useUpdateSessionMutation();
+  const [checkPlayersReadiness] = useLazyCheckPlayersReadinessQuery();
   const [gameStatus, setGameStatus] = useState<string>("pending");
   const [transaction, setTransaction] = useState<boolean>(false);
 
-  // Dialog state
+  // Dialog state for transactions
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
   const [pendingTransaction, setPendingTransaction] = useState<boolean>(false);
+
+  // Force start modal state
+  const [forceStartModalOpen, setForceStartModalOpen] = useState(false);
+  const [pendingPlayers, setPendingPlayers] = useState<any[]>([]);
+  const [totalPlayers, setTotalPlayers] = useState<number>(0);
+  const [isCheckingReadiness, setIsCheckingReadiness] = useState(false);
 
   useEffect(() => {
     setGameStatus(headerData?.gameStatus);
   }, [headerData?.gameStatus]);
 
-  const onGameStatusChange = () => {
-    console.log("Game status changed:", !gameStatus);
+  const onGameStatusChange = async () => {
+    try {
+      setIsCheckingReadiness(true);
+      
+      // First check if all players are ready
+      const readinessResult = await checkPlayersReadiness({}).unwrap();
+      
+      if (readinessResult.allReady) {
+        // All players are ready, start game immediately
+        startGame();
+      } else {
+        // Some players aren't ready, show force start modal
+        setPendingPlayers(readinessResult.pendingPlayers || []);
+        setTotalPlayers(readinessResult.totalPlayers || 0);
+        setForceStartModalOpen(true);
+      }
+    } catch (error) {
+      console.error("Failed to check players readiness:", error);
+      // If check fails, proceed with normal game start
+      startGame();
+    } finally {
+      setIsCheckingReadiness(false);
+    }
+  };
+
+  const startGame = () => {
+    console.log("Starting game...");
     UpdateSession({ status: "playing" })
       .unwrap()
       .then(() => {
@@ -44,6 +77,15 @@ const Dashboard: React.FC<DashboardProps> = ({
       .catch((error) => {
         console.error("Failed to update session:", error);
       });
+  };
+
+  const handleForceStartWait = () => {
+    setForceStartModalOpen(false);
+  };
+
+  const handleForceStartConfirm = () => {
+    setForceStartModalOpen(false);
+    startGame();
   };
 
   const onTransactionsChange = (status: boolean) => {
@@ -67,6 +109,7 @@ const Dashboard: React.FC<DashboardProps> = ({
         onGameStatusChange={onGameStatusChange}
         transaction={transaction}
         onTransactionsChange={onTransactionsChange}
+        isCheckingReadiness={isCheckingReadiness}
       />
       <Box sx={{ px: 4 }}>
         <PlayerTable
@@ -79,6 +122,8 @@ const Dashboard: React.FC<DashboardProps> = ({
           playerWithResponses={playerWithResponses}
         />
       </Box>
+      
+      {/* Transaction Confirmation Dialog */}
       <Dialog open={confirmDialogOpen} onClose={handleDialogClose}>
         <DialogTitle>Confirm Transaction Change</DialogTitle>
         <DialogContent>
@@ -100,6 +145,16 @@ const Dashboard: React.FC<DashboardProps> = ({
           </Button>
         </DialogActions>
       </Dialog>
+
+      {/* Force Start Modal */}
+      <ForceStartModal
+        open={forceStartModalOpen}
+        onClose={handleForceStartWait}
+        onWait={handleForceStartWait}
+        onForceStart={handleForceStartConfirm}
+        pendingPlayers={pendingPlayers}
+        totalPlayers={totalPlayers}
+      />
     </Box>
   );
 };

@@ -10,12 +10,14 @@ import QuestionService from '../../questions/services/question.service';
 import { Question } from '../../questions/models/question.model';
 import { SessionStatus } from '../../session/types/enums';
 import FileService from '../../files/services/fileService';
+import TeamService from '../../teams/services/team.service';
 
 const adminService = new AdminServices();
 const sessionService = new SessionService();
 const playerService = new PlayerService(Player); // Assuming you have a player service
 const questionService = new QuestionService(Question); // Assuming you have a question service
 const fileService = new FileService();
+const teamService = new TeamService();
 
 
 export const createAdmin = async (
@@ -184,7 +186,6 @@ export const fetchAdminDashboardData = async (
 
         // Fetch all players in the session
         const players = await playerService.getPlayersBySession(sessionId);
-
         const playerDataPromises = players.map(async (player) => {
             // Questions answered
             const totalQuestions = await questionService.getAllQuestions();
@@ -207,11 +208,12 @@ export const fetchAdminDashboardData = async (
                     guess.personId.toString() === guess.guessedPersonId.toString()
             );
             const peopleWhoKnowYou = `${correctGuessesByPerson.length}`;
-            // Status from session gue
+            // Status from session 
             const currentStatus = session.status || "Pending";
 
             // Total score
             const totalScore = player.score || 0;
+            const team = await teamService.fetchTeamById(player?.team?.toString() || "");
 
             return {
                 id: player._id.toString(),
@@ -222,6 +224,7 @@ export const fetchAdminDashboardData = async (
                 peopleYouKnow,
                 peopleWhoKnowYou,
                 totalScore,
+                team: team.teamNumber,
             };
         });
 
@@ -323,5 +326,60 @@ export const fetchLeaderboardData = async (
     } catch (error) {
         console.error("Error fetching leaderboard data:", error);
         next(new AppError("Failed to fetch leaderboard data.", 500));
+    }
+};
+
+export const checkPlayersReadiness = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+) => {
+    try {
+        const sessionId = req.user?.sessionId;
+        const adminId = req.user?.id;
+
+        if (!sessionId || !adminId) {
+            return next(new AppError("Session ID and Admin ID are required.", 400));
+        }
+
+        // Fetch all players in the session
+        const players = await playerService.getPlayersBySession(sessionId);
+        
+        // Get total number of questions
+        const totalQuestions = await questionService.getAllQuestions();
+        const totalQuestionCount = totalQuestions.length;
+
+        const pendingPlayers = [];
+        
+        for (const player of players) {
+            // Get responses by player id
+            const responses = await questionService.getResponsesByPlayerId(player._id.toString());
+            const answeredCount = responses.length;
+            
+            // If player hasn't answered all questions, add to pending list
+            if (answeredCount < totalQuestionCount) {
+                const team = await teamService.fetchTeamById(player?.team?.toString() || "");
+                pendingPlayers.push({
+                    id: player._id.toString(),
+                    name: player.name,
+                    team: team?.teamNumber || 0,
+                    questionsAnswered: `${answeredCount}/${totalQuestionCount}`
+                });
+            }
+        }
+
+        const allReady = pendingPlayers.length === 0;
+
+        res.status(200).json({
+            success: true,
+            data: {
+                allReady,
+                pendingPlayers,
+                totalPlayers: players.length
+            }
+        });
+    } catch (error) {
+        console.error("Error checking players readiness:", error);
+        next(new AppError("Failed to check players readiness.", 500));
     }
 };

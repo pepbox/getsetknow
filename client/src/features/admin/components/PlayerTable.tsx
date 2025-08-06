@@ -1,4 +1,4 @@
-import { Edit as EditIcon } from "@mui/icons-material";
+import { Edit as EditIcon, Clear as ClearIcon } from "@mui/icons-material";
 import {
   Button,
   Chip,
@@ -23,6 +23,10 @@ import {
   Divider,
   TableSortLabel,
   Tooltip,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
 } from "@mui/material";
 import React, { useState } from "react";
 import { PlayerTableProps } from "../types/interfaces";
@@ -60,6 +64,7 @@ const PlayerTable: React.FC<PlayerTableProps> = ({
   const [responsesModalOpen, setResponsesModalOpen] = useState(false);
   const [sortField, setSortField] = useState<string>("");
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
+  const [selectedTeam, setSelectedTeam] = useState<string>(""); // Team filter state
 
   // Score change modal state
   const [scoreModalOpen, setScoreModalOpen] = useState(false);
@@ -138,10 +143,55 @@ const PlayerTable: React.FC<PlayerTableProps> = ({
     }
   };
 
-  const sortedPlayers = React.useMemo(() => {
-    if (!sortField || !players) return players;
+  const handleTeamFilter = (team: string) => {
+    setSelectedTeam(team);
+  };
 
-    return [...players].sort((a, b) => {
+  const clearTeamFilter = () => {
+    setSelectedTeam("");
+  };
+
+  // Get unique teams for filter dropdown
+  const uniqueTeams = React.useMemo(() => {
+    if (!players) return [];
+    const teams = [...new Set(players.map((player) => player.team))].filter(
+      Boolean
+    );
+    return teams.sort((a, b) => {
+      const aNum = parseInt(String(a || "").replace(/\D/g, "")) || 0;
+      const bNum = parseInt(String(b || "").replace(/\D/g, "")) || 0;
+      return aNum - bNum;
+    });
+  }, [players]);
+
+  // Filter players by selected team
+  const filteredPlayers = React.useMemo(() => {
+    if (!selectedTeam || !players) return players;
+    return players.filter((player) => player.team === selectedTeam);
+  }, [players, selectedTeam]);
+
+  // Calculate team rank for filtered players
+  const playersWithTeamRank = React.useMemo(() => {
+    if (!filteredPlayers) return filteredPlayers;
+
+    if (selectedTeam) {
+      // Sort by totalScore descending to calculate team rank
+      const sortedByScore = [...filteredPlayers].sort(
+        (a, b) => (b.totalScore || 0) - (a.totalScore || 0)
+      );
+      return sortedByScore.map((player, index) => ({
+        ...player,
+        teamRank: index + 1,
+      }));
+    }
+
+    return filteredPlayers;
+  }, [filteredPlayers, selectedTeam]);
+
+  const sortedPlayers = React.useMemo(() => {
+    if (!sortField || !playersWithTeamRank) return playersWithTeamRank;
+
+    return [...playersWithTeamRank].sort((a, b) => {
       let aValue = (a as any)[sortField];
       let bValue = (b as any)[sortField];
 
@@ -168,7 +218,7 @@ const PlayerTable: React.FC<PlayerTableProps> = ({
       const comparison = aStr.localeCompare(bStr);
       return sortDirection === "asc" ? comparison : -comparison;
     });
-  }, [players, sortField, sortDirection]);
+  }, [playersWithTeamRank, sortField, sortDirection]);
 
   const columns: Column[] = [
     {
@@ -206,10 +256,18 @@ const PlayerTable: React.FC<PlayerTableProps> = ({
     },
     {
       key: "rank",
-      label: "Rank",
+      label: selectedTeam ? "Team Rank" : "Rank",
       sortable: true,
       visible: (gameStatus) => gameStatus === "playing",
-      render: (player) => player.rank,
+      render: (player) =>
+        selectedTeam ? (player as any).teamRank || player.rank : player.rank,
+    },
+    {
+      key: "team",
+      label: "Team",
+      sortable: true,
+      visible: () => true,
+      render: (player) => player.team,
     },
     {
       key: "peopleYouKnow",
@@ -318,6 +376,56 @@ const PlayerTable: React.FC<PlayerTableProps> = ({
 
   return (
     <>
+      {/* Team Filter */}
+      <Box
+        mb={2}
+        sx={{ display: "flex", alignItems: "center", gap: 2, flexWrap: "wrap" }}
+      >
+        <FormControl size="small" sx={{ minWidth: 170 }}>
+          <InputLabel>Filter by Team</InputLabel>
+          <Select
+            value={selectedTeam}
+            onChange={(e) => handleTeamFilter(e.target.value)}
+            label="Filter by Team"
+          >
+            <MenuItem value="">
+              <em>All Teams</em>
+            </MenuItem>
+            {uniqueTeams.map((team) => (
+              <MenuItem key={team} value={team}>
+                Team {team}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+        {selectedTeam && (
+          <Button
+            size="small"
+            variant="outlined"
+            startIcon={<ClearIcon />}
+            onClick={clearTeamFilter}
+            sx={{
+              color: "text.secondary",
+              borderColor: "text.secondary",
+              padding: "6px 8px",
+              "&:hover": {
+                backgroundColor: "action.hover",
+                borderColor: "text.primary",
+                color: "text.primary",
+              },
+            }}
+          >
+            Clear Filter
+          </Button>
+        )}
+        {selectedTeam && (
+          <Typography variant="body2" color="text.secondary">
+            Showing {filteredPlayers?.length || 0} players from Team{" "}
+            {selectedTeam}
+          </Typography>
+        )}
+      </Box>
+
       {!isMobile && visibleColumns.some((col) => col.sortable) && (
         <Box mb={1}>
           <Typography
