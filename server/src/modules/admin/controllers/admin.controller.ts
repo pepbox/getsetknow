@@ -9,11 +9,14 @@ import { Player } from '../../players/models/player.model';
 import QuestionService from '../../questions/services/question.service';
 import { Question } from '../../questions/models/question.model';
 import { SessionStatus } from '../../session/types/enums';
+import FileService from '../../files/services/fileService';
 
 const adminService = new AdminServices();
 const sessionService = new SessionService();
 const playerService = new PlayerService(Player); // Assuming you have a player service
 const questionService = new QuestionService(Question); // Assuming you have a question service
+const fileService = new FileService();
+
 
 export const createAdmin = async (
     req: Request,
@@ -246,5 +249,79 @@ export const fetchAdminDashboardData = async (
     } catch (error) {
         console.error("Error fetching admin dashboard data:", error);
         next(new AppError("Failed to fetch admin dashboard data.", 500));
+    }
+};
+
+export const fetchLeaderboardData = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+) => {
+    try {
+        const sessionId = req.user?.sessionId;
+        const adminId = req.user?.id;
+
+        if (!sessionId || !adminId) {
+            return next(new AppError("Session ID and Admin ID are required.", 400));
+        }
+
+        // Fetch all players in the session sorted by score
+        const players = await playerService.getPlayersBySession(sessionId);
+
+        // Sort players by score and add ranking
+        const sortedPlayers = players.sort((a, b) => (b.score || 0) - (a.score || 0));
+        const profilePhotos = await Promise.all(
+            sortedPlayers.map(async (player) => {
+                if (player.profilePhoto) {
+                    const profilePhoto = await fileService.getFileById(player.profilePhoto.toString());
+                    return profilePhoto?.location || "";
+                }
+                return "";
+            })
+        );
+
+        const playerRankings = sortedPlayers.map((player, index) => ({
+            id: player._id.toString(),
+            name: player.name,
+            profilePhoto: profilePhotos[index],
+            score: player.score || 0,
+            rank: index + 1,
+        }));
+
+        // Fetch all guesses with selfies for this session
+        const allGuesses = await playerService.getGuessesWithSelfiesForSession(sessionId);
+
+        const selfies = await Promise.all(
+            allGuesses.map(async (guess: any) => {
+                // Get guesser and guessed person details
+                const guesser = await playerService.getPlayerById(guess.user.toString());
+                const guessedPerson = await playerService.getPlayerById(guess.personId.toString());
+                let selfiePicture = "";
+                if (guess.selfie) {
+                    const file = await fileService.getFileById(guess.selfie.toString());
+                    selfiePicture = file?.location || "";
+                }
+                return {
+                    id: guess._id.toString(),
+                    guesserName: guesser?.name || "Unknown",
+                    guessedPersonName: guessedPerson?.name || "Unknown",
+                    selfieId: selfiePicture,
+                    createdAt: guess.createdAt,
+                };
+            })
+        );
+
+        const data = {
+            playerRankings,
+            selfies: selfies.filter((selfie: any) => selfie.selfieId), // Only include selfies that exist
+        };
+
+        res.status(200).json({
+            success: true,
+            data,
+        });
+    } catch (error) {
+        console.error("Error fetching leaderboard data:", error);
+        next(new AppError("Failed to fetch leaderboard data.", 500));
     }
 };

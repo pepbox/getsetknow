@@ -83,6 +83,33 @@ export interface DashboardProps {
     loadingResponses?: boolean;
 }
 
+// Leaderboard Types
+export interface PlayerRanking {
+    id: string;
+    name: string;
+    profilePhoto: string | null;
+    score: number;
+    rank: number;
+}
+
+export interface SelfieData {
+    id: string;
+    guesserName: string;
+    guessedPersonName: string;
+    selfieId: string | null;
+    createdAt: Date;
+}
+
+export interface LeaderboardData {
+    playerRankings: PlayerRanking[];
+    selfies: SelfieData[];
+}
+
+export interface LeaderboardProps {
+    data: LeaderboardData | null;
+    isLoading: boolean;
+}
+
 // export interface DashboardPageProps {
 //   data: {
 //     headerData: HeaderData;

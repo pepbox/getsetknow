@@ -1,5 +1,6 @@
 import { Route, Routes, useParams } from "react-router-dom";
 import DashboardPage from "../features/admin/Pages/DshboardPage";
+import LeaderboardPage from "../features/admin/Pages/LeaderboardPage";
 import AdminLogin from "../features/admin/Pages/AdminLogin";
 import Box from "@mui/material/Box";
 import { useLazyFetchAdminQuery } from "../features/admin/services/admin.Api";
@@ -18,11 +19,14 @@ const AdminMain = () => {
   );
   const dispatch = useAppDispatch();
   const sessionId = useParams<{ sessionId: string }>().sessionId;
-  dispatch(setSessionId(sessionId ?? ""));
+
+  useEffect(() => {
+    dispatch(setSessionId(sessionId ?? ""));
+  }, [sessionId, dispatch]);
 
   useEffect(() => {
     FetchAdmin({});
-  }, [isAuthenticated]);
+  }, [isAuthenticated, FetchAdmin]);
 
   if (isLoading) {
     return <Loader />;
@@ -42,6 +46,7 @@ const AdminMain = () => {
           }
         >
           <Route path="/dashboard" element={<DashboardPage />} />
+          <Route path="/leaderboard" element={<LeaderboardPage />} />
         </Route>
         <Route path={`/${sessionId}`} element={<AdminLogin />} />
       </Routes>

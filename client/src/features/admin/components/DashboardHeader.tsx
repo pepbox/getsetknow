@@ -11,6 +11,7 @@ import { useNavigate } from "react-router-dom";
 import { DashboardHeaderProps } from "../types/interfaces";
 import { useAdminAuth } from "../services/useAdminAuth";
 import LogoutIcon from "@mui/icons-material/Logout";
+import LeaderboardIcon from "@mui/icons-material/Leaderboard";
 import {
   useAdminLogoutMutation,
   useUpdateSessionMutation,
@@ -56,6 +57,11 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
         console.error("Failed to end session:", error);
       });
   };
+
+  const handleViewLeaderboard = () => {
+    navigate(`/admin/${sessionId}/leaderboard`);
+  };
+
   return (
     <>
       <Box
@@ -69,27 +75,49 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
           Admin Dashboard
         </Typography>
 
-        <Button
-          variant="outlined"
-          color="error"
-          startIcon={<LogoutIcon />}
-          onClick={handleLogout}
-          sx={{
-            textTransform: "none",
-            borderRadius: "8px",
-            border: "1px solid #FF6363",
-            fontWeight: 500,
-            color: "#FF6363",
-          }}
-        >
-          <Box
+        <Box display="flex" gap={2} alignItems="center">
+          <Button
+            variant="outlined"
+            color="primary"
+            startIcon={<LeaderboardIcon />}
+            onClick={handleViewLeaderboard}
             sx={{
-              display: { xs: "none", sm: "inline" },
+              textTransform: "none",
+              borderRadius: "8px",
+              fontWeight: 500,
             }}
           >
-            Log Out
-          </Box>
-        </Button>
+            <Box
+              sx={{
+                display: { xs: "none", sm: "inline" },
+              }}
+            >
+              Leaderboard
+            </Box>
+          </Button>
+
+          <Button
+            variant="outlined"
+            color="error"
+            startIcon={<LogoutIcon />}
+            onClick={handleLogout}
+            sx={{
+              textTransform: "none",
+              borderRadius: "8px",
+              border: "1px solid #FF6363",
+              fontWeight: 500,
+              color: "#FF6363",
+            }}
+          >
+            <Box
+              sx={{
+                display: { xs: "none", sm: "inline" },
+              }}
+            >
+              Log Out
+            </Box>
+          </Button>
+        </Box>
       </Box>
       <Paper
         sx={{
