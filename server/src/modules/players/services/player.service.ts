@@ -3,14 +3,12 @@ import { IGuess, IPlayer } from '../types/interfaces';
 import { Guess } from '../models/guess.model';
 
 
-
 class PlayerService {
     private playerModel: Model<IPlayer>;
 
     constructor(playerModel: Model<IPlayer>) {
         this.playerModel = playerModel;
     }
-
 
     async createPlayer(data: Partial<IPlayer>): Promise<IPlayer> {
         const player = new this.playerModel({
@@ -71,6 +69,22 @@ class PlayerService {
         player.score = newScore < 0 ? 0 : newScore;
         await player.save();
         return player;
+    }
+
+    async isSelfieRequired(guessId: string): Promise<boolean> {
+        const guess = await Guess.findById(guessId);
+        if (!guess) {
+            return false;
+        }
+        
+        // Selfie is required if the guess is correct and no selfie has been uploaded yet
+        const isCorrect = guess.personId.toString() === guess.guessedPersonId?.toString();
+        return isCorrect && !guess.selfie;
+    }
+
+    async hasSelfieUploaded(guessId: string): Promise<boolean> {
+        const guess = await Guess.findById(guessId);
+        return !!guess?.selfie;
     }
 }
 

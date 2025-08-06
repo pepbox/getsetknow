@@ -16,6 +16,7 @@ export interface IGuess extends Document {
     personId: Types.ObjectId;
     guessedPersonId: Types.ObjectId;
     attempts?: number;
+    selfie?: mongoose.Types.ObjectId;
     createdAt: Date;
     updatedAt: Date;
 }

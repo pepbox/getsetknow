@@ -12,6 +12,14 @@ export interface GuessResult {
   score?: number;
 }
 
+export interface PendingSelfieData {
+  guessId: string;
+  lastGuessPlayerPhoto?: string;
+  lastGuessPlayerName?: string;
+  lastGuessAttempts?: number;
+  lastGuessScore?: number;
+}
+
 export interface GameArenaState {
   gameCards: GameCard[];
   players: Player[];
@@ -28,6 +36,8 @@ export interface GameArenaState {
   lastGuessResult: GuessResult | null;
   gameCompleted: boolean;
   correctlyGuessedCards: string[];
+  showSelfieUpload: boolean;
+  currentSelfieGuessId: string | null;
 }
 
 const initialState: GameArenaState = {
@@ -46,6 +56,8 @@ const initialState: GameArenaState = {
   lastGuessResult: null,
   gameCompleted: false,
   correctlyGuessedCards: [],
+  showSelfieUpload: false,
+  currentSelfieGuessId: null,
 };
 
 
@@ -80,6 +92,7 @@ const areAllCardsGuessed = (
   );
 };
 
+
 const gameArenaSlice = createSlice({
   name: 'gameArena',
   initialState,
@@ -102,7 +115,6 @@ const gameArenaSlice = createSlice({
       // Check if all cards are correctly guessed
       if (areAllCardsGuessed(state.gameCards, state.correctlyGuessedCards)) {
         state.gameCompleted = true;
-        console.log("All cards guessed, game completed ate next card 1 ");
         return;
       }
 
@@ -193,8 +205,24 @@ const gameArenaSlice = createSlice({
       // If the guess is correct, add the guessId to correctly guessed cards
       if (action.payload.correct && action.payload.guessedPersonId) {
         const currentCard = state.gameCards[state.currentCardIndex];
+        state.showSelfieUpload = true;
+        state.currentSelfieGuessId = currentCard.guessId;
+        
+        // Store complete selfie data in localStorage for persistence across refreshes
+        if (typeof window !== 'undefined') {
+          const pendingSelfieData: PendingSelfieData = {
+            guessId: currentCard.guessId,
+            lastGuessPlayerPhoto: action.payload.profilePhoto,
+            lastGuessPlayerName: action.payload.name,
+            lastGuessAttempts: action.payload.attempts,
+            lastGuessScore: action.payload.score,
+          };
+          localStorage.setItem('pendingSelfieData', JSON.stringify(pendingSelfieData));
+        }
+        
         if (currentCard && !state.correctlyGuessedCards.includes(currentCard.guessId)) {
           state.correctlyGuessedCards.push(currentCard.guessId);
+          // If guess is correct, show selfie upload screen
         }
       }
     },
@@ -219,6 +247,229 @@ const gameArenaSlice = createSlice({
     initializeCorrectlyGuessedCards: (state, action: PayloadAction<string[]>) => {
       state.correctlyGuessedCards = action.payload;
     },
+
+    // Selfie-related actions
+    showSelfieUploadScreen: (state, action: PayloadAction<{ 
+      guessId: string;
+      lastGuessPlayerPhoto?: string;
+      lastGuessPlayerName?: string;
+      lastGuessAttempts?: number;
+      lastGuessScore?: number;
+    }>) => {
+      state.showSelfieUpload = true;
+      state.currentSelfieGuessId = action.payload.guessId;
+      
+      // Store complete selfie data in localStorage as backup for page refresh
+      if (typeof window !== 'undefined') {
+        const pendingSelfieData: PendingSelfieData = {
+          guessId: action.payload.guessId,
+          lastGuessPlayerPhoto: action.payload.lastGuessPlayerPhoto,
+          lastGuessPlayerName: action.payload.lastGuessPlayerName,
+          lastGuessAttempts: action.payload.lastGuessAttempts,
+          lastGuessScore: action.payload.lastGuessScore,
+        };
+        localStorage.setItem('pendingSelfieData', JSON.stringify(pendingSelfieData));
+      }
+    },
+
+    hideSelfieUploadScreen: (state) => {
+      state.showSelfieUpload = false;
+      state.currentSelfieGuessId = null;
+      
+      // Clear from localStorage
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('pendingSelfieData');
+        localStorage.removeItem('pendingSelfieGuessId'); // Remove old key for backwards compatibility
+      }
+    },
+
+    setSelfieUploaded: (state, action: PayloadAction<{ guessId: string }>) => {
+      // Mark selfie as uploaded for this guess
+      state.showSelfieUpload = false;
+      state.currentSelfieGuessId = null;
+
+      // Clear from localStorage
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('pendingSelfieData');
+        localStorage.removeItem('pendingSelfieGuessId'); // Remove old key for backwards compatibility
+      }
+
+      // Find and update the corresponding game card if needed
+      const currentCard = state.gameCards[state.currentCardIndex];
+      if (currentCard && currentCard.guessId === action.payload.guessId) {
+        // The selfie has been uploaded, user can now proceed to next card
+      }
+    },
+
+    // New action to restore selfie screen with complete data from localStorage
+    restoreSelfieScreenData: (state, action: PayloadAction<PendingSelfieData>) => {
+      const { guessId, lastGuessPlayerPhoto, lastGuessPlayerName, lastGuessAttempts, lastGuessScore } = action.payload;
+      
+      state.showSelfieUpload = true;
+      state.currentSelfieGuessId = guessId;
+      
+      // Restore the lastGuessResult with the stored data
+      state.lastGuessResult = {
+        correct: true,
+        guessedPersonId: '', // We don't need this for the selfie screen
+        profilePhoto: lastGuessPlayerPhoto,
+        name: lastGuessPlayerName,
+        attempts: lastGuessAttempts,
+        score: lastGuessScore,
+      };
+    },
+
+    // New action to check for pending selfies on page load
+    checkForPendingSelfies: (state, action: PayloadAction<{ 
+      guessesData: any[], 
+      gameCards: GameCard[], 
+      currentCardIndex: number,
+      players?: Player[] // Add players to help find missing data
+    }>) => {
+      const { guessesData, gameCards, currentCardIndex, players = [] } = action.payload;
+      
+      // Check localStorage for pending selfie data as fallback
+      let pendingSelfieData: PendingSelfieData | null = null;
+      let pendingSelfieGuessId: string | null = null; // For backwards compatibility
+      
+      if (typeof window !== 'undefined') {
+        // Try new format first
+        const storedData = localStorage.getItem('pendingSelfieData');
+        if (storedData) {
+          try {
+            pendingSelfieData = JSON.parse(storedData);
+          } catch (e) {
+            console.warn('Failed to parse pendingSelfieData from localStorage');
+          }
+        }
+        
+        // Fallback to old format for backwards compatibility
+        if (!pendingSelfieData) {
+          pendingSelfieGuessId = localStorage.getItem('pendingSelfieGuessId');
+          if (pendingSelfieGuessId) {
+            pendingSelfieData = { guessId: pendingSelfieGuessId };
+          }
+        }
+      }
+      
+      if (guessesData && gameCards.length > 0) {
+        // First check if we have a pending selfie from localStorage
+        if (pendingSelfieData) {
+          const cardWithPendingSelfie = gameCards.find(card => card.guessId === pendingSelfieData!.guessId);
+          if (cardWithPendingSelfie) {
+            const cardIndex = gameCards.indexOf(cardWithPendingSelfie);
+            const guess = guessesData.find((g: any) => g.guessId === pendingSelfieData!.guessId);
+            
+            // Verify it still requires selfie
+            if (guess?.requiresSelfie) {
+              // Only change currentCardIndex if it's different
+              if (state.currentCardIndex !== cardIndex) {
+                state.currentCardIndex = cardIndex;
+              }
+              state.showSelfieUpload = true;
+              state.currentSelfieGuessId = pendingSelfieData.guessId;
+              state.currentGuess = {
+                guessId: null,
+                guessedPersonId: null,
+              };
+              
+              // If we have stored player data, restore it
+              if (pendingSelfieData.lastGuessPlayerPhoto || pendingSelfieData.lastGuessPlayerName) {
+                state.lastGuessResult = {
+                  correct: true,
+                  guessedPersonId: '',
+                  profilePhoto: pendingSelfieData.lastGuessPlayerPhoto,
+                  name: pendingSelfieData.lastGuessPlayerName,
+                  attempts: pendingSelfieData.lastGuessAttempts,
+                  score: pendingSelfieData.lastGuessScore,
+                };
+              } else if (guess?.guessedPersonId && players.length > 0) {
+                // Try to find player data from the players array
+                const guessedPlayer = players.find(p => p._id === guess.guessedPersonId);
+                if (guessedPlayer) {
+                  state.lastGuessResult = {
+                    correct: true,
+                    guessedPersonId: guess.guessedPersonId,
+                    profilePhoto: guessedPlayer.profilePhoto,
+                    name: guessedPlayer.name,
+                    attempts: 1,
+                    score: 100,
+                  };
+                  
+                  // Update localStorage with the found data
+                  const updatedSelfieData: PendingSelfieData = {
+                    ...pendingSelfieData,
+                    lastGuessPlayerPhoto: guessedPlayer.profilePhoto,
+                    lastGuessPlayerName: guessedPlayer.name,
+                    lastGuessAttempts: 1,
+                    lastGuessScore: 100,
+                  };
+                  if (typeof window !== 'undefined') {
+                    localStorage.setItem('pendingSelfieData', JSON.stringify(updatedSelfieData));
+                  }
+                }
+              }
+              return;
+            } else {
+              // Clear localStorage if selfie no longer required
+              localStorage.removeItem('pendingSelfieData');
+              localStorage.removeItem('pendingSelfieGuessId');
+            }
+          }
+        }
+
+        // Check the current card
+        const currentCard = gameCards[currentCardIndex];
+        if (currentCard) {
+          const currentGuess = guessesData.find(
+            (guess: any) => guess.guessId === currentCard.guessId
+          );
+
+          if (currentGuess?.requiresSelfie) {
+            state.showSelfieUpload = true;
+            state.currentSelfieGuessId = currentCard.guessId;
+            // Note: lastGuessResult should already be available from API or previous state
+            return;
+          }
+        }
+
+        // If no selfie required for current card, check all cards for any pending selfies
+        // Start from current index and wrap around to find the next pending selfie
+        let foundPendingSelfie = false;
+        for (let i = 0; i < gameCards.length; i++) {
+          const cardIndex = (currentCardIndex + i) % gameCards.length;
+          const card = gameCards[cardIndex];
+          const guess = guessesData.find((g: any) => g.guessId === card.guessId);
+          
+          if (guess?.requiresSelfie) {
+            // Found a card that requires selfie, navigate to it only if different
+            if (state.currentCardIndex !== cardIndex) {
+              state.currentCardIndex = cardIndex;
+            }
+            state.showSelfieUpload = true;
+            state.currentSelfieGuessId = card.guessId;
+            // Clear any previous guess state
+            state.currentGuess = {
+              guessId: null,
+              guessedPersonId: null,
+            };
+            foundPendingSelfie = true;
+            break;
+          }
+        }
+
+        // If no pending selfies found, ensure selfie screen is hidden and clear localStorage
+        if (!foundPendingSelfie && state.showSelfieUpload) {
+          state.showSelfieUpload = false;
+          state.currentSelfieGuessId = null;
+          if (typeof window !== 'undefined') {
+            localStorage.removeItem('pendingSelfieData');
+            localStorage.removeItem('pendingSelfieGuessId');
+          }
+        }
+      }
+    },
+
   },
 
   extraReducers: (builder) => {
@@ -389,6 +640,11 @@ export const {
   replayLastCard,
   jumpToUnguessedCard,
   initializeCorrectlyGuessedCards,
+  showSelfieUploadScreen,
+  hideSelfieUploadScreen,
+  setSelfieUploaded,
+  checkForPendingSelfies,
+  restoreSelfieScreenData,
 } = gameArenaSlice.actions;
 
 export default gameArenaSlice.reducer;

@@ -40,6 +40,15 @@ export interface GameCompletionData {
   totalPlayers: number;
 }
 
+export interface SelfieSubmissionResponse {
+  success: boolean;
+  message: string;
+  data?: {
+    guessId: string;
+    selfieUrl?: string;
+  };
+}
+
 export const gameApi = api.injectEndpoints({
   endpoints: (builder) => ({
     getPlayersCards: builder.query<GameCard[], void>({
@@ -101,6 +110,15 @@ export const gameApi = api.injectEndpoints({
       }),
       transformResponse: (response: { data: GameCompletionData }) => response.data,
     }),
+
+    submitSelfie: builder.mutation<SelfieSubmissionResponse, FormData>({
+      query: (formData) => ({
+        url: '/player/submitSelfie',
+        method: 'POST',
+        body: formData,
+      }),
+      invalidatesTags: ['GameCards'],
+    }),
   }),
 });
 
@@ -112,4 +130,5 @@ export const {
   useGetPlayerStatsQuery,
   useGetSessionQuery,
   useGetGameCompletionDataQuery,
+  useSubmitSelfieMutation,
 } = gameApi;

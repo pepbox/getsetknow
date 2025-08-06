@@ -21,6 +21,11 @@ router.post('/storeQuestionResponse', authenticateUser, asyncHandeler(questionCo
 router.get('/getPlayersCards', authenticateUser, asyncHandeler(playerControllers.getPlayersCards));
 router.get('/getPlayersBySession', authenticateUser, asyncHandeler(playerControllers.getPlayersBySession));
 router.post('/submitGuess', authenticateUser, asyncHandeler(playerControllers.submitGuess));
+router.post('/submitSelfie', authenticateUser, uploadMiddleware.single("selfie", {
+  allowedMimeTypes: ["image/jpeg", "image/png", "image/gif"],
+  maxFileSize: 20 * 1024 * 1024,
+  folder: "selfies",
+}), asyncHandeler(playerControllers.submitSelfie));
 router.get('/getUserGuesses', authenticateUser, asyncHandeler(playerControllers.getUserGuesses));
 router.get('/getPlayerStats', authenticateUser, asyncHandeler(playerControllers.getPlayerStats));
 router.get('/getGameCompletionData', authenticateUser, asyncHandeler(playerControllers.getGameCompletionData));

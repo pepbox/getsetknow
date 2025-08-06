@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { Box, Alert } from "@mui/material";
 import { RootState, AppDispatch } from "../../../app/store";
@@ -17,6 +17,8 @@ import {
   setGuessResult,
   jumpToUnguessedCard,
   initializeCorrectlyGuessedCards,
+  checkForPendingSelfies,
+  restoreSelfieScreenData,
 } from "../services/gameArenaSlice";
 import GameArena from "../components/GameArena";
 import Loader from "../../../components/ui/Loader";
@@ -46,6 +48,7 @@ const GameArenaPage: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
   const [showResult, setShowResult] = useState(false);
   const { isGameStarted } = useAppSelector((state: RootState) => state.game);
+  const hasCheckedPendingSelfies = useRef(false);
 
   // RTK Query hooks
   const {
@@ -86,6 +89,7 @@ const GameArenaPage: React.FC = () => {
     lastGuessResult,
     gameCompleted,
     correctlyGuessedCards,
+    showSelfieUpload,
   } = gameState;
 
   // Auto-navigate to unguessed card when current card is already guessed
@@ -94,7 +98,8 @@ const GameArenaPage: React.FC = () => {
     if (
       currentCard &&
       correctlyGuessedCards.includes(currentCard.guessId) &&
-      !gameCompleted
+      !gameCompleted &&
+      !showSelfieUpload // Don't auto-navigate if selfie upload is required
     ) {
       dispatch(nextCard());
     }
@@ -103,6 +108,7 @@ const GameArenaPage: React.FC = () => {
     gameCards,
     correctlyGuessedCards,
     gameCompleted,
+    showSelfieUpload,
     dispatch,
   ]);
 
@@ -125,6 +131,57 @@ const GameArenaPage: React.FC = () => {
       }
     }
   }, [guessesData, gameCards, correctlyGuessedCards, dispatch]);
+
+  // Initial check for pending selfies on page load (handles refresh scenarios)
+  useEffect(() => {
+    if (guessesData?.data && gameCards.length > 0 && !isLoadingCards && !isLoadingGuesses && !hasCheckedPendingSelfies.current) {
+      // Check for any pending selfies on initial load
+      hasCheckedPendingSelfies.current = true;
+      dispatch(checkForPendingSelfies({
+        guessesData: guessesData.data,
+        gameCards,
+        currentCardIndex,
+        players
+      }));
+    }
+  }, [guessesData?.data, gameCards, isLoadingCards, isLoadingGuesses, dispatch]);
+
+  // Fallback: Check localStorage for pending selfie on component mount
+  useEffect(() => {
+    if (typeof window !== 'undefined' && gameCards.length > 0) {
+      // Try new format first
+      const storedData = localStorage.getItem('pendingSelfieData');
+      let pendingSelfieData = null;
+      
+      if (storedData) {
+        try {
+          pendingSelfieData = JSON.parse(storedData);
+        } catch (e) {
+          console.warn('Failed to parse pendingSelfieData from localStorage');
+        }
+      }
+      
+      // Fallback to old format for backwards compatibility
+      if (!pendingSelfieData) {
+        const pendingSelfieGuessId = localStorage.getItem('pendingSelfieGuessId');
+        if (pendingSelfieGuessId) {
+          pendingSelfieData = { guessId: pendingSelfieGuessId };
+        }
+      }
+      
+      if (pendingSelfieData) {
+        const cardWithPendingSelfie = gameCards.find(card => card.guessId === pendingSelfieData.guessId);
+        if (cardWithPendingSelfie) {
+          const cardIndex = gameCards.indexOf(cardWithPendingSelfie);
+          // Navigate to the card with pending selfie and restore data
+          dispatch(jumpToUnguessedCard(cardIndex));
+          if (pendingSelfieData.lastGuessPlayerPhoto || pendingSelfieData.lastGuessPlayerName) {
+            dispatch(restoreSelfieScreenData(pendingSelfieData));
+          }
+        }
+      }
+    }
+  }, [gameCards, dispatch]);
 
   // Loading and error states
   const isLoading =
