@@ -4,7 +4,6 @@ import {
   Typography,
   Button,
   Paper,
-  Divider,
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
@@ -29,7 +28,7 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ data, isLoading }) => {
 
   if (!data) {
     return (
-      <Box sx={{ p: 4, textAlign: "center" }}>
+      <Box sx={{ p: 4, textAlign: "center", my:"auto"}}>
         <Typography variant="h6" color="error">
           Failed to load leaderboard data
         </Typography>
@@ -87,16 +86,32 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ data, isLoading }) => {
       </Paper>
 
       <Box sx={{ px: 4, pb: 4 }}>
-        {/* Player Leaderboard Section */}
-        <Box sx={{ mb: 6 }}>
-          <PlayerLeaderboard playerRankings={data.playerRankings} />
-        </Box>
+        {/* Side by side layout */}
+        <Box
+          sx={{
+            display: "grid",
+            gridTemplateColumns: {
+              xs: "1fr",
+              md: "1fr 2fr",
+              lg: "1fr 2.5fr",
+            },
+            gap: {
+              xs: 3,
+              md: 4,
+              lg: 5,
+            },
+            alignItems: "start",
+          }}
+        >
+          {/* Player Leaderboard Section - Left */}
+          <Box>
+            <PlayerLeaderboard playerRankings={data.playerRankings} />
+          </Box>
 
-        <Divider sx={{ my: 4 }} />
-
-        {/* Selfies Gallery Section */}
-        <Box>
-          <SelfiesGallery selfies={data.selfies} />
+          {/* Selfies Gallery Section - Right */}
+          <Box>
+            <SelfiesGallery selfies={data.selfies} />
+          </Box>
         </Box>
       </Box>
     </Box>

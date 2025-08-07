@@ -44,14 +44,14 @@ const SelfiesGallery: React.FC<SelfiesGalleryProps> = ({ selfies }) => {
 
   return (
     <Box>
-      <Typography
+            <Typography
         variant="h5"
         fontWeight="bold"
         mb={3}
         textAlign="center"
         color="primary"
       >
-        Guess Selfies
+        📸 Photo Gallery
       </Typography>
       <Box
         sx={{
@@ -59,10 +59,15 @@ const SelfiesGallery: React.FC<SelfiesGalleryProps> = ({ selfies }) => {
           gridTemplateColumns: {
             xs: "repeat(2, 1fr)",
             sm: "repeat(3, 1fr)",
-            md: "repeat(4, 1fr)",
-            lg: "repeat(5, 1fr)",
+            md: "repeat(3, 1fr)",
+            lg: "repeat(4, 1fr)",
+            xl: "repeat(4, 1fr)",
           },
-          gap: 2,
+          gap: {
+            xs: 1.5,
+            sm: 2,
+            md: 2.5,
+          },
         }}
       >
         {selfies.map((selfie) => (
@@ -79,7 +84,7 @@ const SelfiesGallery: React.FC<SelfiesGalleryProps> = ({ selfies }) => {
           >
             <CardMedia
               component="img"
-              height="200"
+              height="180"
               image={
                 selfie.selfieId ? selfie.selfieId : "/placeholder-selfie.jpg"
               }
@@ -87,6 +92,11 @@ const SelfiesGallery: React.FC<SelfiesGalleryProps> = ({ selfies }) => {
               sx={{
                 objectFit: "cover",
                 backgroundColor: "#f5f5f5",
+                height: {
+                  xs: "150px",
+                  sm: "170px",
+                  md: "180px",
+                },
               }}
               onError={(e) => {
                 const target = e.target as HTMLImageElement;
@@ -94,31 +104,62 @@ const SelfiesGallery: React.FC<SelfiesGalleryProps> = ({ selfies }) => {
               }}
             />
             <CardContent sx={{ p: 2, textAlign: "center" }}>
-              <Typography
-                variant="body2"
-                fontWeight="bold"
+              {/* Simple player names display */}
+              <Box
                 sx={{
-                  overflow: "hidden",
-                  textOverflow: "ellipsis",
-                  whiteSpace: "nowrap",
-                  fontSize: "0.875rem",
+                  // backgroundColor: "#fff",
+                  // borderRadius: "8px",
+                  // p: 1.5,
+                  // border: "1px solid #e0e0e0",
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
                 }}
               >
-                {selfie.guesserName}
-              </Typography>
-              <Typography
-                variant="body2"
-                color="primary"
-                fontWeight="medium"
-                sx={{
-                  overflow: "hidden",
-                  textOverflow: "ellipsis",
-                  whiteSpace: "nowrap",
-                  fontSize: "0.875rem",
-                }}
-              >
-                {selfie.guessedPersonName}
-              </Typography>
+                {/* First player name */}
+                <Typography
+                  variant="body2"
+                  fontWeight="bold"
+                  sx={{
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                    whiteSpace: "nowrap",
+                    fontSize: "0.875rem",
+                    color: "#333",
+                    width: "100%",
+                    textAlign: "center",
+                  }}
+                >
+                  {selfie.guesserName}
+                </Typography>
+                
+                {/* Horizontal divider line */}
+                <Box
+                  sx={{
+                    width: "100%",
+                    height: "1px",
+                    backgroundColor: "#e0e0e0",
+                    my: 1,
+                  }}
+                />
+                
+                {/* Second player name */}
+                <Typography
+                  variant="body2"
+                  fontWeight="bold"
+                  sx={{
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                    whiteSpace: "nowrap",
+                    fontSize: "0.875rem",
+                    color: "#666",
+                    width: "100%",
+                    textAlign: "center",
+                  }}
+                >
+                  {selfie.guessedPersonName}
+                </Typography>
+              </Box>
             </CardContent>
           </Card>
         ))}

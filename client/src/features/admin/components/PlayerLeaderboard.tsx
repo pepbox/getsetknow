@@ -2,10 +2,7 @@ import React from "react";
 import {
   Box,
   Typography,
-  Card,
-  CardContent,
   Avatar,
-  Chip,
 } from "@mui/material";
 import { PlayerRanking } from "../types/interfaces";
 
@@ -51,87 +48,105 @@ const PlayerLeaderboard: React.FC<PlayerLeaderboardProps> = ({
         textAlign="center"
         color="primary"
       >
-        Player Leaderboard
+        🏆 Player Leaderboard
       </Typography>
+      
+      {/* WhatsApp-style vertical list */}
       <Box
         sx={{
-          display: "grid",
-          gridTemplateColumns: {
-            xs: "1fr",
-            sm: "repeat(2, 1fr)",
-            md: "repeat(3, 1fr)",
-          },
-          gap: 2,
+          backgroundColor: "#fff",
+          borderRadius: "12px",
+          boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+          overflow: "hidden",
         }}
       >
-        {playerRankings.map((player) => (
-          <Card
+        {playerRankings.map((player, index) => (
+          <Box
             key={player?.id}
             sx={{
-              position: "relative",
-              border:
-                player?.rank <= 3
-                  ? `2px solid ${getRankColor(player?.rank)}`
-                  : "1px solid #E0E0E0",
-              borderRadius: "12px",
-              transition: "transform 0.2s ease-in-out",
+              display: "flex",
+              alignItems: "center",
+              p: 2,
+              borderBottom: index < playerRankings.length - 1 ? "1px solid #f0f0f0" : "none",
+              transition: "background-color 0.2s ease",
               "&:hover": {
-                transform: "translateY(-4px)",
-                boxShadow: "0 8px 16px rgba(0,0,0,0.1)",
+                backgroundColor: "#f8f9fa",
               },
             }}
           >
-            <CardContent sx={{ textAlign: "center", p: 3 }}>
-              <Chip
-                label={getRankIcon(player?.rank)}
-                sx={{
-                  position: "absolute",
-                  top: -10,
-                  left: "50%",
-                  transform: "translateX(-50%)",
-                  backgroundColor: getRankColor(player.rank),
-                  color: player.rank <= 3 ? "#000" : "#666",
-                  fontWeight: "bold",
-                  fontSize: "14px",
-                }}
-              />
+            {/* Rank Badge */}
+            <Box
+              sx={{
+                minWidth: 50,
+                height: 50,
+                borderRadius: "50%",
+                backgroundColor: getRankColor(player?.rank),
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                marginRight: 3,
+                fontWeight: "bold",
+                fontSize: "18px",
+                color: player?.rank <= 3 ? "#000" : "#666",
+                boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+              }}
+            >
+              {getRankIcon(player?.rank)}
+            </Box>
 
-              <Avatar
-                src={player?.profilePhoto || ""}
-                sx={{
-                  width: 80,
-                  height: 80,
-                  mx: "auto",
-                  mb: 2,
-                  mt: 1,
-                  border: `3px solid ${getRankColor(player?.rank)}`,
-                }}
-              >
-                {player.name.charAt(0).toUpperCase()}
-              </Avatar>
+            {/* Player Avatar */}
+            <Avatar
+              src={player?.profilePhoto || ""}
+              sx={{
+                width: 60,
+                height: 60,
+                marginRight: 3,
+                border: `3px solid ${getRankColor(player?.rank)}`,
+                boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+              }}
+            >
+              {player.name.charAt(0).toUpperCase()}
+            </Avatar>
 
+            {/* Player Info */}
+            <Box sx={{ flex: 1, minWidth: 0 }}>
               <Typography
                 variant="h6"
                 fontWeight="bold"
-                mb={1}
                 sx={{
                   overflow: "hidden",
                   textOverflow: "ellipsis",
                   whiteSpace: "nowrap",
+                  mb: 0.5,
                 }}
               >
                 {player?.name}
               </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Rank #{player?.rank}
+              </Typography>
+            </Box>
 
-              <Typography variant="h4" fontWeight="bold" color="primary" mb={1}>
+            {/* Score */}
+            <Box
+              sx={{
+                textAlign: "right",
+                minWidth: 80,
+              }}
+            >
+              <Typography
+                variant="h5"
+                fontWeight="bold"
+                color="primary"
+                sx={{ lineHeight: 1 }}
+              >
                 {player?.score}
               </Typography>
-
-              <Typography variant="body2" color="text.secondary">
-                Points
+              <Typography variant="caption" color="text.secondary">
+                points
               </Typography>
-            </CardContent>
-          </Card>
+            </Box>
+          </Box>
         ))}
       </Box>
     </Box>

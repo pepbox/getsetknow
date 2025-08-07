@@ -150,19 +150,6 @@ const QuestionnaireScreen: React.FC<QuestionnaireScreenProps> = ({
       >
         <Box
           position={"absolute"}
-          top={0}
-          component="img"
-          sx={{
-            width: "185px",
-            height: "185px",
-            objectFit: "contain",
-          }}
-          src={currentQuestion.questionImage}
-          alt="Character 1"
-        />
-
-        <Box
-          position={"absolute"}
           top={"62%"}
           sx={{
             width: "100%",
@@ -176,6 +163,21 @@ const QuestionnaireScreen: React.FC<QuestionnaireScreenProps> = ({
             gap: 2,
           }}
         >
+          <Box
+            position={"absolute"}
+            top={0}
+            component="img"
+            sx={{
+              // width: "185px",
+              height: "150px",
+              objectFit: "contain",
+              transform: "translateY(-100%) translateX(-50%)",
+              left: "50%",
+            }}
+            src={currentQuestion.questionImage}
+            alt="Character 1"
+          />
+
           <Typography
             variant="h6"
             sx={{
