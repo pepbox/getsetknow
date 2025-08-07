@@ -10,11 +10,13 @@ import { Types } from "mongoose";
 import axios from "axios";
 import PlayerService from "../../players/services/player.service";
 import { Player } from "../../players/models/player.model";
+import TeamService from "../../teams/services/team.service";
 
 
 const sessionService = new SessionService();
 const adminService = new AdminServices();
 const playerService = new PlayerService(Player);
+const teamService = new TeamService();
 
 
 export const updateSession = async (
@@ -103,16 +105,20 @@ export const createSession = async (
     next: NextFunction
 ) => {
     try {
-        const { name, adminName, adminPin: password } = req.body;
-
+        const { name, adminName, adminPin: password, gameConfig } = req.body;
+        const { numberOfTeams } = gameConfig;
         const newSession = await sessionService.createSession({
             name,
+            numberOfTeams: numberOfTeams || null,
         });
 
         await adminService.createAdmin({
             name: adminName,
             sessionId: newSession._id as Types.ObjectId,
             password: password,
+        });
+        await teamService.createMultipleTeams(numberOfTeams, {
+            session: newSession._id as Types.ObjectId,
         });
 
         res.status(201).json({

@@ -59,6 +59,15 @@ export const adminApi = api.injectEndpoints({
       providesTags: ["AdminPlayer"],
     }),
 
+    fetchLeaderboardData: builder.query({
+      query: () => ({
+        url: '/admin/fetchLeaderboardData',
+        method: 'GET',
+      }),
+      transformResponse: (response: any) => response.data,
+      providesTags: ["AdminPlayer"],
+    }),
+
     updatePlayer: builder.mutation({
       query: (updateData) => ({
         url: '/admin/updatePlayer',
@@ -77,6 +86,14 @@ export const adminApi = api.injectEndpoints({
       // providesTags: ["AdminPlayer"],
     }),
 
+    checkPlayersReadiness: builder.query({
+      query: () => ({
+        url: '/admin/checkPlayersReadiness',
+        method: 'GET',
+      }),
+      transformResponse: (response: any) => response.data,
+    }),
+
   }),
 
 });
@@ -86,7 +103,9 @@ export const {
   useAdminLogoutMutation,
   useUpdateSessionMutation,
   useFetchDashboardDataQuery,
+  useFetchLeaderboardDataQuery,
   useUpdatePlayerMutation,
   useLazyGetPlayerWithResponsesQuery,
-  useLazyFetchAdminQuery
+  useLazyFetchAdminQuery,
+  useLazyCheckPlayersReadinessQuery
 } = adminApi;

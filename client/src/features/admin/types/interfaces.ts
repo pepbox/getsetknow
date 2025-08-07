@@ -48,6 +48,7 @@ export interface Player {
     peopleYouKnow?: string;
     peopleWhoKnowYou?: string;
     totalScore?: number;
+    team?: string | number;
 }
 
 export interface DashboardHeaderProps {
@@ -56,6 +57,7 @@ export interface DashboardHeaderProps {
     onGameStatusChange?: () => void;
     onTransactionsChange?: (status: boolean) => void;
     transaction?: boolean;
+    isCheckingReadiness?: boolean;
 }
 
 
@@ -81,6 +83,33 @@ export interface DashboardProps {
     onChangeScore?: (playerId: string, newScore: number) => void;
     onViewResponses?: (playerId: string) => void;
     loadingResponses?: boolean;
+}
+
+// Leaderboard Types
+export interface PlayerRanking {
+    id: string;
+    name: string;
+    profilePhoto: string | null;
+    score: number;
+    rank: number;
+}
+
+export interface SelfieData {
+    id: string;
+    guesserName: string;
+    guessedPersonName: string;
+    selfieId: string | null;
+    createdAt: Date;
+}
+
+export interface LeaderboardData {
+    playerRankings: PlayerRanking[];
+    selfies: SelfieData[];
+}
+
+export interface LeaderboardProps {
+    data: LeaderboardData | null;
+    isLoading: boolean;
 }
 
 // export interface DashboardPageProps {

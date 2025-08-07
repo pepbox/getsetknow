@@ -7,6 +7,7 @@ export interface IPlayer {
     profilePhoto?: string;
     session?: string;
     isAuthenticated?: boolean;
+    teamNumber?: number;
 }
 
 const initialState = {

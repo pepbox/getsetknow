@@ -1,4 +1,4 @@
-import { Edit as EditIcon } from "@mui/icons-material";
+import { Edit as EditIcon, Clear as ClearIcon } from "@mui/icons-material";
 import {
   Button,
   Chip,
@@ -23,6 +23,10 @@ import {
   Divider,
   TableSortLabel,
   Tooltip,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
 } from "@mui/material";
 import React, { useState } from "react";
 import { PlayerTableProps } from "../types/interfaces";
@@ -60,6 +64,7 @@ const PlayerTable: React.FC<PlayerTableProps> = ({
   const [responsesModalOpen, setResponsesModalOpen] = useState(false);
   const [sortField, setSortField] = useState<string>("");
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
+  const [selectedTeam, setSelectedTeam] = useState<string>(""); // Team filter state
 
   // Score change modal state
   const [scoreModalOpen, setScoreModalOpen] = useState(false);
@@ -67,6 +72,7 @@ const PlayerTable: React.FC<PlayerTableProps> = ({
     useState<string>("");
   const [currentScore, setCurrentScore] = useState<number>(0);
   const [scoreAdjustment, setScoreAdjustment] = useState<string>("");
+  const [operation, setOperation] = useState<"add" | "subtract">("add");
 
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
@@ -81,6 +87,7 @@ const PlayerTable: React.FC<PlayerTableProps> = ({
     setSelectedPlayerIdForScore(playerId);
     setCurrentScore(playerCurrentScore);
     setScoreAdjustment("");
+    setOperation("add");
     setScoreModalOpen(true);
   };
 
@@ -95,13 +102,21 @@ const PlayerTable: React.FC<PlayerTableProps> = ({
 
   const handleChangeScore = () => {
     const adjustment = parseInt(scoreAdjustment);
-    if (onChangeScore && selectedPlayerIdForScore && !isNaN(adjustment)) {
-      const newScore = Math.max(0, currentScore + adjustment); // Ensure score doesn't go below 0
+    if (
+      onChangeScore &&
+      selectedPlayerIdForScore &&
+      !isNaN(adjustment) &&
+      adjustment > 0
+    ) {
+      const finalAdjustment =
+        operation === "subtract" ? -adjustment : adjustment;
+      const newScore = Math.max(0, currentScore + finalAdjustment);
       onChangeScore(selectedPlayerIdForScore, newScore);
       setScoreModalOpen(false);
       setSelectedPlayerIdForScore("");
       setCurrentScore(0);
       setScoreAdjustment("");
+      setOperation("add");
     }
   };
 
@@ -116,6 +131,7 @@ const PlayerTable: React.FC<PlayerTableProps> = ({
     setSelectedPlayerIdForScore("");
     setCurrentScore(0);
     setScoreAdjustment("");
+    setOperation("add");
   };
 
   const handleViewResponses = (playerId: string) => {
@@ -138,10 +154,55 @@ const PlayerTable: React.FC<PlayerTableProps> = ({
     }
   };
 
-  const sortedPlayers = React.useMemo(() => {
-    if (!sortField || !players) return players;
+  const handleTeamFilter = (team: string) => {
+    setSelectedTeam(team);
+  };
 
-    return [...players].sort((a, b) => {
+  const clearTeamFilter = () => {
+    setSelectedTeam("");
+  };
+
+  // Get unique teams for filter dropdown
+  const uniqueTeams = React.useMemo(() => {
+    if (!players) return [];
+    const teams = [...new Set(players.map((player) => player.team))].filter(
+      Boolean
+    );
+    return teams.sort((a, b) => {
+      const aNum = parseInt(String(a || "").replace(/\D/g, "")) || 0;
+      const bNum = parseInt(String(b || "").replace(/\D/g, "")) || 0;
+      return aNum - bNum;
+    });
+  }, [players]);
+
+  // Filter players by selected team
+  const filteredPlayers = React.useMemo(() => {
+    if (!selectedTeam || !players) return players;
+    return players.filter((player) => player.team === selectedTeam);
+  }, [players, selectedTeam]);
+
+  // Calculate team rank for filtered players
+  const playersWithTeamRank = React.useMemo(() => {
+    if (!filteredPlayers) return filteredPlayers;
+
+    if (selectedTeam) {
+      // Sort by totalScore descending to calculate team rank
+      const sortedByScore = [...filteredPlayers].sort(
+        (a, b) => (b.totalScore || 0) - (a.totalScore || 0)
+      );
+      return sortedByScore.map((player, index) => ({
+        ...player,
+        teamRank: index + 1,
+      }));
+    }
+
+    return filteredPlayers;
+  }, [filteredPlayers, selectedTeam]);
+
+  const sortedPlayers = React.useMemo(() => {
+    if (!sortField || !playersWithTeamRank) return playersWithTeamRank;
+
+    return [...playersWithTeamRank].sort((a, b) => {
       let aValue = (a as any)[sortField];
       let bValue = (b as any)[sortField];
 
@@ -168,7 +229,7 @@ const PlayerTable: React.FC<PlayerTableProps> = ({
       const comparison = aStr.localeCompare(bStr);
       return sortDirection === "asc" ? comparison : -comparison;
     });
-  }, [players, sortField, sortDirection]);
+  }, [playersWithTeamRank, sortField, sortDirection]);
 
   const columns: Column[] = [
     {
@@ -206,10 +267,18 @@ const PlayerTable: React.FC<PlayerTableProps> = ({
     },
     {
       key: "rank",
-      label: "Rank",
+      label: selectedTeam ? "Team Rank" : "Rank",
       sortable: true,
       visible: (gameStatus) => gameStatus === "playing",
-      render: (player) => player.rank,
+      render: (player) =>
+        selectedTeam ? (player as any).teamRank || player.rank : player.rank,
+    },
+    {
+      key: "team",
+      label: "Team",
+      sortable: true,
+      visible: () => true,
+      render: (player) => player.team,
     },
     {
       key: "peopleYouKnow",
@@ -277,7 +346,12 @@ const PlayerTable: React.FC<PlayerTableProps> = ({
               : "pending"
           }
           size="small"
-          color={player.currentStatus === "pending" ? "warning" : "default"}
+          color={
+            player.questionsAnswered.split("/")[0] ===
+            player.questionsAnswered.split("/")[1]
+              ? "primary"
+              : "warning"
+          }
         />
       ),
     },
@@ -288,8 +362,17 @@ const PlayerTable: React.FC<PlayerTableProps> = ({
       visible: () => true,
       render: (player) => (
         <Button
-          variant="text"
+          variant="outlined"
           size="small"
+          sx={{
+            padding: "2px 4px",
+            color: "black",
+            borderColor: "black",
+            "&:hover": {
+              backgroundColor: "#f5f5f5",
+              borderColor: "black",
+            },
+          }}
           onClick={() => handleViewResponses(player.id)}
         >
           Show
@@ -301,9 +384,59 @@ const PlayerTable: React.FC<PlayerTableProps> = ({
   const getRowColor = (index: number) =>
     index % 2 === 0 ? "#11111108" : "#11111100";
   const visibleColumns = columns.filter((col) => col.visible(gameStatus));
-  
+
   return (
     <>
+      {/* Team Filter */}
+      <Box
+        mb={2}
+        sx={{ display: "flex", alignItems: "center", gap: 2, flexWrap: "wrap" }}
+      >
+        <FormControl size="small" sx={{ minWidth: 170 }}>
+          <InputLabel>Filter by Team</InputLabel>
+          <Select
+            value={selectedTeam}
+            onChange={(e) => handleTeamFilter(e.target.value)}
+            label="Filter by Team"
+          >
+            <MenuItem value="">
+              <em>All Teams</em>
+            </MenuItem>
+            {uniqueTeams.map((team) => (
+              <MenuItem key={team} value={team}>
+                Team {team}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+        {selectedTeam && (
+          <Button
+            size="small"
+            variant="outlined"
+            startIcon={<ClearIcon />}
+            onClick={clearTeamFilter}
+            sx={{
+              color: "text.secondary",
+              borderColor: "text.secondary",
+              padding: "6px 8px",
+              "&:hover": {
+                backgroundColor: "action.hover",
+                borderColor: "text.primary",
+                color: "text.primary",
+              },
+            }}
+          >
+            Clear Filter
+          </Button>
+        )}
+        {selectedTeam && (
+          <Typography variant="body2" color="text.secondary">
+            Showing {filteredPlayers?.length || 0} players from Team{" "}
+            {selectedTeam}
+          </Typography>
+        )}
+      </Box>
+
       {!isMobile && visibleColumns.some((col) => col.sortable) && (
         <Box mb={1}>
           <Typography
@@ -466,43 +599,143 @@ const PlayerTable: React.FC<PlayerTableProps> = ({
         open={scoreModalOpen}
         onClose={handleCloseScoreModal}
         maxWidth="sm"
-        fullWidth
       >
-        <DialogTitle>Change Player Score</DialogTitle>
+        <DialogTitle>Edit Score</DialogTitle>
         <DialogContent>
-          <Box sx={{ mb: 2 }}>
+          <Box
+            sx={{
+              mb: 2,
+              display: "flex",
+              flexDirection: "row",
+              gap: 1,
+              alignItems: "center",
+            }}
+          >
             <Typography variant="body2" color="text.secondary">
-              Current Score: <strong>{currentScore}</strong>
+              Current Score:
+            </Typography>
+            <Typography variant="h6" fontWeight="bold">
+              {currentScore} points
             </Typography>
           </Box>
-          <TextField
-            autoFocus
-            margin="dense"
-            label="Score Adjustment (e.g., +50 or -30)"
-            type="number"
-            fullWidth
-            variant="outlined"
-            value={scoreAdjustment}
-            onChange={(e) => setScoreAdjustment(e.target.value)}
-            placeholder="Enter positive or negative number"
-            helperText={
-              scoreAdjustment && !isNaN(parseInt(scoreAdjustment))
-                ? `New Score: ${Math.max(
-                    0,
-                    currentScore + parseInt(scoreAdjustment)
-                  )}`
-                : "Enter a number to see preview"
-            }
-          />
+
+          <Box sx={{ mb: 2 }}>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+              Operation:
+            </Typography>
+            <Box sx={{ display: "flex", gap: 2 }}>
+              <Button
+                variant={operation === "add" ? "contained" : "outlined"}
+                onClick={() => setOperation("add")}
+                sx={{
+                  flex: 1,
+                  backgroundColor:
+                    operation === "add" ? "#4caf50" : "transparent",
+                  color: operation === "add" ? "white" : "#4caf50",
+                  borderColor: "#4caf50",
+                  "&:hover": {
+                    backgroundColor:
+                      operation === "add"
+                        ? "#45a049"
+                        : "rgba(76, 175, 80, 0.1)",
+                  },
+                  py: 1,
+                }}
+                startIcon={<span>+</span>}
+              >
+                Add Points
+              </Button>
+              <Button
+                variant={operation === "subtract" ? "contained" : "outlined"}
+                onClick={() => setOperation("subtract")}
+                sx={{
+                  flex: 1,
+                  textWrap: "nowrap",
+                  backgroundColor:
+                    operation === "subtract" ? "#f44336" : "transparent",
+                  color: operation === "subtract" ? "white" : "#f44336",
+                  borderColor: "#f44336",
+                  "&:hover": {
+                    backgroundColor:
+                      operation === "subtract"
+                        ? "#e53935"
+                        : "rgba(244, 67, 54, 0.1)",
+                  },
+                  py: 1,
+                }}
+                startIcon={<span>−</span>}
+              >
+                Subtract Points
+              </Button>
+            </Box>
+          </Box>
+
+          <Box>
+            <Typography variant="body2" color="text.secondary">
+              Enter points to {operation}:
+            </Typography>
+            <TextField
+              autoFocus
+              margin="dense"
+              placeholder="Enter points"
+              type="number"
+              fullWidth
+              variant="outlined"
+              value={scoreAdjustment}
+              onChange={(e) => setScoreAdjustment(e.target.value)}
+              inputProps={{
+                min: 0,
+                step: 1,
+              }}
+              sx={{
+                "& .MuiOutlinedInput-root": {
+                  "& fieldset": {
+                    borderColor: "rgba(0, 0, 0, 0.23)",
+                  },
+                  "&:hover fieldset": {
+                    borderColor: "rgba(0, 0, 0, 0.87)",
+                  },
+                  "&.Mui-focused fieldset": {
+                    borderColor: "#1976d2",
+                  },
+                },
+              }}
+            />
+          </Box>
         </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCloseScoreModal}>Cancel</Button>
+        <DialogActions sx={{ px: 3, pb: 3 }}>
+          <Button
+            onClick={handleCloseScoreModal}
+            sx={{
+              color: "text.secondary",
+              px: 3,
+              py: 1,
+            }}
+          >
+            Cancel
+          </Button>
           <Button
             onClick={handleChangeScore}
             variant="contained"
-            disabled={!scoreAdjustment || isNaN(parseInt(scoreAdjustment))}
+            disabled={
+              !scoreAdjustment ||
+              isNaN(parseInt(scoreAdjustment)) ||
+              parseInt(scoreAdjustment) <= 0
+            }
+            sx={{
+              backgroundColor: operation === "add" ? "#4caf50" : "#f44336",
+              px: 3,
+              py: 1,
+              "&:hover": {
+                backgroundColor: "#45a049",
+              },
+              "&:disabled": {
+                backgroundColor: "rgba(0, 0, 0, 0.12)",
+                color: "rgba(0, 0, 0, 0.26)",
+              },
+            }}
           >
-            Change Score
+            {operation === "add" ? "Add Points" : "Subtract Points"}
           </Button>
         </DialogActions>
       </Dialog>

@@ -1,11 +1,22 @@
 import React, { useState } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
-import { Alert, Box, Snackbar, TextField, Typography } from "@mui/material";
+import {
+  Alert,
+  Box,
+  Snackbar,
+  TextField,
+  Typography,
+  FormControl,
+  Select,
+  MenuItem,
+  InputLabel,
+} from "@mui/material";
 import { useAppDispatch, useAppSelector } from "../../../app/hooks";
 import GlobalButton from "../../../components/ui/button";
 import { setPlayer } from "../services/player.slice";
 import { RootState } from "../../../app/store";
 import homescreenBanner from "../../../assets/homescreenBanner.png";
+import { useGetAllTeamsQuery } from "../services/player.api";
 
 const HomeScreen: React.FC = () => {
   const { isAuthenticated } = useAppSelector(
@@ -15,8 +26,16 @@ const HomeScreen: React.FC = () => {
   const dispatch = useAppDispatch();
   const [firstname, setFirstname] = React.useState<string>("");
   const [lastname, setLastname] = React.useState<string>("");
+  const [selectedTeam, setSelectedTeam] = React.useState<number | "">("");
   const [showSnackbar, setShowSnackbar] = useState(false);
   const { sessionId } = useAppSelector((state: RootState) => state.game);
+  const {
+    data: teams,
+    isError,
+    isLoading,
+  } = useGetAllTeamsQuery(sessionId, {
+    skip: !sessionId,
+  });
 
   const MAX_NAME_LENGTH = 20;
 
@@ -49,7 +68,7 @@ const HomeScreen: React.FC = () => {
     const firstnameValidation = validateName(firstname.trim());
     const lastnameValidation = validateName(lastname.trim());
 
-    if (!firstname.trim() || !lastname.trim()) {
+    if (!firstname.trim() || !lastname.trim() || selectedTeam === "") {
       setShowSnackbar(true);
       return;
     }
@@ -62,6 +81,7 @@ const HomeScreen: React.FC = () => {
     dispatch(
       setPlayer({
         name: playerName,
+        teamNumber: selectedTeam as number,
       })
     );
     navigate(`/game/${sessionId}/capture`);
@@ -113,17 +133,20 @@ const HomeScreen: React.FC = () => {
       <Box
         position={"relative"}
         sx={{
-          bottom: "80px",
+          bottom: "170px",
           borderRadius: 2,
           background: "linear-gradient(180deg, #A78BFA 0%, #3622C9 100%)",
           padding: "2px",
           mx: "55px",
+          maxHeight: "400px",
         }}
       >
         <Box
           sx={{
             borderRadius: 2,
             backgroundColor: "background.paper",
+            maxHeight: "396px",
+            overflowY: "auto",
           }}
         >
           <Box
@@ -146,6 +169,38 @@ const HomeScreen: React.FC = () => {
               value={lastname}
               onChange={(e) => handleLastnameChange(e.target.value)}
             />
+
+            {/* Teams Dropdown */}
+            <FormControl variant="outlined" fullWidth>
+              <InputLabel>Select Team</InputLabel>
+              <Select
+                value={selectedTeam}
+                onChange={(e) => setSelectedTeam(e.target.value as number)}
+                label="Select Team"
+                disabled={isLoading}
+                MenuProps={{
+                  PaperProps: {
+                    style: {
+                      maxHeight: 200,
+                    },
+                  },
+                }}
+              >
+                {isLoading ? (
+                  <MenuItem disabled>Loading teams...</MenuItem>
+                ) : isError ? (
+                  <MenuItem disabled>Error loading teams</MenuItem>
+                ) : teams && teams.length > 0 ? (
+                  teams.map((_: any, index: number) => (
+                    <MenuItem key={index} value={index + 1}>
+                      Team {index + 1}
+                    </MenuItem>
+                  ))
+                ) : (
+                  <MenuItem disabled>No teams available</MenuItem>
+                )}
+              </Select>
+            </FormControl>
           </Box>
           <Box
             sx={{
@@ -159,7 +214,9 @@ const HomeScreen: React.FC = () => {
             <GlobalButton
               fullWidth
               onClick={handleStart}
-              disabled={!firstname.trim() || !lastname.trim()}
+              disabled={
+                !firstname.trim() || !lastname.trim() || selectedTeam === ""
+              }
             >
               Start
             </GlobalButton>
@@ -177,7 +234,7 @@ const HomeScreen: React.FC = () => {
           severity="warning"
           sx={{ width: "100%" }}
         >
-          Please enter both first and last names.
+          Please enter both first and last names and select a team.
         </Alert>
       </Snackbar>
     </Box>

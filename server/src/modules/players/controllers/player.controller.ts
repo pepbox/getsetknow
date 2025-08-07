@@ -15,10 +15,12 @@ import { deleteFromS3 } from '../../../services/fileUpload';
 import SessionService from '../../session/services/session.service';
 import FileService from '../../files/services/fileService';
 import { SessionStatus } from '../../session/types/enums';
+import TeamService from '../../teams/services/team.service';
 
 const playerService = new PlayerService(Player);
 const questionService = new QuestionService(Question);
 const fileService = new FileService();
+const teamService = new TeamService();
 
 
 export const onboardPlayer = async (
@@ -29,6 +31,7 @@ export const onboardPlayer = async (
     try {
         const { name,
             session,
+            teamNumber
         } = req.body;
 
         if (!req.file) {
@@ -68,11 +71,13 @@ export const onboardPlayer = async (
         };
 
         const profileImage = await fileService.uploadFile(profileImageInfo);
+        const team = await teamService.fetchTeamByNumber(teamNumber, session);
 
         const playerData = {
             name,
             profilePhoto: profileImage._id,
             session,
+            team: team._id,
         };
 
         const player = await playerService.createPlayer(playerData);
@@ -154,12 +159,21 @@ export const getPlayersCards = async (
             });
             return;
         }
-
+        const CurrentPlayer = await playerService.getPlayerById(currentUserId.toString());
+        if (!CurrentPlayer) {
+            res.status(StatusCodes.NOT_FOUND).json({
+                success: false,
+                message: "Current player not found",
+            });
+            return;
+        }
+        console.log("Current Player:", CurrentPlayer);
         // Fetch all players in the session except the current user
         const players = await playerService.getPlayersBySession(new Types.ObjectId(sessionId));
         const otherPlayers = players.filter(
-            (player: any) => player._id.toString() !== currentUserId
+            (player: any) => player._id.toString() !== currentUserId && player.team.toString() === CurrentPlayer?.team?.toString()
         );
+        console.log("Other Players:", otherPlayers);
 
         // Prepare the result array
         const result = [];
@@ -215,6 +229,7 @@ export const getPlayersBySession = async (
     try {
         const sessionId = req.user?.sessionId;
         const currentUserId = req.user?.id;
+        const role = req.user?.role;
 
         if (!sessionId || !currentUserId) {
             res.status(StatusCodes.BAD_REQUEST).json({
@@ -223,11 +238,16 @@ export const getPlayersBySession = async (
             });
             return;
         }
-
         const players = await playerService.getPlayersBySession(new Types.ObjectId(sessionId));
-        const filteredPlayers = players.filter(
+        let filteredPlayers = players.filter(
             (player: any) => player._id.toString() !== currentUserId
         );
+        if (role === "USER") {
+            const currentPlayer = await playerService.getPlayerById(currentUserId.toString());
+            filteredPlayers = filteredPlayers.filter(
+                (player: any) => player.team.toString() === currentPlayer?.team?.toString()
+            );
+        }
         for (let i = filteredPlayers.length - 1; i > 0; i--) {
             const j = Math.floor(Math.random() * (i + 1));
             [filteredPlayers[i], filteredPlayers[j]] = [filteredPlayers[j], filteredPlayers[i]];
@@ -326,6 +346,125 @@ export const submitGuess = async (
     }
 };
 
+export const submitSelfie = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+): Promise<void> => {
+    try {
+        const { guessId } = req.body;
+        const currentUserId = req.user?.id;
+
+        if (!req.file) {
+            return next(new AppError("Selfie image is required.", 400));
+        }
+
+        if (!guessId) {
+            deleteFromS3(req.file.key!);
+            res.status(StatusCodes.BAD_REQUEST).json({
+                success: false,
+                message: "guessId is required",
+            });
+            return;
+        }
+
+        if (!currentUserId) {
+            deleteFromS3(req.file.key!);
+            res.status(StatusCodes.BAD_REQUEST).json({
+                success: false,
+                message: "User ID is required",
+            });
+            return;
+        }
+
+        // Find the guess by ID and verify it belongs to the current user
+        const guess = await playerService.getGuessById(guessId);
+        if (!guess) {
+            deleteFromS3(req.file.key!);
+            res.status(StatusCodes.NOT_FOUND).json({
+                success: false,
+                message: "Guess not found",
+            });
+            return;
+        }
+
+        // Check if the guess belongs to the current user
+        if (guess.user.toString() !== currentUserId.toString()) {
+            deleteFromS3(req.file.key!);
+            res.status(StatusCodes.FORBIDDEN).json({
+                success: false,
+                message: "You can only upload selfies for your own guesses",
+            });
+            return;
+        }
+
+        // Check if the guess is correct (only allow selfie upload for correct guesses)
+        const isCorrect = guess.personId.toString() === guess.guessedPersonId?.toString();
+        if (!isCorrect) {
+            deleteFromS3(req.file.key!);
+            res.status(StatusCodes.BAD_REQUEST).json({
+                success: false,
+                message: "You can only upload selfies for correctly guessed players",
+            });
+            return;
+        }
+
+        // Upload the selfie file
+        const selfieImageInfo = {
+            originalName: req.file.originalname!,
+            fileName: req.file.key!,
+            size: req.file.size!,
+            mimetype: req.file.mimetype!,
+            location: req.file.location!,
+            bucket: req.file.bucket!,
+            etag: req.file.etag!,
+        };
+
+        const selfieFile = await fileService.uploadFile(selfieImageInfo);
+
+        // Update the guess with the selfie reference
+        const updatedGuess = await playerService.updateGuessById(guessId, {
+            selfie: selfieFile._id,
+        });
+
+        if (!updatedGuess) {
+            res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+                success: false,
+                message: "Failed to update guess with selfie",
+            });
+            return;
+        }
+
+        res.status(StatusCodes.OK).json({
+            success: true,
+            message: "Selfie uploaded successfully",
+            data: {
+                guessId: guessId,
+                selfieUrl: selfieFile.location,
+            },
+        });
+
+    } catch (error) {
+        if (req.file?.key) {
+            deleteFromS3(req.file.key);
+        }
+        if (error instanceof AppError) {
+            res.status(error.statusCode).json({
+                success: false,
+                message: error.message,
+            });
+        } else {
+            console.error("Error uploading selfie:", error);
+            res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+                success: false,
+                message: "Internal Server Error",
+            });
+        }
+    }
+};
+
+
+
 export const getUserGuesses = async (
     req: Request,
     res: Response
@@ -350,6 +489,8 @@ export const getUserGuesses = async (
                     guessId: guess._id,
                     status: "no guess",
                     guessedPersonId: null, // No guess made yet
+                    hasSelfie: false,
+                    requiresSelfie: false,
                 };
             }
             const isCorrect = guess.personId.toString() === guess.guessedPersonId.toString();
@@ -357,6 +498,8 @@ export const getUserGuesses = async (
                 guessId: guess._id,
                 status: isCorrect ? "correct" : "wrong",
                 guessedPersonId: isCorrect ? guess.guessedPersonId : null,
+                hasSelfie: !!guess.selfie,
+                requiresSelfie: isCorrect && !guess.selfie, // Requires selfie if correct but no selfie uploaded
             };
         });
 
@@ -567,7 +710,10 @@ export const getGameCompletionData = async (
         }
 
         // Get all players in session
-        const allPlayers = await playerService.getPlayersBySession(new Types.ObjectId(sessionId));
+        let allPlayers = await playerService.getPlayersBySession(new Types.ObjectId(sessionId));
+        allPlayers = allPlayers.filter(
+            (player: any) => player.team.toString() === currentPlayer?.team?.toString()
+        );
         const totalPlayers = allPlayers.length;
 
         // Get people you know (players you guessed correctly)

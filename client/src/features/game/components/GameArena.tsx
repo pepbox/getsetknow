@@ -14,8 +14,13 @@ import { Navigate } from "react-router-dom";
 import GlobalButton from "../../../components/ui/button";
 import ConfirmationModal from "./ConfirmationModa";
 import QuestionsNavigationModal from "./QuestionsNavigationModal";
+import SelfieUploadScreen from "./SelfieUploadScreen";
 import { useAppDispatch, useAppSelector } from "../../../app/hooks";
-import { replayLastCard } from "../services/gameArenaSlice";
+import {
+  replayLastCard,
+  setSelfieUploaded,
+  showSelfieUploadScreen,
+} from "../services/gameArenaSlice";
 import { RootState } from "../../../app/store";
 import guessedWrong from "../../../assets/guessedWrong.png";
 
@@ -52,6 +57,8 @@ interface GameArenaProps {
   guesses: Array<{
     guessId: string;
     status: "correct" | "wrong" | "no guess";
+    hasSelfie?: boolean;
+    requiresSelfie?: boolean;
   }>;
   correctlyGuessedPlayerIds?: string[]; // Add this new prop to track correctly guessed players
 }
@@ -74,6 +81,9 @@ const GameArena: React.FC<GameArenaProps> = ({
 }) => {
   const dispatch = useAppDispatch();
   const { sessionId } = useAppSelector((state: RootState) => state.game);
+  const { showSelfieUpload, currentSelfieGuessId } = useAppSelector(
+    (state: RootState) => state.gameArena
+  );
   const [knowsPerson, setKnowsPerson] = useState<boolean>(false);
   const [skipModal, setSkipModal] = useState(false);
   const [submitModal, setSubmitModal] = useState(false);
@@ -122,6 +132,13 @@ const GameArena: React.FC<GameArenaProps> = ({
   };
   const handleAssignmentIconClick = () => {
     handleQuestionsModalOpen();
+  };
+
+  // Selfie upload handlers
+  const handleSelfieUploaded = () => {
+    if (currentSelfieGuessId) {
+      dispatch(setSelfieUploaded({ guessId: currentSelfieGuessId }));
+    }
   };
 
   // Format profile key for display
@@ -175,6 +192,31 @@ const GameArena: React.FC<GameArenaProps> = ({
       onClearSelection(); // Use the proper clear function
     }
   }, [selectedPersonId, filteredPlayers, onClearSelection]);
+
+  // Check if current guess requires selfie upload
+  const currentGuessRequiresSelfie = () => {
+    if (!data?.currentGuessId) return false;
+
+    const currentGuess = guesses.find(
+      (guess) => guess.guessId === data.currentGuessId
+    );
+    return currentGuess?.requiresSelfie === true;
+  };
+
+  // Show selfie upload screen if required
+  if (showSelfieUpload && currentSelfieGuessId ) {
+    return (
+      <SelfieUploadScreen
+        data={{
+          currentGuessId: currentSelfieGuessId,
+          lastGuessPlayerPhoto: data.lastGuessPlayerPhoto,
+          lastGuessPlayerName: data.lastGuessPlayerName,
+        }}
+        progressValue={progressValue}
+        onSelfieUploaded={handleSelfieUploaded}
+      />
+    );
+  }
 
   // Show result screen if there's a guess result
   if (showResult) {
@@ -322,6 +364,14 @@ const GameArena: React.FC<GameArenaProps> = ({
                 Wohoo! You guessed it right.
                 <br />
                 Score: {data.lastGuessScore}
+                {currentGuessRequiresSelfie() && (
+                  <>
+                    <br />
+                    <br />
+                    📸 Take a selfie with {data.lastGuessPlayerName} to
+                    continue!
+                  </>
+                )}
               </>
             ) : (
               <>
@@ -334,12 +384,25 @@ const GameArena: React.FC<GameArenaProps> = ({
             )}
           </Typography>
 
-          <GlobalButton
-            onClick={handleNextClick}
-            sx={{ maxWidth: "300px", mx: "auto" }}
-          >
-            Next Player
-          </GlobalButton>
+          {data?.isLastGuessCorrect && currentGuessRequiresSelfie() ? (
+            <GlobalButton
+              onClick={() =>
+                dispatch(
+                  showSelfieUploadScreen({ guessId: data.currentGuessId })
+                )
+              }
+              sx={{ maxWidth: "300px", mx: "auto" }}
+            >
+              Take Selfie
+            </GlobalButton>
+          ) : (
+            <GlobalButton
+              onClick={handleNextClick}
+              sx={{ maxWidth: "300px", mx: "auto" }}
+            >
+              Next Player
+            </GlobalButton>
+          )}
 
           {!data?.isLastGuessCorrect && (
             <GlobalButton

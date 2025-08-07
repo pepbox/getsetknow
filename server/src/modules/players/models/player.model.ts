@@ -1,4 +1,4 @@
-import  { Schema, model } from 'mongoose';
+import { Schema, model } from 'mongoose';
 import { IPlayer } from '../types/interfaces';
 
 
@@ -11,6 +11,7 @@ const PlayerSchema = new Schema<IPlayer>({
     },
     session: { type: Schema.Types.ObjectId, ref: 'Session', required: true },
     score: { type: Number, default: 0 },
+    team: { type: Schema.Types.ObjectId, ref: 'Team' },
 }, {
     timestamps: true
 });

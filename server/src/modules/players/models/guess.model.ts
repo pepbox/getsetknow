@@ -19,7 +19,11 @@ const guessSchema = new Schema<IGuess>({
     attempts: {
         type: Number,
         default: 0
-    }
+    },
+    selfie: {
+        type: Schema.Types.ObjectId,
+        ref: "File",
+    },
 }, {
     timestamps: true
 });

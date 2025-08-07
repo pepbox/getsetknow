@@ -5,6 +5,7 @@ export interface IPlayer extends Document {
     name: string;
     profilePhoto: mongoose.Types.ObjectId;
     score?: number;
+    team?: mongoose.Types.ObjectId;
     session: Types.ObjectId;
     createdAt?: Date;
     updatedAt?: Date;
@@ -15,6 +16,7 @@ export interface IGuess extends Document {
     personId: Types.ObjectId;
     guessedPersonId: Types.ObjectId;
     attempts?: number;
+    selfie?: mongoose.Types.ObjectId;
     createdAt: Date;
     updatedAt: Date;
 }

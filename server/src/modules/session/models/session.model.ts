@@ -13,6 +13,7 @@ const sessionSchema = new Schema<ISession>({
         enum: SessionStatus,
         default: 'pending'
     },
+    numberOfTeams: { type: Number, default: null },
 }, {
     timestamps: true
 });
