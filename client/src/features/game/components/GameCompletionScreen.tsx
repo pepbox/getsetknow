@@ -14,11 +14,18 @@ import {
   Container,
   Paper,
   Chip,
+  IconButton,
+  AppBar,
+  Toolbar,
 } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import LogoutIcon from "@mui/icons-material/Logout";
 import Confetti from "react-confetti";
-import { useGetGameCompletionDataQuery } from "../services/gameArena.Api";
+import { useNavigate } from "react-router-dom";
+import { useDispatch } from "react-redux";
+import { useGetGameCompletionDataQuery, usePlayerLogoutMutation } from "../services/gameArena.Api";
 import { useLazyGetPlayerWithResponsesQuery } from "../../admin/services/admin.Api";
+import { logoutPlayer } from "../../player/services/player.slice";
 import PlayerResponsesModal from "../../admin/components/PlayerResponsesModal";
 import Loader from "../../../components/ui/Loader";
 import Error from "../../../components/ui/Error";
@@ -43,6 +50,8 @@ const GameCompletionScreen: React.FC = () => {
   const [selectedPlayer, setSelectedPlayer] =
     useState<PlayerWithResponses | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
 
   // API calls
   const {
@@ -52,6 +61,7 @@ const GameCompletionScreen: React.FC = () => {
   } = useGetGameCompletionDataQuery();
   const [getPlayerWithResponses, { isLoading: loadingPlayerResponses }] =
     useLazyGetPlayerWithResponsesQuery();
+  const [playerLogout, { isLoading: loggingOut }] = usePlayerLogoutMutation();
 
   // Hide confetti after 5 seconds
   React.useEffect(() => {
@@ -84,6 +94,19 @@ const GameCompletionScreen: React.FC = () => {
     setSelectedPlayer(null);
   };
 
+  const handleLogout = async () => {
+    try {
+      await playerLogout().unwrap();
+      dispatch(logoutPlayer());
+      navigate("/");
+    } catch (error) {
+      console.error("Logout failed:", error);
+      // Even if API call fails, clear local state
+      dispatch(logoutPlayer());
+      navigate("/");
+    }
+  };
+
   if (isLoading) {
     return <Loader />;
   }
@@ -104,6 +127,25 @@ const GameCompletionScreen: React.FC = () => {
         overflow: "auto",
       }}
     >
+      {/* Header with Logout */}
+      <AppBar position="static" elevation={0} sx={{ bgcolor: "transparent" }}>
+        <Toolbar sx={{ justifyContent: "space-between" }}>
+          <Typography variant="h6" sx={{ color: "white", fontWeight: "bold" }}>
+            GetSetKnow!
+          </Typography>
+          <IconButton
+            onClick={handleLogout}
+            disabled={loggingOut}
+            sx={{ 
+              color: "white",
+              "&:hover": { bgcolor: "rgba(255,255,255,0.1)" }
+            }}
+          >
+            <LogoutIcon />
+          </IconButton>
+        </Toolbar>
+      </AppBar>
+
       {/* Confetti Animation */}
       {showConfetti && (
         <Confetti
@@ -115,7 +157,7 @@ const GameCompletionScreen: React.FC = () => {
         />
       )}
 
-      <Container maxWidth="md" sx={{ pt: 4, pb: 4 }}>
+      <Container maxWidth="md" sx={{ pt: 2, pb: 4 }}>
         {/* Header Section */}
         <Paper
           elevation={3}
@@ -161,17 +203,30 @@ const GameCompletionScreen: React.FC = () => {
             {currentPlayer.name}
           </Typography>
 
-          <Chip
-            label={`Final Score: ${currentPlayer.score}`}
-            sx={{
-              fontSize: "1.2rem",
-              fontWeight: "bold",
-              py: 2,
-              px: 3,
-              background: "rgba(255,255,255,0.9)",
-              color: "#333",
-            }}
-          />
+          <Box sx={{ display: "flex", justifyContent: "center", gap: 2, flexWrap: "wrap" }}>
+            <Chip
+              label={`Final Score: ${currentPlayer.score}`}
+              sx={{
+                fontSize: "1.1rem",
+                fontWeight: "bold",
+                py: 2,
+                px: 3,
+                background: "rgba(255,255,255,0.9)",
+                color: "#333",
+              }}
+            />
+            <Chip
+              label={`Rank: #${currentPlayer.rank}`}
+              sx={{
+                fontSize: "1.1rem",
+                fontWeight: "bold",
+                py: 2,
+                px: 3,
+                background: "rgba(255,215,0,0.9)",
+                color: "#333",
+              }}
+            />
+          </Box>
         </Paper>
 
         {/* Statistics Overview */}
@@ -272,11 +327,7 @@ const GameCompletionScreen: React.FC = () => {
                         </ListItemAvatar>
                         <ListItemText
                           primary={player.name}
-                          secondary={
-                            player.score
-                              ? `Score: ${player.score}`
-                              : "No score available"
-                          }
+                          secondary={`Score: ${player.score}`}
                         />
                       </ListItemButton>
                     </ListItem>
@@ -326,11 +377,7 @@ const GameCompletionScreen: React.FC = () => {
                         </ListItemAvatar>
                         <ListItemText
                           primary={player.name}
-                          secondary={
-                            player.score
-                              ? `Score: ${player.score}`
-                              : "No score available"
-                          }
+                          secondary={`Score: ${player.score}`}
                         />
                       </ListItemButton>
                     </ListItem>

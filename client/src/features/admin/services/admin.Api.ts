@@ -65,7 +65,7 @@ export const adminApi = api.injectEndpoints({
         method: 'GET',
       }),
       transformResponse: (response: any) => response.data,
-      providesTags: ["AdminPlayer"],
+      providesTags: ["Selfie"],
     }),
 
     updatePlayer: builder.mutation({
@@ -98,7 +98,7 @@ export const adminApi = api.injectEndpoints({
 
 });
 
-export const { 
+export const {
   useAdminLoginMutation,
   useAdminLogoutMutation,
   useUpdateSessionMutation,

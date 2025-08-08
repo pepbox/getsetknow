@@ -65,6 +65,7 @@ const PlayerTable: React.FC<PlayerTableProps> = ({
   const [sortField, setSortField] = useState<string>("");
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
   const [selectedTeam, setSelectedTeam] = useState<string>(""); // Team filter state
+  const [searchQuery, setSearchQuery] = useState<string>(""); // Search query state
 
   // Score change modal state
   const [scoreModalOpen, setScoreModalOpen] = useState(false);
@@ -175,11 +176,24 @@ const PlayerTable: React.FC<PlayerTableProps> = ({
     });
   }, [players]);
 
-  // Filter players by selected team
+  // Filter players by selected team and search query
   const filteredPlayers = React.useMemo(() => {
-    if (!selectedTeam || !players) return players;
-    return players.filter((player) => player.team === selectedTeam);
-  }, [players, selectedTeam]);
+    let filtered = players || [];
+
+    // Filter by team if selected
+    if (selectedTeam) {
+      filtered = filtered.filter((player) => player.team === selectedTeam);
+    }
+
+    // Filter by search query if provided
+    if (searchQuery.trim()) {
+      filtered = filtered.filter((player) =>
+        player.name.toLowerCase().includes(searchQuery.toLowerCase().trim())
+      );
+    }
+
+    return filtered;
+  }, [players, selectedTeam, searchQuery]);
 
   // Calculate team rank for filtered players
   const playersWithTeamRank = React.useMemo(() => {
@@ -387,11 +401,23 @@ const PlayerTable: React.FC<PlayerTableProps> = ({
 
   return (
     <>
-      {/* Team Filter */}
+      {/* Search and Team Filter */}
       <Box
         mb={2}
-        sx={{ display: "flex", alignItems: "center", gap: 2, flexWrap: "wrap" }}
+        sx={{ display: "flex", alignItems: "center", gap: 1, flexWrap: "wrap" }}
       >
+        <TextField
+          size="small"
+          placeholder="Search players by name..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          sx={{ minWidth: 200, flex: 1, maxWidth: 300 }}
+          InputProps={{
+            startAdornment: (
+              <Box sx={{ mr: 1, color: "text.secondary" }}>🔍</Box>
+            ),
+          }}
+        />
         <FormControl size="small" sx={{ minWidth: 170 }}>
           <InputLabel>Filter by Team</InputLabel>
           <Select
@@ -409,12 +435,15 @@ const PlayerTable: React.FC<PlayerTableProps> = ({
             ))}
           </Select>
         </FormControl>
-        {selectedTeam && (
+        {(selectedTeam || searchQuery) && (
           <Button
             size="small"
             variant="outlined"
             startIcon={<ClearIcon />}
-            onClick={clearTeamFilter}
+            onClick={() => {
+              clearTeamFilter();
+              setSearchQuery("");
+            }}
             sx={{
               color: "text.secondary",
               borderColor: "text.secondary",
@@ -426,14 +455,26 @@ const PlayerTable: React.FC<PlayerTableProps> = ({
               },
             }}
           >
-            Clear Filter
+            Clear Filters
           </Button>
         )}
-        {selectedTeam && (
-          <Typography variant="body2" color="text.secondary">
-            Showing {filteredPlayers?.length || 0} players from Team{" "}
-            {selectedTeam}
-          </Typography>
+        {/* Filter Status Info */}
+        {(selectedTeam || searchQuery) && (
+          <Box>
+            <Typography variant="body2" color="text.secondary">
+              {searchQuery && selectedTeam
+                ? `Showing ${
+                    filteredPlayers?.length || 0
+                  } players matching "${searchQuery}" in Team ${selectedTeam}`
+                : searchQuery
+                ? `Showing ${
+                    filteredPlayers?.length || 0
+                  } players matching "${searchQuery}"`
+                : `Showing ${
+                    filteredPlayers?.length || 0
+                  } players from Team ${selectedTeam}`}
+            </Typography>
+          </Box>
         )}
       </Box>
 

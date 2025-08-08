@@ -14,7 +14,7 @@ const initialState = {
     player: null as IPlayer | null,
     isLoading: false,
     error: null as SerializedError | null,
-    isAuthenticated : false,
+    isAuthenticated: false,
 };
 
 const playerSlice = createSlice({
@@ -26,6 +26,15 @@ const playerSlice = createSlice({
         },
         clearPlayer: (state) => {
             state.player = null;
+        },
+        logoutPlayer: (state) => {
+            state.player = null;
+            state.isAuthenticated = false;
+            state.error = null;
+            // Clear entire localStorage on logout
+            if (typeof window !== 'undefined') {
+                localStorage.clear();
+            }
         },
     },
     extraReducers: (builder) => {
@@ -80,6 +89,6 @@ const playerSlice = createSlice({
     },
 });
 
-export const { setPlayer, clearPlayer } = playerSlice.actions;
+export const { setPlayer, clearPlayer, logoutPlayer } = playerSlice.actions;
 
 export default playerSlice.reducer;

@@ -1,6 +1,6 @@
 import React, { useRef, useCallback, useState, useEffect } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
-import { Box, Typography } from "@mui/material";
+import { Box, Typography, Snackbar, Alert } from "@mui/material";
 import { CloudUpload } from "@mui/icons-material";
 import Webcam from "react-webcam";
 import GlobalButton from "../../../components/ui/button";
@@ -25,7 +25,18 @@ const CaptureScreen: React.FC = () => {
     (state: RootState) => state.player.isAuthenticated
   );
 
-  const capture = useCallback(() => {
+  // Snackbar state for error handling
+  const [snackbar, setSnackbar] = useState<{
+    open: boolean;
+    message: string;
+    severity: "success" | "error";
+  }>({ open: false, message: "", severity: "error" });
+
+  const handleCloseSnackbar = () => {
+    setSnackbar((prev) => ({ ...prev, open: false }));
+  };
+
+  const capture = useCallback(() => {``
     const imageSrc = webcamRef.current?.getScreenshot();
     if (imageSrc) {
       setCapturedImage(imageSrc);
@@ -88,9 +99,36 @@ const CaptureScreen: React.FC = () => {
         })
         .catch((error) => {
           console.error("Error onboarding player:", error);
+          
+          // Extract error message from the API response
+          const errorMessage = error?.data?.message || error?.message || "Failed to onboard player. Please try again.";
+          
+          // Show error snackbar
+          setSnackbar({
+            open: true,
+            message: errorMessage,
+            severity: "error",
+          });
+
+          // Navigate to login screen after a short delay
+          setTimeout(() => {
+            navigate(`/game/${sessionId}`);
+          }, 3000);
         });
     } catch (error) {
       console.error("Error preparing image data:", error);
+      
+      // Show error snackbar for image preparation errors
+      setSnackbar({
+        open: true,
+        message: "Failed to process image. Please try again.",
+        severity: "error",
+      });
+
+      // Navigate to login screen after a short delay
+      setTimeout(() => {
+        navigate(`/game/${sessionId}`);
+      }, 3000);
     }
   };
 
@@ -246,6 +284,22 @@ const CaptureScreen: React.FC = () => {
           )}
         </Box>
       </Box>
+
+      {/* Snackbar for error messages */}
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={3000}
+        onClose={handleCloseSnackbar}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+      >
+        <Alert
+          onClose={handleCloseSnackbar}
+          severity={snackbar.severity}
+          sx={{ width: "100%" }}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 };

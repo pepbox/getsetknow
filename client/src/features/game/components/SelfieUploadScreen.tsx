@@ -345,7 +345,7 @@ const SelfieUploadScreen: React.FC<SelfieUploadScreenProps> = ({
           ) : (
             <Box sx={{ display: "flex", flexDirection: "row", gap: 1 }}>
               <Button
-                onClick={capture}
+                onClick={handleUploadClick}
                 variant="outlined"
                 fullWidth
                 sx={{
@@ -362,10 +362,11 @@ const SelfieUploadScreen: React.FC<SelfieUploadScreenProps> = ({
                   cursor: "pointer",
                 }}
               >
-                Capture Selfie
+                <CloudUpload sx={{ fontSize: 16, mr:1 }} />
+                Upload Photo
               </Button>
               <GlobalButton
-                onClick={handleUploadClick}
+                onClick={capture}
                 sx={{
                   display: "flex",
                   alignItems: "center",
@@ -374,8 +375,7 @@ const SelfieUploadScreen: React.FC<SelfieUploadScreenProps> = ({
                   textWrap: "nowrap",
                 }}
               >
-                <CloudUpload sx={{ fontSize: 16 }} />
-                Upload Photo
+                Capture Selfie
               </GlobalButton>
             </Box>
           )}

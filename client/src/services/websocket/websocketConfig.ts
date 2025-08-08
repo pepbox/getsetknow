@@ -28,6 +28,14 @@ export const setupGlobalListeners = () => {
   );
 
   websocketService.addGlobalListener(
+    Events.PLAYER_SELFIE_UPDATE,
+    throttle(() => {
+      store.dispatch(adminApi.util.invalidateTags(["Selfie"]));
+    }, 3000),
+    "redux"
+  );
+
+  websocketService.addGlobalListener(
     Events.PLAYER_STAT_UPDATE,
     throttle(() => {
       store.dispatch(adminApi.util.invalidateTags(["GameCards"]));

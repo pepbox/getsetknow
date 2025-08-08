@@ -72,6 +72,18 @@ export const onboardPlayer = async (
 
         const profileImage = await fileService.uploadFile(profileImageInfo);
         const team = await teamService.fetchTeamByNumber(teamNumber, session);
+        const players = await playerService.getPlayersBySession(session);
+        const existingPlayer = players.find(
+            (player: any) => player.name === name
+        );
+
+        if (existingPlayer) {
+            if (existingPlayer?.team?.toString() === team?._id?.toString()) {
+                deleteFromS3(req.file.key!);
+                return next(new AppError("A player with this name already exists in team.", 400));
+            }
+        }
+
 
         const playerData = {
             name,
@@ -305,6 +317,7 @@ export const submitGuess = async (
 
         let profilePicture = "";
         let score = 0;
+        const guessedPerson = await playerService.getPlayerById(guess.personId.toString());
         if (isCorrect) {
             // Update player score if the guess is correct
             score = 100 - (guess.attempts || 0) * 10;
@@ -318,7 +331,9 @@ export const submitGuess = async (
             }
             SessionEmitters.toUser(guess.personId?.toString() ?? "", Events.PLAYER_STAT_UPDATE, {});
             if (guess.personId) {
-                const file = await fileService.getFileById(guess.personId.toString());
+                console.log("Guessing personId:", guess.personId.toString());
+                const file = await fileService.getFileById(guessedPerson?.profilePhoto?.toString() || "");
+                console.log("File for personId:", file);
                 profilePicture = file?.location || "";
             }
         }
@@ -333,7 +348,7 @@ export const submitGuess = async (
             success: true,
             correct: isCorrect,
             profilePhoto: profilePicture,
-            name: isCorrect ? (await playerService.getPlayerById(guess.personId.toString()))?.name : "",
+            name: isCorrect ? guessedPerson?.name : "",
             attempts: updatedAttempts,
             score: score,
         });
@@ -354,6 +369,7 @@ export const submitSelfie = async (
     try {
         const { guessId } = req.body;
         const currentUserId = req.user?.id;
+        const sessionId = req.user?.sessionId;
 
         if (!req.file) {
             return next(new AppError("Selfie image is required.", 400));
@@ -434,6 +450,8 @@ export const submitSelfie = async (
             });
             return;
         }
+        // Emit event to update session admins
+        SessionEmitters.toSessionAdmins(sessionId?.toString() ?? "", Events.PLAYER_SELFIE_UPDATE, {});
 
         res.status(StatusCodes.OK).json({
             success: true,
@@ -768,6 +786,12 @@ export const getGameCompletionData = async (
             }
         }
 
+        // Calculate current player's rank within the team
+        const teamPlayers = allPlayers.sort((a: any, b: any) => (b.score || 0) - (a.score || 0));
+        const currentPlayerRank = teamPlayers.findIndex((player: any) =>
+            player._id.toString() === currentPlayer._id.toString()
+        ) + 1; // +1 for 1-based ranking
+
         res.status(StatusCodes.OK).json({
             success: true,
             data: {
@@ -776,6 +800,7 @@ export const getGameCompletionData = async (
                     name: currentPlayer.name,
                     profilePhoto: currentPlayerProfilePhoto,
                     score: currentPlayer.score || 0,
+                    rank: currentPlayerRank,
                 },
                 peopleYouKnow,
                 peopleWhoKnowYou,
@@ -788,6 +813,34 @@ export const getGameCompletionData = async (
             success: false,
             message: "Internal Server Error",
         });
+    }
+};
+
+export const logoutPlayer = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+) => {
+    try {
+        res.clearCookie("accessToken", {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === "production",
+            sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+        });
+
+        res.clearCookie("refreshToken", {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === "production",
+            sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+        });
+
+        res.status(200).json({
+            success: true,
+            message: "Player logged out successfully.",
+        });
+    } catch (error) {
+        console.error("Error logging out player:", error);
+        next(new AppError("Failed to log out player.", 500));
     }
 };
 

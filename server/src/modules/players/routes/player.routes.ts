@@ -29,5 +29,6 @@ router.post('/submitSelfie', authenticateUser, uploadMiddleware.single("selfie",
 router.get('/getUserGuesses', authenticateUser, asyncHandeler(playerControllers.getUserGuesses));
 router.get('/getPlayerStats', authenticateUser, asyncHandeler(playerControllers.getPlayerStats));
 router.get('/getGameCompletionData', authenticateUser, asyncHandeler(playerControllers.getGameCompletionData));
+router.post('/logout', authenticateUser, asyncHandeler(playerControllers.logoutPlayer));
 
 export default router;

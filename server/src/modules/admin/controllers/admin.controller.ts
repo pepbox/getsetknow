@@ -271,8 +271,11 @@ export const fetchLeaderboardData = async (
         // Fetch all players in the session sorted by score
         const players = await playerService.getPlayersBySession(sessionId);
 
-        // Sort players by score and add ranking
-        const sortedPlayers = players.sort((a, b) => (b.score || 0) - (a.score || 0));
+        // Sort players by score and get top 12
+        const sortedPlayers = players
+            .sort((a, b) => (b.score || 0) - (a.score || 0))
+            .slice(0, 12); // Get only top 12 players
+
         const profilePhotos = await Promise.all(
             sortedPlayers.map(async (player) => {
                 if (player.profilePhoto) {
@@ -310,13 +313,25 @@ export const fetchLeaderboardData = async (
                     guessedPersonName: guessedPerson?.name || "Unknown",
                     selfieId: selfiePicture,
                     createdAt: guess.createdAt,
+                    updatedAt: guess.updatedAt, // Include updatedAt for proper sorting
                 };
             })
         );
 
+        // Filter out selfies without images, sort by latest first, and get top 12
+        const filteredAndSortedSelfies = selfies
+            .filter((selfie: any) => selfie.selfieId) // Only include selfies that exist
+            .sort((a: any, b: any) => {
+                // Use updatedAt for sorting since that's when the selfie was actually uploaded
+                const dateA = new Date(a.updatedAt || a.createdAt);
+                const dateB = new Date(b.updatedAt || b.createdAt);
+                return dateB.getTime() - dateA.getTime(); // Sort by latest first
+            })
+            .slice(0, 12); // Get only top 12 latest selfies
+
         const data = {
             playerRankings,
-            selfies: selfies.filter((selfie: any) => selfie.selfieId), // Only include selfies that exist
+            selfies: filteredAndSortedSelfies,
         };
 
         res.status(200).json({

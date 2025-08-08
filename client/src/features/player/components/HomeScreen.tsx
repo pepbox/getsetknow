@@ -15,7 +15,7 @@ import { useAppDispatch, useAppSelector } from "../../../app/hooks";
 import GlobalButton from "../../../components/ui/button";
 import { setPlayer } from "../services/player.slice";
 import { RootState } from "../../../app/store";
-import homescreenBanner from "../../../assets/homescreenBanner.png";
+import homescreenBanner from "../../../assets/homescreenBanner.webp";
 import { useGetAllTeamsQuery } from "../services/player.api";
 
 const HomeScreen: React.FC = () => {

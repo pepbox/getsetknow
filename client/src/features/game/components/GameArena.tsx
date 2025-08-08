@@ -22,7 +22,7 @@ import {
   showSelfieUploadScreen,
 } from "../services/gameArenaSlice";
 import { RootState } from "../../../app/store";
-import guessedWrong from "../../../assets/guessedWrong.png";
+import guessedWrong from "../../../assets/guessedWrong.webp";
 
 interface GameArenaProps {
   data: {
@@ -139,6 +139,7 @@ const GameArena: React.FC<GameArenaProps> = ({
     if (currentSelfieGuessId) {
       dispatch(setSelfieUploaded({ guessId: currentSelfieGuessId }));
     }
+    handleNextClick();
   };
 
   // Format profile key for display
@@ -204,7 +205,7 @@ const GameArena: React.FC<GameArenaProps> = ({
   };
 
   // Show selfie upload screen if required
-  if (showSelfieUpload && currentSelfieGuessId ) {
+  if (showSelfieUpload && currentSelfieGuessId) {
     return (
       <SelfieUploadScreen
         data={{

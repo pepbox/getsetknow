@@ -92,9 +92,10 @@ const IntroScreen: React.FC = () => {
   return (
     <Box
       sx={{
-        height: "100vh",
+        maxHeight: "100vh",
         display: "flex",
         flexDirection: "column",
+        justifyContent: "space-between",
       }}
     >
       <GameHeader />
@@ -109,7 +110,7 @@ const IntroScreen: React.FC = () => {
           overflow: "hidden",
           gap: 0,
           p: 2,
-          minHeight: "400px",
+          minHeight: "450px",
         }}
       >
         {/* Left Side - Game Path */}
@@ -300,7 +301,7 @@ const IntroScreen: React.FC = () => {
         sx={{
           width: "100%",
           bgcolor: "white",
-          p: 3,
+          py: 3,
           display: "flex",
           flexDirection: "column",
           alignItems: "center",

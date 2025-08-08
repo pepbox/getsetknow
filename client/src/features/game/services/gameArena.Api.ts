@@ -34,6 +34,7 @@ export interface GameCompletionData {
     name: string;
     profilePhoto?: string;
     score: number;
+    rank: number;
   };
   peopleYouKnow: Player[];
   peopleWhoKnowYou: Player[];
@@ -119,6 +120,13 @@ export const gameApi = api.injectEndpoints({
       }),
       invalidatesTags: ['GameCards'],
     }),
+
+    playerLogout: builder.mutation<{ success: boolean; message: string }, void>({
+      query: () => ({
+        url: '/player/logout',
+        method: 'POST',
+      }),
+    }),
   }),
 });
 
@@ -131,4 +139,5 @@ export const {
   useGetSessionQuery,
   useGetGameCompletionDataQuery,
   useSubmitSelfieMutation,
+  usePlayerLogoutMutation,
 } = gameApi;

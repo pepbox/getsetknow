@@ -1,5 +1,5 @@
 import { IPlayer, IQuestion } from '../types';
-import questionaireImage from '../assets/questinaireImage.png';
+import questionaireImage from '../assets/questinaireImage.webp';
 
 export const mockPlayers: IPlayer[] = [
   {

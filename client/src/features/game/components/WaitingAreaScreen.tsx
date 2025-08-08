@@ -4,14 +4,14 @@ import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { useAppSelector } from "../../../app/hooks";
 import { RootState } from "../../../app/store";
-import artist from "../../../assets/artist.png";
-import music from "../../../assets/music.png";
-import dance from "../../../assets/Dance.png";
-import adventure from "../../../assets/adventure.png";
-import uiux from "../../../assets/uiux.png";
-import foodie from "../../../assets/foodie.png";
-import photographer from "../../../assets/photographer.png";
-import music2 from "../../../assets/music2.png";
+import artist from "../../../assets/artist.webp";
+import music from "../../../assets/music.webp";
+import dance from "../../../assets/Dance.webp";
+import adventure from "../../../assets/adventure.webp";
+import uiux from "../../../assets/uiux.webp";
+import foodie from "../../../assets/foodie.webp";
+import photographer from "../../../assets/photographer.webp";
+import music2 from "../../../assets/music2.webp";
 
 interface Player {
   id: number;
