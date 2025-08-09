@@ -72,17 +72,17 @@ export const onboardPlayer = async (
 
         const profileImage = await fileService.uploadFile(profileImageInfo);
         const team = await teamService.fetchTeamByNumber(teamNumber, session);
-        const players = await playerService.getPlayersBySession(session);
-        const existingPlayer = players.find(
-            (player: any) => player.name === name
-        );
+        // const players = await playerService.getPlayersBySession(session);
+        // const existingPlayer = players.find(
+        //     (player: any) => player.name === name
+        // );
 
-        if (existingPlayer) {
-            if (existingPlayer?.team?.toString() === team?._id?.toString()) {
-                deleteFromS3(req.file.key!);
-                return next(new AppError("A player with this name already exists in team.", 400));
-            }
-        }
+        // if (existingPlayer) {
+        //     if (existingPlayer?.team?.toString() === team?._id?.toString()) {
+        //         deleteFromS3(req.file.key!);
+        //         return next(new AppError("A player with this name already exists in team.", 400));
+        //     }
+        // }
 
 
         const playerData = {

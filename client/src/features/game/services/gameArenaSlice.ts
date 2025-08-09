@@ -566,21 +566,21 @@ const gameArenaSlice = createSlice({
       .addMatcher(
         gameApi.endpoints.getUserGuesses.matchPending,
         (state) => {
-          state.isLoading = true;
+          // state.isLoading = true;
           state.error = null;
         }
       )
       .addMatcher(
         gameApi.endpoints.getUserGuesses.matchFulfilled,
         (state, { payload }) => {
-          state.isLoading = false;
+          // state.isLoading = false;
           state.players = payload;
         }
       )
       .addMatcher(
         gameApi.endpoints.getUserGuesses.matchRejected,
         (state, { error }) => {
-          state.isLoading = false;
+          // state.isLoading = false;
           state.error = error;
         }
       )
@@ -588,14 +588,14 @@ const gameArenaSlice = createSlice({
       .addMatcher(
         gameApi.endpoints.getPlayerStats.matchPending,
         (state) => {
-          state.isLoading = true;
+          // state.isLoading = true;
           state.error = null;
         }
       )
       .addMatcher(
         gameApi.endpoints.getPlayerStats.matchFulfilled,
         (state, { payload }) => {
-          state.isLoading = false;
+          // state.isLoading = false;
           state.totalScore = payload.totalScore || 0;
           state.peopleIKnow = payload.peopleIKnow || 0;
           state.peopleWhoKnowMe = payload.peopleWhoKnowMe || 0;
@@ -604,7 +604,7 @@ const gameArenaSlice = createSlice({
       .addMatcher(
         gameApi.endpoints.getPlayerStats.matchRejected,
         (state, { error }) => {
-          state.isLoading = false;
+          // state.isLoading = false;
           state.error = error;
         }
       );
