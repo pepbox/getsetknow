@@ -38,7 +38,7 @@ export const setupGlobalListeners = () => {
   websocketService.addGlobalListener(
     Events.PLAYER_STAT_UPDATE,
     throttle(() => {
-      store.dispatch(adminApi.util.invalidateTags(["GameCards"]));
+      store.dispatch(adminApi.util.invalidateTags(["GameCards", "GameCompletion"]));
     }, 3000),
     "redux"
   );
