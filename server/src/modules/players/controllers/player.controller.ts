@@ -322,6 +322,8 @@ export const submitGuess = async (
             // Update player score if the guess is correct
             score = 100 - (guess.attempts || 0) * 10;
             const player = await playerService.updatePlayerScore(guess.user.toString(), score);
+            //update target player score.
+            await playerService.updatePlayerScore(guess?.personId.toString(), score / 2);
             if (!player) {
                 res.status(StatusCodes.NOT_FOUND).json({
                     success: false,
