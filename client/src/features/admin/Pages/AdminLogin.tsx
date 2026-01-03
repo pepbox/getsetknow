@@ -1,6 +1,6 @@
 import React, { useState, useRef, KeyboardEvent, useEffect } from "react";
 import { Box, Typography, TextField, Container, Alert } from "@mui/material";
-import { Navigate, useNavigate } from "react-router-dom";
+import { Navigate, useNavigate, useSearchParams } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import GlobalButton from "../../../components/ui/button";
 import { useAdminLoginMutation } from "../services/admin.Api";
@@ -17,10 +17,12 @@ import { useAppSelector } from "../../../app/hooks";
 const AdminLogin: React.FC = () => {
   const [pin, setPin] = useState<string[]>(["", "", "", ""]);
   const [localError, setLocalError] = useState<string>("");
+  const [hasAutoLoggedIn, setHasAutoLoggedIn] = useState<boolean>(false);
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const { sessionId } = useAppSelector((state: RootState) => state.game);
+  const [searchParams] = useSearchParams();
 
   // Redux state
   const isAuthenticated = useSelector((state: RootState) =>
@@ -44,12 +46,34 @@ const AdminLogin: React.FC = () => {
     }
   }, [dispatch, isAuthenticated, navigate]);
 
-  // Auto-focus first input on component mount
+  // Check for PIN in URL and auto-login
   useEffect(() => {
-    if (inputRefs.current[0]) {
+    const urlPin = searchParams.get('pin');
+    
+    if (urlPin && !hasAutoLoggedIn) {
+      // Validate PIN format (must be exactly 4 digits)
+      if (/^\d{4}$/.test(urlPin)) {
+        const pinArray = urlPin.split('');
+        setPin(pinArray);
+        setHasAutoLoggedIn(true);
+        
+        // Trigger auto-login after a brief delay to ensure state is updated
+        setTimeout(() => {
+          handleAutoLogin(urlPin);
+        }, 100);
+      } else {
+        setLocalError("Invalid PIN format in URL. PIN must be 4 digits.");
+      }
+    }
+  }, [searchParams, hasAutoLoggedIn]);
+
+  // Auto-focus first input on component mount (only if not auto-logging in)
+  useEffect(() => {
+    const urlPin = searchParams.get('pin');
+    if (!urlPin && inputRefs.current[0]) {
       inputRefs.current[0].focus();
     }
-  }, []);
+  }, [searchParams]);
 
   // Clear Redux error when component unmounts or when starting new login
   useEffect(() => {
@@ -122,6 +146,36 @@ const AdminLogin: React.FC = () => {
 
       // Clear PIN on error and focus first input
       setPin(["", "", "", ""]);
+      if (inputRefs.current[0]) {
+        inputRefs.current[0].focus();
+      }
+    }
+  };
+
+  const handleAutoLogin = async (urlPin: string) => {
+    setLocalError("");
+    dispatch(clearError());
+
+    try {
+      const result = await adminLogin({
+        password: urlPin,
+        sessionId: sessionId || "",
+      }).unwrap();
+
+      if (result.success) {
+        navigate(`/admin/${sessionId}/dashboard`);
+      } else {
+        setLocalError(result.message || "Auto-login failed");
+      }
+    } catch (error: any) {
+      console.error("Auto-login failed:", error);
+      const errorMessage =
+        error?.data?.message || "Invalid PIN. Please try again.";
+      setLocalError(errorMessage);
+
+      // Clear PIN on error and focus first input
+      setPin(["", "", "", ""]);
+      setHasAutoLoggedIn(false);
       if (inputRefs.current[0]) {
         inputRefs.current[0].focus();
       }

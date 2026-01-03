@@ -94,6 +94,14 @@ export const adminApi = api.injectEndpoints({
       transformResponse: (response: any) => response.data,
     }),
 
+    downloadSessionSelfies: builder.mutation<Blob, string>({
+      query: (sessionId) => ({
+        url: `/session/download-selfies/${sessionId}`,
+        method: 'GET',
+        responseHandler: (response) => response.blob(),
+      }),
+    }),
+
   }),
 
 });
@@ -107,5 +115,6 @@ export const {
   useUpdatePlayerMutation,
   useLazyGetPlayerWithResponsesQuery,
   useLazyFetchAdminQuery,
-  useLazyCheckPlayersReadinessQuery
+  useLazyCheckPlayersReadinessQuery,
+  useDownloadSessionSelfiesMutation
 } = adminApi;

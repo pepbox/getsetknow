@@ -7,6 +7,11 @@ const guessSchema = new Schema<IGuess>({
         ref: 'Player',
         required: true
     },
+    session : {
+        type:Schema.Types.ObjectId,
+        ref: 'Session',
+        required: true
+    },
     personId: {
         type: Schema.Types.ObjectId,
         ref: 'Player',

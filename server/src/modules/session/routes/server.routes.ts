@@ -6,5 +6,6 @@ const router = express.Router();
 
 router.post('/create-session', asyncHandeler(sessionControllers.createSession));
 router.post('/update-session', asyncHandeler(sessionControllers.updateSessionServer));
+router.post('/end-session', asyncHandeler(sessionControllers.endSessionServer));
 
 export default router;

@@ -13,6 +13,7 @@ export interface IPlayer extends Document {
 
 export interface IGuess extends Document {
     user: Types.ObjectId;
+    session: Types.ObjectId;
     personId: Types.ObjectId;
     guessedPersonId: Types.ObjectId;
     attempts?: number;

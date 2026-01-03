@@ -7,5 +7,6 @@ const router = express.Router();
 
 router.put('/update', authenticateUser, asyncHandeler(sessionControllers.updateSession));
 router.get('/getSession', authenticateUser, asyncHandeler(sessionControllers.getSession));
+router.get('/download-selfies/:sessionId', authenticateUser, asyncHandeler(sessionControllers.downloadSessionSelfies));
 
 export default router;

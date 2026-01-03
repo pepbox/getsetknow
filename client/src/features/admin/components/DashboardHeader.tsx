@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   Box,
   Paper,
@@ -6,15 +6,18 @@ import {
   Switch,
   FormControlLabel,
   Button,
+  CircularProgress,
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import { DashboardHeaderProps } from "../types/interfaces";
 import { useAdminAuth } from "../services/useAdminAuth";
 import LogoutIcon from "@mui/icons-material/Logout";
 import LeaderboardIcon from "@mui/icons-material/Leaderboard";
+import DownloadIcon from "@mui/icons-material/Download";
 import {
   useAdminLogoutMutation,
-  useUpdateSessionMutation,
+  useDownloadSessionSelfiesMutation,
+  // useUpdateSessionMutation,
 } from "../services/admin.Api";
 import GlobalButton from "../../../components/ui/button";
 import { useAppDispatch, useAppSelector } from "../../../app/rootReducer";
@@ -30,7 +33,9 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
   isCheckingReadiness = false, // Default value for checking readiness
 }) => {
   const [AdminLogout] = useAdminLogoutMutation();
-  const [UpdateSession] = useUpdateSessionMutation();
+  const [downloadSessionSelfies] = useDownloadSessionSelfiesMutation();
+  const [isDownloading, setIsDownloading] = useState(false);
+  // const [UpdateSession] = useUpdateSessionMutation();
   const { admin } = useAdminAuth();
   const navigate = useNavigate();
   const { sessionId } = useAppSelector((state: RootState) => state.game);
@@ -47,20 +52,46 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
         console.error("Logout failed:", error);
       });
   };
-  const handleSesssionEnd = () => {
-    UpdateSession({ status: "ended" })
-      .unwrap()
-      .then(() => {
-        navigate(`/admin/${sessionId}/login`);
-        dispatch(clearAdmin());
-      })
-      .catch((error) => {
-        console.error("Failed to end session:", error);
-      });
-  };
+  // const handleSesssionEnd = () => {
+  //   UpdateSession({ status: "ended" })
+  //     .unwrap()
+  //     .then(() => {
+  //       navigate(`/admin/${sessionId}/login`);
+  //       dispatch(clearAdmin());
+  //     })
+  //     .catch((error) => {
+  //       console.error("Failed to end session:", error);
+  //     });
+  // };
 
   const handleViewLeaderboard = () => {
     navigate(`/admin/${sessionId}/leaderboard`);
+  };
+
+  const handleDownloadSelfies = async () => {
+    if (!sessionId) return;
+    
+    setIsDownloading(true);
+    try {
+      const blob = await downloadSessionSelfies(sessionId).unwrap();
+      
+      // Create a download link
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `session-${sessionId}-selfies-${new Date().toISOString().split('T')[0]}.zip`;
+      document.body.appendChild(link);
+      link.click();
+      
+      // Cleanup
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch (error: any) {
+      console.error('Failed to download selfies:', error);
+      alert(error?.data?.message || 'Failed to download session data. Please try again.');
+    } finally {
+      setIsDownloading(false);
+    }
   };
 
   return (
@@ -77,6 +108,27 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
         </Typography>
 
         <Box display="flex" gap={2} alignItems="center">
+          <Button
+            variant="outlined"
+            color="success"
+            startIcon={isDownloading ? <CircularProgress size={16} /> : <DownloadIcon />}
+            onClick={handleDownloadSelfies}
+            disabled={isDownloading}
+            sx={{
+              textTransform: "none",
+              borderRadius: "8px",
+              fontWeight: 500,
+            }}
+          >
+            <Box
+              sx={{
+                display: { xs: "none", sm: "inline" },
+              }}
+            >
+              {isDownloading ? 'Downloading...' : 'Download Data'}
+            </Box>
+          </Button>
+
           <Button
             variant="outlined"
             color="primary"
@@ -168,14 +220,14 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
             {isCheckingReadiness ? "Checking Players..." : "Start Game"}
           </GlobalButton>
 
-          <GlobalButton
+          {/* <GlobalButton
             fullWidth={false}
             onClick={() => {
               handleSesssionEnd();
             }}
           >
             End Session
-          </GlobalButton>
+          </GlobalButton> */}
           <FormControlLabel
             control={
               <Switch
