@@ -80,7 +80,8 @@ export const api = createApi({
         "GameCards",
         "AdminPlayer",
         "GameSession",
-        "Selfie"
+        "Selfie",
+        "GameCompletion",
     ],
     endpoints: () => ({}),
 });

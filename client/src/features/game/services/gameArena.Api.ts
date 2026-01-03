@@ -110,6 +110,7 @@ export const gameApi = api.injectEndpoints({
         method: 'GET',
       }),
       transformResponse: (response: { data: GameCompletionData }) => response.data,
+      providesTags: ['GameCompletion'],
     }),
 
     submitSelfie: builder.mutation<SelfieSubmissionResponse, FormData>({
