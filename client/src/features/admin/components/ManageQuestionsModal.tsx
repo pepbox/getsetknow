@@ -3,6 +3,7 @@ import {
   Dialog,
   DialogTitle,
   DialogContent,
+  DialogContentText,
   DialogActions,
   Button,
   Typography,
@@ -20,31 +21,55 @@ import {
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import AddIcon from "@mui/icons-material/Add";
+import DeleteIcon from "@mui/icons-material/Delete";
 import {
   useFetchSessionQuestionsQuery,
   useSelectSessionQuestionsMutation,
   useAddCustomQuestionMutation,
+  useDeleteCustomQuestionMutation,
 } from "../services/admin.Api";
 
 interface ManageQuestionsModalProps {
   open: boolean;
   onClose: () => void;
+  gameStatus?: string;
 }
 
 const ManageQuestionsModal: React.FC<ManageQuestionsModalProps> = ({
   open,
   onClose,
+  gameStatus = "pending",
 }) => {
   const { data: questions = [], isLoading, isError, refetch } = useFetchSessionQuestionsQuery(undefined, { skip: !open });
   const [selectQuestions, { isLoading: isUpdating }] = useSelectSessionQuestionsMutation();
   const [addCustomQuestion, { isLoading: isAdding }] = useAddCustomQuestionMutation();
+  const [deleteCustomQuestion, { isLoading: isDeleting }] = useDeleteCustomQuestionMutation();
 
   const [questionText, setQuestionText] = useState("");
   const [keyAspect, setKeyAspect] = useState("");
   const [formError, setFormError] = useState("");
   const [successMsg, setSuccessMsg] = useState("");
 
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [questionToDelete, setQuestionToDelete] = useState<string | null>(null);
+
+  const confirmDelete = async () => {
+    if (!questionToDelete) return;
+    try {
+      await deleteCustomQuestion(questionToDelete).unwrap();
+      setSuccessMsg("Question deleted successfully!");
+      refetch();
+    } catch (err: any) {
+      console.error("Failed to delete question:", err);
+      setFormError(err?.data?.message || "Failed to delete question.");
+    } finally {
+      setDeleteConfirmOpen(false);
+      setQuestionToDelete(null);
+    }
+  };
+
   const handleToggleQuestion = async (questionId: string, currentlySelected: boolean) => {
+    if (gameStatus !== "pending") return;
     // Collect all currently selected questions
     const selectedIds = questions
       .filter((q) => q.isSelected)
@@ -104,7 +129,8 @@ const ManageQuestionsModal: React.FC<ManageQuestionsModalProps> = ({
   };
 
   return (
-    <Dialog
+    <>
+      <Dialog
       open={open}
       onClose={onClose}
       maxWidth="md"
@@ -158,8 +184,8 @@ const ManageQuestionsModal: React.FC<ManageQuestionsModalProps> = ({
                     dense
                     onClick={() => handleToggleQuestion(question.id, question.isSelected)}
                     sx={{
-                      cursor: "pointer",
-                      "&:hover": { backgroundColor: "#f5f5f5" },
+                      cursor: gameStatus === "pending" ? "pointer" : "default",
+                      "&:hover": { backgroundColor: gameStatus === "pending" ? "#f5f5f5" : "inherit" },
                       borderBottom: "1px solid #f0f0f0",
                       "&:last-child": { borderBottom: "none" },
                     }}
@@ -171,7 +197,7 @@ const ManageQuestionsModal: React.FC<ManageQuestionsModalProps> = ({
                         tabIndex={-1}
                         disableRipple
                         inputProps={{ "aria-labelledby": labelId }}
-                        disabled={isUpdating}
+                        disabled={isUpdating || gameStatus !== "pending"}
                       />
                     </ListItemIcon>
                     <ListItemText
@@ -183,6 +209,20 @@ const ManageQuestionsModal: React.FC<ManageQuestionsModalProps> = ({
                         </Typography>
                       }
                     />
+                    {gameStatus === "pending" && (
+                      <IconButton
+                        edge="end"
+                        aria-label="delete"
+                        disabled={isDeleting}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setQuestionToDelete(question.id);
+                          setDeleteConfirmOpen(true);
+                        }}
+                      >
+                        <DeleteIcon color="error" />
+                      </IconButton>
+                    )}
                   </ListItem>
                 );
               })}
@@ -190,49 +230,53 @@ const ManageQuestionsModal: React.FC<ManageQuestionsModalProps> = ({
           </Box>
         )}
 
-        <Divider />
+        {gameStatus === "pending" && (
+          <>
+            <Divider />
 
-        {/* Add Custom Question Form */}
-        <Box component="form" onSubmit={handleAddQuestion} sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-          <Typography variant="subtitle1" fontWeight="bold">
-            Add a New Custom Question
-          </Typography>
+            {/* Add Custom Question Form */}
+            <Box component="form" onSubmit={handleAddQuestion} sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+              <Typography variant="subtitle1" fontWeight="bold">
+                Add a New Custom Question
+              </Typography>
 
-          {formError && <Alert severity="error">{formError}</Alert>}
-          {successMsg && <Alert severity="success">{successMsg}</Alert>}
+              {formError && <Alert severity="error">{formError}</Alert>}
+              {successMsg && <Alert severity="success">{successMsg}</Alert>}
 
-          <Box sx={{ display: "flex", gap: 2, flexDirection: { xs: "column", sm: "row" } }}>
-            <TextField
-              label="Question Text (e.g. Where is your dream vacation destination?)"
-              variant="outlined"
-              fullWidth
-              size="small"
-              value={questionText}
-              onChange={(e) => setQuestionText(e.target.value)}
-              disabled={isAdding}
-            />
-            <TextField
-              label="Key Aspect ID (e.g. dream_vacation - optional)"
-              variant="outlined"
-              size="small"
-              sx={{ minWidth: { sm: 260 } }}
-              value={keyAspect}
-              onChange={(e) => setKeyAspect(e.target.value)}
-              disabled={isAdding}
-            />
-          </Box>
+              <Box sx={{ display: "flex", gap: 2, flexDirection: { xs: "column", sm: "row" } }}>
+                <TextField
+                  label="Question Text (e.g. Where is your dream vacation destination?)"
+                  variant="outlined"
+                  fullWidth
+                  size="small"
+                  value={questionText}
+                  onChange={(e) => setQuestionText(e.target.value)}
+                  disabled={isAdding}
+                />
+                <TextField
+                  label="Key Aspect ID (e.g. dream_vacation - optional)"
+                  variant="outlined"
+                  size="small"
+                  sx={{ minWidth: { sm: 260 } }}
+                  value={keyAspect}
+                  onChange={(e) => setKeyAspect(e.target.value)}
+                  disabled={isAdding}
+                />
+              </Box>
 
-          <Button
-            type="submit"
-            variant="contained"
-            color="primary"
-            startIcon={isAdding ? <CircularProgress size={16} color="inherit" /> : <AddIcon />}
-            disabled={isAdding || !questionText.trim()}
-            sx={{ alignSelf: "flex-end", textTransform: "none", borderRadius: "8px", fontWeight: 600 }}
-          >
-            Add Question
-          </Button>
-        </Box>
+              <Button
+                type="submit"
+                variant="contained"
+                color="primary"
+                startIcon={isAdding ? <CircularProgress size={16} color="inherit" /> : <AddIcon />}
+                disabled={isAdding || !questionText.trim()}
+                sx={{ alignSelf: "flex-end", textTransform: "none", borderRadius: "8px", fontWeight: 600 }}
+              >
+                Add Question
+              </Button>
+            </Box>
+          </>
+        )}
       </DialogContent>
 
       <DialogActions sx={{ p: 3 }}>
@@ -241,6 +285,22 @@ const ManageQuestionsModal: React.FC<ManageQuestionsModalProps> = ({
         </Button>
       </DialogActions>
     </Dialog>
+
+      <Dialog open={deleteConfirmOpen} onClose={() => setDeleteConfirmOpen(false)}>
+        <DialogTitle>Confirm Delete</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Are you sure you want to delete this question? This action cannot be undone.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setDeleteConfirmOpen(false)} color="primary">Cancel</Button>
+          <Button onClick={confirmDelete} color="error" variant="contained" disabled={isDeleting}>
+            {isDeleting ? <CircularProgress size={20} color="inherit" /> : "Delete"}
+          </Button>
+        </DialogActions>
+      </Dialog>
+    </>
   );
 };
 

@@ -464,6 +464,11 @@ export const selectSessionQuestions = async (
             return next(new AppError("questionIds must be an array of strings.", 400));
         }
 
+        const session = await sessionService.fetchSessionById(sessionId);
+        if (session.status !== SessionStatus.PENDING) {
+            return next(new AppError("Cannot modify questions after the game has started.", 403));
+        }
+
         const updatedSession = await sessionService.updateSessionById(sessionId, {
             questions: questionIds,
         });
@@ -499,6 +504,11 @@ export const addCustomQuestion = async (
             return next(new AppError("Question text and key aspect are required.", 400));
         }
 
+        const session = await sessionService.fetchSessionById(sessionId);
+        if (session.status !== SessionStatus.PENDING) {
+            return next(new AppError("Cannot add custom questions after the game has started.", 403));
+        }
+
         // Create the new question
         const newQuestion = await questionService.createQuestion({
             questionText,
@@ -506,7 +516,6 @@ export const addCustomQuestion = async (
         });
 
         // Add to current session's active questions
-        const session = await sessionService.fetchSessionById(sessionId);
         let activeQuestionIds = session.questions && session.questions.length > 0
             ? session.questions.map((q: any) => q.toString())
             : [];
@@ -536,5 +545,61 @@ export const addCustomQuestion = async (
     } catch (error) {
         console.error("Error adding custom question:", error);
         next(new AppError("Failed to add custom question.", 500));
+    }
+};
+
+export const deleteCustomQuestion = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+) => {
+    try {
+        const sessionId = req.user?.sessionId;
+        const { questionId } = req.params;
+
+        if (!sessionId) {
+            return next(new AppError("Session ID is required.", 400));
+        }
+
+        if (!questionId) {
+            return next(new AppError("Question ID is required.", 400));
+        }
+
+        const session = await sessionService.fetchSessionById(sessionId);
+
+        // Cannot delete question after the game has started.
+        if (session.status !== SessionStatus.PENDING) {
+            return next(new AppError("Cannot delete question after the game has started.", 403));
+        }
+
+        // Delete the question
+        const deletedQuestion = await questionService.deleteQuestion(questionId);
+
+        if (!deletedQuestion) {
+            return next(new AppError("Question not found.", 404));
+        }
+
+        // Remove from session if present
+        let activeQuestionIds = session.questions && session.questions.length > 0
+            ? session.questions.map((q: any) => q.toString())
+            : [];
+
+        if (activeQuestionIds.length > 0) {
+            activeQuestionIds = activeQuestionIds.filter((id: string) => id !== questionId);
+            await sessionService.updateSessionById(sessionId, {
+                questions: activeQuestionIds,
+            });
+        }
+
+        // Notify session players of potential question change
+        SessionEmitters.toSession(sessionId.toString(), Events.SESSION_UPDATE, {});
+
+        res.status(200).json({
+            success: true,
+            message: "Custom question deleted successfully.",
+        });
+    } catch (error) {
+        console.error("Error deleting custom question:", error);
+        next(new AppError("Failed to delete custom question.", 500));
     }
 };

@@ -270,6 +270,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
       <ManageQuestionsModal
         open={questionsModalOpen}
         onClose={() => setQuestionsModalOpen(false)}
+        gameStatus={data?.gameStatus || "pending"}
       />
     </>
   );

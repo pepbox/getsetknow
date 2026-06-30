@@ -129,6 +129,14 @@ export const adminApi = api.injectEndpoints({
       invalidatesTags: ['SessionQuestions', 'AdminPlayer'],
     }),
 
+    deleteCustomQuestion: builder.mutation<any, string>({
+      query: (questionId) => ({
+        url: `/admin/questions/${questionId}`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: ['SessionQuestions', 'AdminPlayer'],
+    }),
+
   }),
 
 });
@@ -146,5 +154,6 @@ export const {
   useDownloadSessionSelfiesMutation,
   useFetchSessionQuestionsQuery,
   useSelectSessionQuestionsMutation,
-  useAddCustomQuestionMutation
+  useAddCustomQuestionMutation,
+  useDeleteCustomQuestionMutation
 } = adminApi;

@@ -26,6 +26,10 @@ class QuestionService {
         return await this.questionModel.findById(id);
     }
 
+    async deleteQuestion(id: string): Promise<IQuestion | null> {
+        return await this.questionModel.findByIdAndDelete(id);
+    }
+
     async storeQuestionResponse(data: {
         question: string;
         player: Types.ObjectId;

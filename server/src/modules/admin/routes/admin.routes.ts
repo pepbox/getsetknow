@@ -22,5 +22,6 @@ router.get('/getPlayerWithResponses/:playerId', authenticateUser, authorizeRoles
 router.get('/questions', authenticateUser, authorizeRoles("ADMIN"), asyncHandeler(adminControllers.getSessionQuestions));
 router.put('/questions/select', authenticateUser, authorizeRoles("ADMIN"), asyncHandeler(adminControllers.selectSessionQuestions));
 router.post('/questions', authenticateUser, authorizeRoles("ADMIN"), asyncHandeler(adminControllers.addCustomQuestion));
+router.delete('/questions/:questionId', authenticateUser, authorizeRoles("ADMIN"), asyncHandeler(adminControllers.deleteCustomQuestion));
 
 export default router;
