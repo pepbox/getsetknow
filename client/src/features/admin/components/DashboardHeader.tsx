@@ -14,6 +14,8 @@ import { useAdminAuth } from "../services/useAdminAuth";
 import LogoutIcon from "@mui/icons-material/Logout";
 import LeaderboardIcon from "@mui/icons-material/Leaderboard";
 import DownloadIcon from "@mui/icons-material/Download";
+import SettingsIcon from "@mui/icons-material/Settings";
+import ManageQuestionsModal from "./ManageQuestionsModal";
 import {
   useAdminLogoutMutation,
   useDownloadSessionSelfiesMutation,
@@ -35,6 +37,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
   const [AdminLogout] = useAdminLogoutMutation();
   const [downloadSessionSelfies] = useDownloadSessionSelfiesMutation();
   const [isDownloading, setIsDownloading] = useState(false);
+  const [questionsModalOpen, setQuestionsModalOpen] = useState(false);
   // const [UpdateSession] = useUpdateSessionMutation();
   const { admin } = useAdminAuth();
   const navigate = useNavigate();
@@ -126,6 +129,26 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
               }}
             >
               {isDownloading ? 'Downloading...' : 'Download Data'}
+            </Box>
+          </Button>
+
+          <Button
+            variant="outlined"
+            color="primary"
+            startIcon={<SettingsIcon />}
+            onClick={() => setQuestionsModalOpen(true)}
+            sx={{
+              textTransform: "none",
+              borderRadius: "8px",
+              fontWeight: 500,
+            }}
+          >
+            <Box
+              sx={{
+                display: { xs: "none", sm: "inline" },
+              }}
+            >
+              Customize Questions
             </Box>
           </Button>
 
@@ -244,6 +267,10 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
           />
         </Box>
       </Paper>
+      <ManageQuestionsModal
+        open={questionsModalOpen}
+        onClose={() => setQuestionsModalOpen(false)}
+      />
     </>
   );
 };

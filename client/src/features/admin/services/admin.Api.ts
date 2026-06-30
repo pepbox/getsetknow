@@ -102,6 +102,33 @@ export const adminApi = api.injectEndpoints({
       }),
     }),
 
+    fetchSessionQuestions: builder.query<any[], void>({
+      query: () => ({
+        url: '/admin/questions',
+        method: 'GET',
+      }),
+      transformResponse: (response: any) => response.data,
+      providesTags: ['SessionQuestions'],
+    }),
+
+    selectSessionQuestions: builder.mutation<any, { questionIds: string[] }>({
+      query: (body) => ({
+        url: '/admin/questions/select',
+        method: 'PUT',
+        body,
+      }),
+      invalidatesTags: ['SessionQuestions', 'AdminPlayer'],
+    }),
+
+    addCustomQuestion: builder.mutation<any, { questionText: string; keyAspect: string }>({
+      query: (body) => ({
+        url: '/admin/questions',
+        method: 'POST',
+        body,
+      }),
+      invalidatesTags: ['SessionQuestions', 'AdminPlayer'],
+    }),
+
   }),
 
 });
@@ -116,5 +143,8 @@ export const {
   useLazyGetPlayerWithResponsesQuery,
   useLazyFetchAdminQuery,
   useLazyCheckPlayersReadinessQuery,
-  useDownloadSessionSelfiesMutation
+  useDownloadSessionSelfiesMutation,
+  useFetchSessionQuestionsQuery,
+  useSelectSessionQuestionsMutation,
+  useAddCustomQuestionMutation
 } = adminApi;

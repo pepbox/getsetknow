@@ -9,6 +9,33 @@ import ProgressComponent from "../../../components/layout/ProgressComponent";
 import { IQuestion } from "../services/questions.slice";
 import { useStoreQuestionResponseMutation } from "../services/questions.api";
 
+const defaultS3Images = [
+  "https://get-set-know.s3.ap-south-1.amazonaws.com/question-images/question1.webp",
+  "https://get-set-know.s3.ap-south-1.amazonaws.com/question-images/question2.webp",
+  "https://get-set-know.s3.ap-south-1.amazonaws.com/question-images/question3.webp",
+  "https://get-set-know.s3.ap-south-1.amazonaws.com/question-images/question4.webp",
+  "https://get-set-know.s3.ap-south-1.amazonaws.com/question-images/question5.webp",
+  "https://get-set-know.s3.ap-south-1.amazonaws.com/question-images/question6.webp",
+  "https://get-set-know.s3.ap-south-1.amazonaws.com/question-images/question7.webp",
+];
+
+const getQuestionImage = (question: IQuestion, index: number, allQuestions: IQuestion[]): string => {
+  if (question.questionImage && question.questionImage !== "undefined") {
+    return question.questionImage;
+  }
+  
+  // Extract all non-empty, valid images from the current questions pool
+  const validImages = allQuestions
+    .map(q => q.questionImage)
+    .filter(img => img && img !== "undefined");
+    
+  if (validImages.length > 0) {
+    return validImages[index % validImages.length]!;
+  }
+  
+  return defaultS3Images[index % defaultS3Images.length];
+};
+
 interface QuestionnaireScreenProps {
   questions: IQuestion[];
   sessionId?: string;
@@ -174,7 +201,7 @@ const QuestionnaireScreen: React.FC<QuestionnaireScreenProps> = ({
               transform: "translateY(-100%) translateX(-50%)",
               left: "50%",
             }}
-            src={currentQuestion.questionImage}
+            src={getQuestionImage(currentQuestion, currentQuestionIndex, questions)}
             alt="Character 1"
           />
 

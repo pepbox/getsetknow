@@ -18,4 +18,9 @@ router.get('/checkPlayersReadiness', authenticateUser, authorizeRoles("ADMIN"), 
 router.put('/updatePlayer', authenticateUser, authorizeRoles("ADMIN"), asyncHandeler(playerControllers.updatePlayer));
 router.get('/getPlayerWithResponses/:playerId', authenticateUser, authorizeRoles("ADMIN"), asyncHandeler(playerControllers.getPlayerWithResponses));
 
+// Question management routes
+router.get('/questions', authenticateUser, authorizeRoles("ADMIN"), asyncHandeler(adminControllers.getSessionQuestions));
+router.put('/questions/select', authenticateUser, authorizeRoles("ADMIN"), asyncHandeler(adminControllers.selectSessionQuestions));
+router.post('/questions', authenticateUser, authorizeRoles("ADMIN"), asyncHandeler(adminControllers.addCustomQuestion));
+
 export default router;

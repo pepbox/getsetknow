@@ -14,6 +14,7 @@ const sessionSchema = new Schema<ISession>({
         default: 'pending'
     },
     numberOfTeams: { type: Number, default: null },
+    questions: [{ type: Schema.Types.ObjectId, ref: 'Question' }],
 }, {
     timestamps: true
 });

@@ -5,10 +5,31 @@ import { Question } from '../models/question.model';
 import { SessionEmitters } from '../../../services/socket/sessionEmitters';
 import { Events } from '../../../services/socket/enums/Events';
 
+import SessionService from '../../session/services/session.service';
+
 const questionService = new QuestionService(Question);
 
-export const getAllQuestions = async (req: Request, res: Response) => {
+export const getAllQuestions = async (req: Request, res: Response): Promise<void> => {
     try {
+        const sessionId = req.user?.sessionId;
+        if (!sessionId) {
+            const questions = await questionService.getAllQuestions();
+            res.status(200).json(questions);
+            return;
+        }
+
+        const session = await SessionService.fetchSessionById(sessionId);
+        if (session && session.questions && session.questions.length > 0) {
+            const questions = await Question.find({
+                _id: { $in: session.questions }
+            });
+            const sortedQuestions = session.questions
+                .map((qId: any) => questions.find(q => (q as any)?._id.toString() === qId.toString()))
+                .filter(q => q !== undefined);
+            res.status(200).json(sortedQuestions);
+            return;
+        }
+
         const questions: IQuestion[] = await questionService.getAllQuestions();
 
         res.status(200).json(questions);

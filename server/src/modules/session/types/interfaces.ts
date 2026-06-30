@@ -1,4 +1,4 @@
-import { Document } from "mongoose";
+import { Document, Types } from "mongoose";
 import { SessionStatus } from "./enums";
 
 export interface ISession extends Document {
@@ -7,4 +7,5 @@ export interface ISession extends Document {
     updatedAt: Date;
     status?: SessionStatus;
     numberOfTeams?: number | null;
+    questions?: Types.ObjectId[] | string[];
 }

@@ -9,6 +9,8 @@ import { Player } from '../../players/models/player.model';
 import QuestionService from '../../questions/services/question.service';
 import { Question } from '../../questions/models/question.model';
 import { SessionStatus } from '../../session/types/enums';
+import { SessionEmitters } from '../../../services/socket/sessionEmitters';
+import { Events } from '../../../services/socket/enums/Events';
 import FileService from '../../files/services/fileService';
 import TeamService from '../../teams/services/team.service';
 
@@ -184,13 +186,18 @@ export const fetchAdminDashboardData = async (
         const admin = await adminService.fetchAdminById(adminId);
         const session = await sessionService.fetchSessionById(sessionId);
 
+        // Calculate total question count for session
+        const sessionQuestions = session.questions && session.questions.length > 0
+            ? session.questions
+            : await questionService.getAllQuestions();
+        const totalQuestionCount = sessionQuestions.length;
+
         // Fetch all players in the session
         const players = await playerService.getPlayersBySession(sessionId);
         const playerDataPromises = players.map(async (player) => {
             // Questions answered
-            const totalQuestions = await questionService.getAllQuestions();
             const responses = await questionService.getResponsesByPlayerId(player._id.toString());
-            const questionsAnswered = `${responses.length}/${totalQuestions.length}`;
+            const questionsAnswered = `${responses.length}/${totalQuestionCount}`;
 
             // People you know
             const guessesByUser = await playerService.getGuessesByUserId(player._id);
@@ -360,9 +367,12 @@ export const checkPlayersReadiness = async (
         // Fetch all players in the session
         const players = await playerService.getPlayersBySession(sessionId);
         
-        // Get total number of questions
-        const totalQuestions = await questionService.getAllQuestions();
-        const totalQuestionCount = totalQuestions.length;
+        // Get total number of questions for this session
+        const session = await sessionService.fetchSessionById(sessionId);
+        const sessionQuestions = session.questions && session.questions.length > 0
+            ? session.questions
+            : await questionService.getAllQuestions();
+        const totalQuestionCount = sessionQuestions.length;
 
         const pendingPlayers = [];
         
@@ -396,5 +406,135 @@ export const checkPlayersReadiness = async (
     } catch (error) {
         console.error("Error checking players readiness:", error);
         next(new AppError("Failed to check players readiness.", 500));
+    }
+};
+
+export const getSessionQuestions = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+) => {
+    try {
+        const sessionId = req.user?.sessionId;
+        if (!sessionId) {
+            return next(new AppError("Session ID is required.", 400));
+        }
+
+        const session = await sessionService.fetchSessionById(sessionId);
+        const allQuestions = await questionService.getAllQuestions();
+
+        const activeQuestionIds = session.questions && session.questions.length > 0
+            ? session.questions.map((q: any) => q.toString())
+            : null; // null means all questions are active by default
+
+        const data = allQuestions.map((question: any) => {
+            const isSelected = activeQuestionIds === null || activeQuestionIds.includes(question._id.toString());
+            return {
+                id: question._id.toString(),
+                questionText: question.questionText,
+                keyAspect: question.keyAspect,
+                isSelected,
+            };
+        });
+
+        res.status(200).json({
+            success: true,
+            data,
+        });
+    } catch (error) {
+        console.error("Error fetching session questions:", error);
+        next(new AppError("Failed to fetch session questions.", 500));
+    }
+};
+
+export const selectSessionQuestions = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+) => {
+    try {
+        const sessionId = req.user?.sessionId;
+        const { questionIds } = req.body;
+
+        if (!sessionId) {
+            return next(new AppError("Session ID is required.", 400));
+        }
+
+        if (!Array.isArray(questionIds)) {
+            return next(new AppError("questionIds must be an array of strings.", 400));
+        }
+
+        const updatedSession = await sessionService.updateSessionById(sessionId, {
+            questions: questionIds,
+        });
+
+        // Notify session players of potential question change
+        SessionEmitters.toSession(sessionId.toString(), Events.SESSION_UPDATE, {});
+
+        res.status(200).json({
+            success: true,
+            message: "Questions updated successfully.",
+            data: updatedSession,
+        });
+    } catch (error) {
+        console.error("Error selecting session questions:", error);
+        next(new AppError("Failed to update session questions.", 500));
+    }
+};
+
+export const addCustomQuestion = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+) => {
+    try {
+        const sessionId = req.user?.sessionId;
+        const { questionText, keyAspect } = req.body;
+
+        if (!sessionId) {
+            return next(new AppError("Session ID is required.", 400));
+        }
+
+        if (!questionText || !keyAspect) {
+            return next(new AppError("Question text and key aspect are required.", 400));
+        }
+
+        // Create the new question
+        const newQuestion = await questionService.createQuestion({
+            questionText,
+            keyAspect,
+        });
+
+        // Add to current session's active questions
+        const session = await sessionService.fetchSessionById(sessionId);
+        let activeQuestionIds = session.questions && session.questions.length > 0
+            ? session.questions.map((q: any) => q.toString())
+            : [];
+
+        if (activeQuestionIds.length === 0) {
+            // If currently empty, it means all existing questions were active.
+            // Populating active questions with existing ones + new one.
+            const allQuestions = await questionService.getAllQuestions();
+            activeQuestionIds = allQuestions.map((q: any) => q._id.toString());
+        } else {
+            // Otherwise, append the new question ID
+            activeQuestionIds.push((newQuestion as any)._id.toString());
+        }
+
+        await sessionService.updateSessionById(sessionId, {
+            questions: activeQuestionIds,
+        });
+
+        // Notify session players of potential question change
+        SessionEmitters.toSession(sessionId.toString(), Events.SESSION_UPDATE, {});
+
+        res.status(201).json({
+            success: true,
+            message: "Custom question created and selected successfully.",
+            data: newQuestion,
+        });
+    } catch (error) {
+        console.error("Error adding custom question:", error);
+        next(new AppError("Failed to add custom question.", 500));
     }
 };
