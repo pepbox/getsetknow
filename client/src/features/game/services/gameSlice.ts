@@ -5,6 +5,7 @@ import { gameApi } from "./gameArena.Api";
 const initialState: GameState = {
   sessionId: null,
   isGameStarted: false,
+  isGamePaused: false,
   currentPlayer: null,
   totalSteps: 0,
   currentStep: 0,
@@ -42,7 +43,8 @@ const gameSlice = createSlice({
         gameApi.endpoints.getSession.matchFulfilled,
         (state, { payload }) => {
           state.isLoading = false;
-          state.isGameStarted = payload.status === "playing";
+          state.isGameStarted = payload.status === "playing" || payload.status === "paused";
+          state.isGamePaused = payload.status === "paused";
           state.sessionId = payload._id;
           if (payload.status === 'ended') {
             console.log("Game has ended, clearing localStorage");

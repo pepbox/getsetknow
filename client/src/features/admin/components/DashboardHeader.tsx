@@ -24,7 +24,7 @@ import { useGetSessionQuery } from "../../game/services/gameArena.Api";
 import {
   useAdminLogoutMutation,
   useDownloadSessionSelfiesMutation,
-  // useUpdateSessionMutation,
+  useUpdateSessionMutation,
 } from "../services/admin.Api";
 import GlobalButton from "../../../components/ui/button";
 import { useAppDispatch, useAppSelector } from "../../../app/rootReducer";
@@ -44,7 +44,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
   const [isDownloading, setIsDownloading] = useState(false);
   const [questionsModalOpen, setQuestionsModalOpen] = useState(false);
   const [brandingModalOpen, setBrandingModalOpen] = useState(false);
-  // const [UpdateSession] = useUpdateSessionMutation();
+  const [UpdateSession, { isLoading: isUpdatingSession }] = useUpdateSessionMutation();
   const { admin } = useAdminAuth();
   const navigate = useNavigate();
   const { sessionId } = useAppSelector((state: RootState) => state.game);
@@ -252,18 +252,37 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
               flexWrap: "wrap",
             }}
           >
-            <GlobalButton
-              fullWidth={false}
-              sx={{
-                display: data?.gameStatus === "playing" ? "none" : "block",
-              }}
-              disabled={isCheckingReadiness}
-              onClick={() => {
-                if (onGameStatusChange) onGameStatusChange();
-              }}
-            >
-              {isCheckingReadiness ? "Checking Players..." : "Start Game"}
-            </GlobalButton>
+            {data?.gameStatus !== "ended" && (
+              <GlobalButton
+                fullWidth={false}
+                disabled={isCheckingReadiness || isUpdatingSession}
+                onClick={async () => {
+                  if (data?.gameStatus === "playing") {
+                    try {
+                      await UpdateSession({ status: "paused" }).unwrap();
+                    } catch (err) {
+                      console.error("Failed to pause session:", err);
+                    }
+                  } else if (data?.gameStatus === "paused") {
+                    try {
+                      await UpdateSession({ status: "playing" }).unwrap();
+                    } catch (err) {
+                      console.error("Failed to resume session:", err);
+                    }
+                  } else {
+                    if (onGameStatusChange) onGameStatusChange();
+                  }
+                }}
+              >
+                {isCheckingReadiness
+                  ? "Checking Players..."
+                  : data?.gameStatus === "playing"
+                  ? "Pause Game"
+                  : data?.gameStatus === "paused"
+                  ? "Resume Game"
+                  : "Start Game"}
+              </GlobalButton>
+            )}
 
             <FormControlLabel
               control={

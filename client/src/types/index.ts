@@ -27,6 +27,7 @@ export interface IAnswer {
 export interface GameState {
   sessionId?: string | null;
   isGameStarted: boolean;
+  isGamePaused: boolean;
   currentPlayer: IPlayer | null;
   totalSteps: number;
   currentStep: number;

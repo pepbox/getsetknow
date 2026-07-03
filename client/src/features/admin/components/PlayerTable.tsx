@@ -257,7 +257,7 @@ const PlayerTable: React.FC<PlayerTableProps> = ({
       key: "changeName",
       label: "Change name",
       sortable: false,
-      visible: (gameStatus) => gameStatus !== "playing",
+      visible: (gameStatus) => gameStatus !== "playing" && gameStatus !== "paused",
       render: (player, _onChangeName, _, transaction, openNameModal) => (
         <Tooltip title={!transaction ? "Enable transactions first" : ""}>
           <span>
@@ -276,14 +276,14 @@ const PlayerTable: React.FC<PlayerTableProps> = ({
       key: "questionsAnswered",
       label: "Questions Answered",
       sortable: true,
-      visible: (gameStatus) => gameStatus !== "playing",
+      visible: (gameStatus) => gameStatus !== "playing" && gameStatus !== "paused",
       render: (player) => player.questionsAnswered,
     },
     {
       key: "rank",
       label: selectedTeam ? "Team Rank" : "Rank",
       sortable: true,
-      visible: (gameStatus) => gameStatus === "playing",
+      visible: (gameStatus) => gameStatus === "playing" || gameStatus === "paused",
       render: (player) =>
         selectedTeam ? (player as any).teamRank || player.rank : player.rank,
     },
@@ -298,21 +298,21 @@ const PlayerTable: React.FC<PlayerTableProps> = ({
       key: "peopleYouKnow",
       label: "People you know",
       sortable: true,
-      visible: (gameStatus) => gameStatus === "playing",
+      visible: (gameStatus) => gameStatus === "playing" || gameStatus === "paused",
       render: (player) => player.peopleYouKnow,
     },
     {
       key: "peopleWhoKnowYou",
       label: "People who know you",
       sortable: true,
-      visible: (gameStatus) => gameStatus === "playing",
+      visible: (gameStatus) => gameStatus === "playing" || gameStatus === "paused",
       render: (player) => player.peopleWhoKnowYou,
     },
     {
       key: "totalScore",
       label: "Total Score",
       sortable: true,
-      visible: (gameStatus) => gameStatus === "playing",
+      visible: (gameStatus) => gameStatus === "playing" || gameStatus === "paused",
       render: (player) => (
         <Typography fontWeight="medium">{player.totalScore}</Typography>
       ),
@@ -321,7 +321,7 @@ const PlayerTable: React.FC<PlayerTableProps> = ({
       key: "changeScore",
       label: "Change Score",
       sortable: false,
-      visible: (gameStatus) => gameStatus === "playing",
+      visible: (gameStatus) => gameStatus === "playing" || gameStatus === "paused",
       render: (
         player,
         _onChangeName,
@@ -350,7 +350,7 @@ const PlayerTable: React.FC<PlayerTableProps> = ({
       key: "currentStatus",
       label: "Current Status",
       sortable: true,
-      visible: (gameStatus) => gameStatus !== "playing",
+      visible: (gameStatus) => gameStatus !== "playing" && gameStatus !== "paused",
       render: (player) => (
         <Chip
           label={

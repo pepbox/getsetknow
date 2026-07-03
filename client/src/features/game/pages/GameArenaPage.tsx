@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useSelector, useDispatch } from "react-redux";
-import { Box, Alert } from "@mui/material";
+import { Box, Alert, Typography } from "@mui/material";
 import { RootState, AppDispatch } from "../../../app/store";
 import {
   useGetPlayersCardsQuery,
@@ -47,7 +47,7 @@ export interface GameArenaData {
 const GameArenaPage: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
   const [showResult, setShowResult] = useState(false);
-  const { isGameStarted } = useAppSelector((state: RootState) => state.game);
+  const { isGameStarted, isGamePaused } = useAppSelector((state: RootState) => state.game);
   const hasCheckedPendingSelfies = useRef(false);
 
   // RTK Query hooks
@@ -333,16 +333,44 @@ const GameArenaPage: React.FC = () => {
     );
   }
 
+  if (!isGameStarted) {
+    return <Navigate to="/game/waiting" replace />;
+  }
+
+  if (isGamePaused) {
+    return (
+      <Box
+        sx={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          height: "100vh",
+          bgcolor: "primary.main",
+          color: "white",
+          px: 3,
+          textAlign: "center",
+        }}
+      >
+        <Typography variant="h4" fontWeight="bold" gutterBottom>
+          Game Paused
+        </Typography>
+        <Typography variant="body1">
+          The administrator has paused the game. Please wait for the game to resume.
+        </Typography>
+      </Box>
+    );
+  }
+
   // No data state
   if (!gameArenaData) {
     return (
       <Box sx={{ p: 2 }}>
-        <Alert severity="info">No game data available</Alert>
+        <Alert severity="info">
+          No game cards available. Please ensure other team members have onboarded and completed their questionnaires.
+        </Alert>
       </Box>
     );
-  }
-  if (!isGameStarted) {
-    return <Navigate to="/game/waiting" replace />;
   }
 
   return (
