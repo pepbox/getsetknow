@@ -137,6 +137,15 @@ export const adminApi = api.injectEndpoints({
       invalidatesTags: ['SessionQuestions', 'AdminPlayer'],
     }),
 
+    updateBranding: builder.mutation<any, FormData>({
+      query: (formData) => ({
+        url: '/session/branding',
+        method: 'PUT',
+        body: formData,
+      }),
+      invalidatesTags: ['GameSession'],
+    }),
+
   }),
 
 });
@@ -155,5 +164,6 @@ export const {
   useFetchSessionQuestionsQuery,
   useSelectSessionQuestionsMutation,
   useAddCustomQuestionMutation,
-  useDeleteCustomQuestionMutation
+  useDeleteCustomQuestionMutation,
+  useUpdateBrandingMutation
 } = adminApi;

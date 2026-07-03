@@ -21,6 +21,7 @@ import {
   setSelfieUploaded,
   showSelfieUploadScreen,
 } from "../services/gameArenaSlice";
+import { useGetSessionQuery } from "../services/gameArena.Api";
 import { RootState } from "../../../app/store";
 import guessedWrong from "../../../assets/guessedWrong.webp";
 
@@ -81,6 +82,7 @@ const GameArena: React.FC<GameArenaProps> = ({
 }) => {
   const dispatch = useAppDispatch();
   const { sessionId } = useAppSelector((state: RootState) => state.game);
+  const { data: session } = useGetSessionQuery(sessionId || "", { skip: !sessionId });
   const { showSelfieUpload, currentSelfieGuessId } = useAppSelector(
     (state: RootState) => state.gameArena
   );
@@ -237,15 +239,60 @@ const GameArena: React.FC<GameArenaProps> = ({
           }}
         >
           <Toolbar sx={{ justifyContent: "space-between" }}>
-            <Typography
-              variant="h3"
-              sx={{
-                mx: "auto",
-                textAlign: "center",
-              }}
-            >
-              GetSetKnow!
-            </Typography>
+            {session?.companyLogo?.location && session?.companyName ? (
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: 1.5,
+                  mx: "auto",
+                }}
+              >
+                <Box
+                  component="img"
+                  sx={{
+                    maxHeight: "36px",
+                    maxWidth: "120px",
+                    objectFit: "contain",
+                  }}
+                  src={session.companyLogo.location}
+                  alt={session.companyName}
+                />
+                <Typography
+                  variant="h3"
+                  sx={{
+                    fontWeight: "bold",
+                    color: "text.primary",
+                  }}
+                >
+                  {session.companyName}
+                </Typography>
+              </Box>
+            ) : session?.companyLogo?.location ? (
+              <Box
+                component="img"
+                sx={{
+                  maxHeight: "40px",
+                  maxWidth: "180px",
+                  objectFit: "contain",
+                  mx: "auto",
+                }}
+                src={session.companyLogo.location}
+                alt={session.companyName || "Company logo"}
+              />
+            ) : (
+              <Typography
+                variant="h3"
+                sx={{
+                  mx: "auto",
+                  textAlign: "center",
+                  fontWeight: session?.companyName ? "bold" : "inherit",
+                }}
+              >
+                {session?.companyName || "GetSetKnow!"}
+              </Typography>
+            )}
           </Toolbar>
         </AppBar>
 
@@ -447,15 +494,60 @@ const GameArena: React.FC<GameArenaProps> = ({
         }}
       >
         <Toolbar sx={{ justifyContent: "space-between" }}>
-          <Typography
-            variant="h3"
-            sx={{
-              mx: "auto",
-              textAlign: "center",
-            }}
-          >
-            GetSetKnow!
-          </Typography>
+          {session?.companyLogo?.location && session?.companyName ? (
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 1.5,
+                mx: "auto",
+              }}
+            >
+              <Box
+                component="img"
+                sx={{
+                  maxHeight: "36px",
+                  maxWidth: "120px",
+                  objectFit: "contain",
+                }}
+                src={session.companyLogo.location}
+                alt={session.companyName}
+              />
+              <Typography
+                variant="h3"
+                sx={{
+                  fontWeight: "bold",
+                  color: "text.primary",
+                }}
+              >
+                {session.companyName}
+              </Typography>
+            </Box>
+          ) : session?.companyLogo?.location ? (
+            <Box
+              component="img"
+              sx={{
+                maxHeight: "40px",
+                maxWidth: "180px",
+                objectFit: "contain",
+                mx: "auto",
+              }}
+              src={session.companyLogo.location}
+              alt={session.companyName || "Company logo"}
+            />
+          ) : (
+            <Typography
+              variant="h3"
+              sx={{
+                mx: "auto",
+                textAlign: "center",
+                fontWeight: session?.companyName ? "bold" : "inherit",
+              }}
+            >
+              {session?.companyName || "GetSetKnow!"}
+            </Typography>
+          )}
           <IconButton
             edge="end"
             color="inherit"

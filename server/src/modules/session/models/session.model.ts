@@ -15,6 +15,8 @@ const sessionSchema = new Schema<ISession>({
     },
     numberOfTeams: { type: Number, default: null },
     questions: [{ type: Schema.Types.ObjectId, ref: 'Question' }],
+    companyName: { type: String, trim: true },
+    companyLogo: { type: Schema.Types.ObjectId, ref: 'File' },
 }, {
     timestamps: true
 });

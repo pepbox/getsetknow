@@ -37,7 +37,7 @@ export default class SessionService {
   }
 
   async fetchSessionById(sessionId: mongoose.Types.ObjectId | string) {
-    const query = Session.findById(sessionId);
+    const query = Session.findById(sessionId).populate("companyLogo");
     if (this.session) {
       query.session(this.session);
     }

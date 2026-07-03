@@ -26,6 +26,11 @@ export interface Session {
   _id: string;
   name: string;
   status?: string;
+  companyName?: string;
+  companyLogo?: {
+    location?: string;
+    fileName?: string;
+  };
 }
 
 export interface GameCompletionData {
@@ -95,9 +100,9 @@ export const gameApi = api.injectEndpoints({
       providesTags: ['GameCards'],
     }),
 
-    getSession: builder.query<Session, void>({
-      query: () => ({
-        url: '/session/getSession',
+    getSession: builder.query<Session, string>({
+      query: (sessionId) => ({
+        url: `/session/public/${sessionId}`,
         method: 'GET',
       }),
       transformResponse: (response: { data: Session }) => response.data,

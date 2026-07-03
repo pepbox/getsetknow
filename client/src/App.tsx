@@ -12,7 +12,9 @@ import { useGetSessionQuery } from "./features/game/services/gameArena.Api";
 import Default from "./components/ui/Default";
 
 const App: React.FC = () => {
-  useGetSessionQuery();
+  const pathParts = window.location.pathname.split('/');
+  const sessionId = (pathParts[1] === 'game' || pathParts[1] === 'admin') ? pathParts[2] : "";
+  useGetSessionQuery(sessionId, { skip: !sessionId });
   const { isAuthenticated: isAdminAuthenticated } = useAdminAuth();
   const { isAuthenticated: isUserAuthenticated } = useAppSelector(
     (state: RootState) => state.player

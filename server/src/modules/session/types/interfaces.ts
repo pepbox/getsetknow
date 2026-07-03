@@ -8,4 +8,6 @@ export interface ISession extends Document {
     status?: SessionStatus;
     numberOfTeams?: number | null;
     questions?: Types.ObjectId[] | string[];
+    companyName?: string;
+    companyLogo?: Types.ObjectId | any;
 }

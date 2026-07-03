@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { useAppSelector } from "../../../app/hooks";
 import { RootState } from "../../../app/store";
+import { useGetSessionQuery } from "../services/gameArena.Api";
 import artist from "../../../assets/artist.webp";
 import music from "../../../assets/music.webp";
 import dance from "../../../assets/Dance.webp";
@@ -37,6 +38,7 @@ const WaitingAreaScreen: React.FC<CircularPlayerAnimationProps> = ({
     (state: RootState) => state.gameArena.gameCompleted
   );
   const { sessionId } = useAppSelector((state: RootState) => state.game);
+  const { data: session } = useGetSessionQuery(sessionId || "", { skip: !sessionId });
   const navigate = useNavigate();
 
   const players: Player[] = [
@@ -118,9 +120,65 @@ const WaitingAreaScreen: React.FC<CircularPlayerAnimationProps> = ({
         margin: "0 auto",
       }}
     >
-      <Typography variant="h3" mt={4}>
-        GetSetKnow!
-      </Typography>
+      {session?.companyLogo?.location && session?.companyName ? (
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 2,
+            mt: 4,
+            mb: 2,
+          }}
+        >
+          <Box
+            component="img"
+            sx={{
+              maxHeight: "50px",
+              maxWidth: "150px",
+              objectFit: "contain",
+            }}
+            src={session.companyLogo.location}
+            alt={session.companyName}
+          />
+          <Typography
+            variant="h1"
+            sx={{
+              color: "text.primary",
+              fontSize: "28px",
+              fontWeight: "bold",
+            }}
+          >
+            {session.companyName}
+          </Typography>
+        </Box>
+      ) : session?.companyLogo?.location ? (
+        <Box
+          component="img"
+          sx={{
+            maxHeight: "80px",
+            maxWidth: "240px",
+            objectFit: "contain",
+            mt: 4,
+            mb: 2,
+          }}
+          src={session.companyLogo.location}
+          alt={session.companyName || "Company logo"}
+        />
+      ) : (
+        <Typography
+          variant="h3"
+          sx={{
+            color: "text.primary",
+            textAlign: "center",
+            fontWeight: session?.companyName ? "bold" : "normal",
+            mt: 4,
+            mb: 2,
+          }}
+        >
+          {session?.companyName || "GetSetKnow!"}
+        </Typography>
+      )}
       {/* Center circle indicator (optional) */}
       <Box
         sx={{

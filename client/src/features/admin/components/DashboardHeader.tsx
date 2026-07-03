@@ -7,6 +7,7 @@ import {
   FormControlLabel,
   Button,
   CircularProgress,
+  IconButton,
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import { DashboardHeaderProps } from "../types/interfaces";
@@ -15,7 +16,11 @@ import LogoutIcon from "@mui/icons-material/Logout";
 import LeaderboardIcon from "@mui/icons-material/Leaderboard";
 import DownloadIcon from "@mui/icons-material/Download";
 import SettingsIcon from "@mui/icons-material/Settings";
+import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
+import BusinessIcon from "@mui/icons-material/Business";
 import ManageQuestionsModal from "./ManageQuestionsModal";
+import ManageBrandingModal from "./ManageBrandingModal";
+import { useGetSessionQuery } from "../../game/services/gameArena.Api";
 import {
   useAdminLogoutMutation,
   useDownloadSessionSelfiesMutation,
@@ -38,11 +43,13 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
   const [downloadSessionSelfies] = useDownloadSessionSelfiesMutation();
   const [isDownloading, setIsDownloading] = useState(false);
   const [questionsModalOpen, setQuestionsModalOpen] = useState(false);
+  const [brandingModalOpen, setBrandingModalOpen] = useState(false);
   // const [UpdateSession] = useUpdateSessionMutation();
   const { admin } = useAdminAuth();
   const navigate = useNavigate();
   const { sessionId } = useAppSelector((state: RootState) => state.game);
   const dispatch = useAppDispatch();
+  const { data: session } = useGetSessionQuery(sessionId || "", { skip: !sessionId });
 
   const handleLogout = () => {
     AdminLogout({})
@@ -195,82 +202,159 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
           </Button>
         </Box>
       </Box>
-      <Paper
+
+      <Box
         sx={{
-          p: 3,
+          display: "flex",
+          flexDirection: { xs: "column", md: "row" },
+          gap: 3,
           px: 4,
           mb: 2,
-          backgroundColor: "rgba(252, 166, 30, 0.10)",
-          dropShadow: "0px 2px 4px rgba(0, 0, 0, 0.1)",
         }}
       >
-        <Box
+        {/* Left Card: Admin Info / Controls */}
+        <Paper
           sx={{
+            flex: 1,
+            p: 3,
+            backgroundColor: "rgba(252, 166, 30, 0.10)",
+            boxShadow: "0px 2px 4px rgba(0, 0, 0, 0.1)",
             display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            mb: 3,
+            flexDirection: "column",
+            justifyContent: "space-between",
+            borderRadius: "16px",
           }}
         >
-          <Typography
-            variant="h3"
-            fontWeight="bold"
-            color="black"
-            textAlign={"center"}
-          >
-            Admin Name - {admin?.name || data?.adminName || "Admin"}
-          </Typography>
-        </Box>
-
-        <Box
-          sx={{
-            display: "flex",
-            gap: 4,
-            alignItems: "center",
-            flexWrap: "wrap",
-          }}
-        >
-          <GlobalButton
-            fullWidth={false}
+          <Box
             sx={{
-              display: data?.gameStatus === "playing" ? "none" : "block",
-            }}
-            disabled={isCheckingReadiness}
-            onClick={() => {
-              if (onGameStatusChange) onGameStatusChange();
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              mb: 3,
+              flex: 1,
             }}
           >
-            {isCheckingReadiness ? "Checking Players..." : "Start Game"}
-          </GlobalButton>
+            <Typography
+              variant="h3"
+              fontWeight="bold"
+              color="black"
+              textAlign={"center"}
+            >
+              Admin Name - {admin?.name || data?.adminName || "Admin"}
+            </Typography>
+          </Box>
 
-          {/* <GlobalButton
-            fullWidth={false}
-            onClick={() => {
-              handleSesssionEnd();
+          <Box
+            sx={{
+              display: "flex",
+              gap: 4,
+              alignItems: "center",
+              flexWrap: "wrap",
             }}
           >
-            End Session
-          </GlobalButton> */}
-          <FormControlLabel
-            control={
-              <Switch
-                checked={transaction}
-                onChange={(e) => onTransactionsChange?.(e.target.checked)}
-                color="primary"
-              />
-            }
-            label={
-              <Typography variant="body2" color="text.secondary">
-                Enable Transactions
+            <GlobalButton
+              fullWidth={false}
+              sx={{
+                display: data?.gameStatus === "playing" ? "none" : "block",
+              }}
+              disabled={isCheckingReadiness}
+              onClick={() => {
+                if (onGameStatusChange) onGameStatusChange();
+              }}
+            >
+              {isCheckingReadiness ? "Checking Players..." : "Start Game"}
+            </GlobalButton>
+
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={transaction}
+                  onChange={(e) => onTransactionsChange?.(e.target.checked)}
+                  color="primary"
+                />
+              }
+              label={
+                <Typography variant="body2" color="text.secondary">
+                  Enable Transactions
+                </Typography>
+              }
+            />
+          </Box>
+        </Paper>
+
+        {/* Right Card: Session Branding */}
+        <Paper
+          sx={{
+            p: 3,
+            width: { xs: "100%", md: "460px" },
+            borderRadius: "16px",
+            border: "1px solid #E5E7EB",
+            boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.05)",
+            backgroundColor: "#FFFFFF",
+            display: "flex",
+            flexDirection: "column",
+            position: "relative",
+          }}
+        >
+          <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+            <Typography variant="h6" fontWeight="bold" color="#1F2937" style={{ fontSize: "20px" }}>
+              Session Branding
+            </Typography>
+            <IconButton size="small" onClick={() => setBrandingModalOpen(true)} sx={{ color: "#6B7280" }}>
+              <EditOutlinedIcon fontSize="small" />
+            </IconButton>
+          </Box>
+
+          <Box display="flex" alignItems="center" gap={3} sx={{ mt: 1 }}>
+            <Box
+              sx={{
+                width: 80,
+                height: 80,
+                borderRadius: "16px",
+                backgroundColor: session?.companyLogo?.location ? "#F3F4F6" : "#3622C9",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                overflow: "hidden",
+                border: "1px solid #E5E7EB",
+                boxShadow: "0px 2px 6px rgba(0,0,0,0.05)",
+              }}
+            >
+              {session?.companyLogo?.location ? (
+                <img
+                  src={session.companyLogo.location}
+                  alt="Company Logo"
+                  style={{ width: "100%", height: "100%", objectFit: "contain" }}
+                />
+              ) : (
+                <BusinessIcon sx={{ color: "#FFFFFF", fontSize: 40 }} />
+              )}
+            </Box>
+
+            <Box>
+              <Typography
+                variant="caption"
+                fontWeight="bold"
+                color="#9CA3AF"
+                sx={{ letterSpacing: "0.05em", textTransform: "uppercase", fontSize: "11px" }}
+              >
+                Company Name
               </Typography>
-            }
-          />
-        </Box>
-      </Paper>
+              <Typography variant="body1" fontWeight="bold" color="#1F2937" sx={{ mt: 0.5, fontSize: "22px" }}>
+                {session?.companyName || "GetSetKnow!"}
+              </Typography>
+            </Box>
+          </Box>
+        </Paper>
+      </Box>
       <ManageQuestionsModal
         open={questionsModalOpen}
         onClose={() => setQuestionsModalOpen(false)}
         gameStatus={data?.gameStatus || "pending"}
+      />
+      <ManageBrandingModal
+        open={brandingModalOpen}
+        onClose={() => setBrandingModalOpen(false)}
       />
     </>
   );

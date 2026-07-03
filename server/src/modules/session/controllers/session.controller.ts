@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import AppError from "../../../utils/appError"; // Adjust path as needed
-import { ISession } from "../types/interfaces";
+import { ISession, Session } from "../models/session.model";
 import { SessionStatus } from "../types/enums";
 import SessionService from "../services/session.service";
 import { SessionEmitters } from "../../../services/socket/sessionEmitters";
@@ -17,11 +17,14 @@ import { s3Client } from "../../../services/fileUpload/s3Client";
 import { s3Config } from "../../../services/fileUpload/config";
 import { FileModel } from "../../files/models/File";
 import { Readable } from "stream";
+import { deleteFromS3 } from "../../../services/fileUpload";
+import FileService from "../../files/services/fileService";
 
 const sessionService = new SessionService();
 const adminService = new AdminServices();
 const playerService = new PlayerService(Player);
 const teamService = new TeamService();
+const fileService = new FileService();
 
 export const updateSession = async (
   req: Request,
@@ -343,5 +346,116 @@ export const downloadSessionSelfies = async (
   } catch (error) {
     console.error("Error downloading session selfies:", error);
     next(new AppError("Failed to download session selfies.", 500));
+  }
+};
+
+export const updateBranding = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const sessionId = req.user?.sessionId;
+    const { companyName } = req.body;
+
+    if (!sessionId) {
+      if (req.file?.key) deleteFromS3(req.file.key);
+      return next(new AppError("Session ID is required.", 400));
+    }
+
+    const session = await sessionService.fetchSessionById(sessionId);
+    if (!session) {
+      if (req.file?.key) deleteFromS3(req.file.key);
+      return next(new AppError("Session not found.", 404));
+    }
+
+    const updateData: any = {};
+    if (companyName !== undefined) {
+      updateData.companyName = companyName;
+    }
+
+    if (req.file) {
+      const logoImageInfo = {
+        originalName: req.file.originalname!,
+        fileName: req.file.key!,
+        size: req.file.size!,
+        mimetype: req.file.mimetype!,
+        location: req.file.location!,
+        bucket: req.file.bucket!,
+        etag: req.file.etag!,
+      };
+
+      const logoFile = await fileService.uploadFile(logoImageInfo);
+      updateData.companyLogo = logoFile._id;
+
+      // If session had a previous logo, delete it
+      if (session.companyLogo) {
+        try {
+          const oldLogoId = session.companyLogo.toString();
+          const oldLogoFile = await FileModel.findById(oldLogoId);
+          if (oldLogoFile) {
+            await deleteFromS3(oldLogoFile.fileName);
+            await FileModel.findByIdAndDelete(oldLogoId);
+          }
+        } catch (err) {
+          console.error("Error deleting old company logo:", err);
+        }
+      }
+    }
+
+    const updatedSession = await sessionService.updateSessionById(
+      sessionId,
+      updateData
+    );
+
+    // Populate the logo details before returning
+    const populatedSession = await Session.findById(sessionId).populate('companyLogo');
+
+    SessionEmitters.toSession(sessionId.toString(), Events.SESSION_UPDATE, {});
+
+    res.status(200).json({
+      success: true,
+      message: "Branding updated successfully.",
+      data: populatedSession,
+    });
+  } catch (error) {
+    if (req.file?.key) {
+      deleteFromS3(req.file.key);
+    }
+    console.error("Error updating branding:", error);
+    next(new AppError("Failed to update branding.", 500));
+  }
+};
+
+export const getPublicSession = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { sessionId } = req.params;
+    if (!sessionId) {
+      return next(new AppError("Session ID is required.", 400));
+    }
+
+    const session = await sessionService.fetchSessionById(sessionId);
+
+    res.status(200).json({
+      message: "Public session fetched successfully.",
+      data: {
+        _id: session._id,
+        name: session.name,
+        status: session.status,
+        companyName: session.companyName,
+        companyLogo: session.companyLogo,
+      },
+      success: true,
+    });
+  } catch (error: any) {
+    if (error.message === "Session not found") {
+      return next(new AppError("Session not found.", 404));
+    }
+    console.error("Error fetching public session:", error);
+    next(new AppError("Failed to fetch public session.", 500));
   }
 };
