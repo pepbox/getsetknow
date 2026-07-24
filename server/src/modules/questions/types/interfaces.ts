@@ -4,6 +4,7 @@ export interface IQuestion extends Document {
     questionText: string;
     keyAspect: string;
     questionImage?: string;
+    isDefault?: boolean;
     createdAt: Date;
     updatedAt: Date;
 }

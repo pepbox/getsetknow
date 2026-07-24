@@ -46,6 +46,36 @@ export const updateSession = async (
       return next(new AppError("Invalid session status.", 400));
     }
 
+    // Validate teams and purge empty ones if starting or waiting
+    if (
+      updateData.status &&
+      (updateData.status === SessionStatus.PLAYING || updateData.status === SessionStatus.WAITING)
+    ) {
+      const existingTeams = await teamService.getAllTeamsBySessionId(sessionId.toString());
+      if (!existingTeams || existingTeams.length === 0) {
+        return next(
+          new AppError(
+            "Game cannot start because no teams have been created yet. Please create at least one team.",
+            400
+          )
+        );
+      }
+
+      // Purge empty teams (with 0 players)
+      for (const team of existingTeams) {
+        const pCount = await Player.countDocuments({ team: team._id });
+        if (pCount === 0) {
+          await teamService.deleteTeamById(team._id);
+        }
+      }
+
+      // Re-index remaining non-empty teams sequentially
+      const remainingTeams = await teamService.getAllTeamsBySessionId(sessionId.toString());
+      for (let i = 0; i < remainingTeams.length; i++) {
+        await teamService.updateTeamById(remainingTeams[i]._id, { teamNumber: i + 1 });
+      }
+    }
+
     // Assuming you have imported the service as sessionService
     updateData.updatedAt = new Date();
     const updatedSession = await sessionService.updateSessionById(

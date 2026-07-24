@@ -83,6 +83,7 @@ export const api = createApi({
         "Selfie",
         "GameCompletion",
         "SessionQuestions",
+        "SessionTeams",
     ],
     endpoints: () => ({}),
 });

@@ -1,4 +1,5 @@
 import { NextFunction, Request, Response } from 'express';
+import { Types } from 'mongoose';
 import AppError from '../../../utils/appError';
 import SessionService from '../../session/services/session.service';
 import { generateAccessToken, generateRefreshToken } from '../../../utils/jwtUtils';
@@ -433,6 +434,7 @@ export const getSessionQuestions = async (
                 id: question._id.toString(),
                 questionText: question.questionText,
                 keyAspect: question.keyAspect,
+                isDefault: question.isDefault === true,
                 isSelected,
             };
         });
@@ -572,6 +574,16 @@ export const deleteCustomQuestion = async (
             return next(new AppError("Cannot delete question after the game has started.", 403));
         }
 
+        // Fetch question first to verify if it is default
+        const question = await questionService.getQuestionById(questionId);
+        if (!question) {
+            return next(new AppError("Question not found.", 404));
+        }
+
+        if (question.isDefault) {
+            return next(new AppError("Default questions cannot be deleted.", 403));
+        }
+
         // Delete the question
         const deletedQuestion = await questionService.deleteQuestion(questionId);
 
@@ -601,5 +613,187 @@ export const deleteCustomQuestion = async (
     } catch (error) {
         console.error("Error deleting custom question:", error);
         next(new AppError("Failed to delete custom question.", 500));
+    }
+};
+
+export const getSessionTeams = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+) => {
+    try {
+        const sessionId = req.user?.sessionId;
+        if (!sessionId) {
+            return next(new AppError("Session ID is required.", 400));
+        }
+        const teams = await teamService.getAllTeamsBySessionId(sessionId.toString());
+        // Return player count for each team
+        const teamsWithPlayerCounts = await Promise.all(
+            teams.map(async (team: any) => {
+                const playerCount = await Player.countDocuments({ team: team._id });
+                return {
+                    id: team._id.toString(),
+                    teamNumber: team.teamNumber,
+                    playerCount,
+                };
+            })
+        );
+        res.status(200).json({
+            success: true,
+            data: teamsWithPlayerCounts,
+        });
+    } catch (error) {
+        console.error("Error fetching session teams:", error);
+        next(new AppError("Failed to fetch session teams.", 500));
+    }
+};
+
+export const createBulkTeams = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+) => {
+    try {
+        const sessionId = req.user?.sessionId;
+        const { count } = req.body;
+        if (!sessionId) {
+            return next(new AppError("Session ID is required.", 400));
+        }
+        if (!count || typeof count !== "number" || count < 1) {
+            return next(new AppError("A valid count of teams (minimum 1) is required.", 400));
+        }
+
+        const session = await sessionService.fetchSessionById(sessionId.toString());
+        if (session.status !== SessionStatus.PENDING) {
+            return next(new AppError("Cannot modify teams after the game has started.", 403));
+        }
+
+        // 1. Fetch current teams for session
+        const existingTeams = await teamService.getAllTeamsBySessionId(sessionId.toString());
+
+        // 2. Identify and keep teams that have players; delete empty ones
+        const teamsWithPlayers = [];
+        for (const team of existingTeams) {
+            const pCount = await Player.countDocuments({ team: team._id });
+            if (pCount > 0) {
+                teamsWithPlayers.push(team);
+            } else {
+                await teamService.deleteTeamById(team._id);
+            }
+        }
+
+        // 3. Create teams up to count
+        const keepCount = teamsWithPlayers.length;
+        const toCreate = count - keepCount;
+
+        if (toCreate > 0) {
+            await teamService.createMultipleTeams(toCreate, {
+                session: new Types.ObjectId(sessionId.toString()),
+            });
+        }
+
+        // 4. Re-index remaining teams sequentially to ensure Team 1, Team 2, ... Team N
+        const finalTeams = await teamService.getAllTeamsBySessionId(sessionId.toString());
+        for (let i = 0; i < finalTeams.length; i++) {
+            await teamService.updateTeamById(finalTeams[i]._id, { teamNumber: i + 1 });
+        }
+
+        // 5. Notify player views of team updates
+        SessionEmitters.toSession(sessionId.toString(), Events.SESSION_UPDATE, {});
+
+        res.status(200).json({
+            success: true,
+            message: `Teams updated successfully. Session now has ${finalTeams.length} teams.`,
+        });
+    } catch (error) {
+        console.error("Error creating bulk teams:", error);
+        next(new AppError("Failed to update teams.", 500));
+    }
+};
+
+export const addSingleTeam = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+) => {
+    try {
+        const sessionId = req.user?.sessionId;
+        if (!sessionId) {
+            return next(new AppError("Session ID is required.", 400));
+        }
+
+        const session = await sessionService.fetchSessionById(sessionId.toString());
+        if (session.status !== SessionStatus.PENDING) {
+            return next(new AppError("Cannot add teams after the game has started.", 403));
+        }
+
+        const existingTeams = await teamService.getAllTeamsBySessionId(sessionId.toString());
+        const nextTeamNumber = existingTeams.length > 0 ? Math.max(...existingTeams.map(t => t.teamNumber)) + 1 : 1;
+
+        const newTeam = await teamService.createTeam({
+            teamNumber: nextTeamNumber,
+            session: sessionId,
+            teamScore: 0
+        });
+
+        // Notify player views
+        SessionEmitters.toSession(sessionId.toString(), Events.SESSION_UPDATE, {});
+
+        res.status(201).json({
+            success: true,
+            message: "Team added successfully.",
+            data: newTeam,
+        });
+    } catch (error) {
+        console.error("Error adding single team:", error);
+        next(new AppError("Failed to add team.", 500));
+    }
+};
+
+export const deleteSingleTeam = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+) => {
+    try {
+        const sessionId = req.user?.sessionId;
+        const { teamId } = req.params;
+
+        if (!sessionId) {
+            return next(new AppError("Session ID is required.", 400));
+        }
+        if (!teamId) {
+            return next(new AppError("Team ID is required.", 400));
+        }
+
+        const session = await sessionService.fetchSessionById(sessionId.toString());
+        if (session.status !== SessionStatus.PENDING) {
+            return next(new AppError("Cannot delete teams after the game has started.", 403));
+        }
+
+        // Check if team has players
+        const playersCount = await Player.countDocuments({ team: teamId });
+        if (playersCount > 0) {
+            return next(new AppError("Cannot delete team because players are currently assigned to it.", 400));
+        }
+
+        await teamService.deleteTeamById(teamId);
+
+        // Re-index remaining teams
+        const remainingTeams = await teamService.getAllTeamsBySessionId(sessionId.toString());
+        for (let i = 0; i < remainingTeams.length; i++) {
+            await teamService.updateTeamById(remainingTeams[i]._id, { teamNumber: i + 1 });
+        }
+
+        // Notify player views
+        SessionEmitters.toSession(sessionId.toString(), Events.SESSION_UPDATE, {});
+
+        res.status(200).json({
+            success: true,
+            message: "Team deleted successfully and remaining teams re-indexed.",
+        });
+    } catch (error) {
+        console.error("Error deleting team:", error);
+        next(new AppError("Failed to delete team.", 500));
     }
 };

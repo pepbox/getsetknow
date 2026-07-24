@@ -16,6 +16,10 @@ const questionSchema = new Schema<IQuestion>({
     questionImage: {
         type: String,
         required: false,
+    },
+    isDefault: {
+        type: Boolean,
+        default: false,
     }
 }, {
     timestamps: true

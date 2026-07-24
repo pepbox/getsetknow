@@ -25,6 +25,7 @@ export const playerApi = api.injectEndpoints({
                 method: 'GET',
             }),
             transformResponse: (response: { data: any[] }) => response.data,
+            providesTags: ['SessionTeams'],
         }),
 
 

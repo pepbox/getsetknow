@@ -8,6 +8,11 @@ import {
   Button,
   CircularProgress,
   IconButton,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogContentText,
+  DialogActions,
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import { DashboardHeaderProps } from "../types/interfaces";
@@ -20,6 +25,8 @@ import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
 import BusinessIcon from "@mui/icons-material/Business";
 import ManageQuestionsModal from "./ManageQuestionsModal";
 import ManageBrandingModal from "./ManageBrandingModal";
+import ManageTeamsModal from "./ManageTeamsModal";
+import GroupIcon from "@mui/icons-material/Group";
 import { useGetSessionQuery } from "../../game/services/gameArena.Api";
 import {
   useAdminLogoutMutation,
@@ -44,6 +51,10 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
   const [isDownloading, setIsDownloading] = useState(false);
   const [questionsModalOpen, setQuestionsModalOpen] = useState(false);
   const [brandingModalOpen, setBrandingModalOpen] = useState(false);
+  const [teamsModalOpen, setTeamsModalOpen] = useState(false);
+  const [pauseConfirmOpen, setPauseConfirmOpen] = useState(false);
+  const [resumeConfirmOpen, setResumeConfirmOpen] = useState(false);
+  const [startConfirmOpen, setStartConfirmOpen] = useState(false);
   const [UpdateSession, { isLoading: isUpdatingSession }] = useUpdateSessionMutation();
   const { admin } = useAdminAuth();
   const navigate = useNavigate();
@@ -138,6 +149,28 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
               {isDownloading ? 'Downloading...' : 'Download Data'}
             </Box>
           </Button>
+
+          {data?.gameStatus === "pending" && (
+            <Button
+              variant="outlined"
+              color="primary"
+              startIcon={<GroupIcon />}
+              onClick={() => setTeamsModalOpen(true)}
+              sx={{
+                textTransform: "none",
+                borderRadius: "8px",
+                fontWeight: 500,
+              }}
+            >
+              <Box
+                sx={{
+                  display: { xs: "none", sm: "inline" },
+                }}
+              >
+                Manage Teams
+              </Box>
+            </Button>
+          )}
 
           <Button
             variant="outlined"
@@ -256,21 +289,13 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
               <GlobalButton
                 fullWidth={false}
                 disabled={isCheckingReadiness || isUpdatingSession}
-                onClick={async () => {
+                onClick={() => {
                   if (data?.gameStatus === "playing") {
-                    try {
-                      await UpdateSession({ status: "paused" }).unwrap();
-                    } catch (err) {
-                      console.error("Failed to pause session:", err);
-                    }
+                    setPauseConfirmOpen(true);
                   } else if (data?.gameStatus === "paused") {
-                    try {
-                      await UpdateSession({ status: "playing" }).unwrap();
-                    } catch (err) {
-                      console.error("Failed to resume session:", err);
-                    }
+                    setResumeConfirmOpen(true);
                   } else {
-                    if (onGameStatusChange) onGameStatusChange();
+                    setStartConfirmOpen(true);
                   }
                 }}
               >
@@ -375,6 +400,91 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
         open={brandingModalOpen}
         onClose={() => setBrandingModalOpen(false)}
       />
+      <ManageTeamsModal
+        open={teamsModalOpen}
+        onClose={() => setTeamsModalOpen(false)}
+        gameStatus={data?.gameStatus || "pending"}
+      />
+
+      {/* Pause Confirmation Dialog */}
+      <Dialog open={pauseConfirmOpen} onClose={() => setPauseConfirmOpen(false)}>
+        <DialogTitle>Confirm Pause Game</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Are you sure you want to pause the game? Players will not be able to answer or guess while the game is paused.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 3 }}>
+          <Button onClick={() => setPauseConfirmOpen(false)} variant="outlined" color="primary" sx={{ textTransform: "none", borderRadius: "8px" }}>Cancel</Button>
+          <Button
+            onClick={async () => {
+              setPauseConfirmOpen(false);
+              try {
+                await UpdateSession({ status: "paused" }).unwrap();
+              } catch (err) {
+                console.error("Failed to pause session:", err);
+              }
+            }}
+            color="primary"
+            variant="contained"
+            sx={{ textTransform: "none", borderRadius: "8px" }}
+          >
+            Pause
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Resume Confirmation Dialog */}
+      <Dialog open={resumeConfirmOpen} onClose={() => setResumeConfirmOpen(false)}>
+        <DialogTitle>Confirm Resume Game</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Are you sure you want to resume the game?
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 3 }}>
+          <Button onClick={() => setResumeConfirmOpen(false)} variant="outlined" color="primary" sx={{ textTransform: "none", borderRadius: "8px" }}>Cancel</Button>
+          <Button
+            onClick={async () => {
+              setResumeConfirmOpen(false);
+              try {
+                await UpdateSession({ status: "playing" }).unwrap();
+              } catch (err) {
+                console.error("Failed to resume session:", err);
+              }
+            }}
+            color="primary"
+            variant="contained"
+            sx={{ textTransform: "none", borderRadius: "8px" }}
+          >
+            Resume
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Start Confirmation Dialog */}
+      <Dialog open={startConfirmOpen} onClose={() => setStartConfirmOpen(false)}>
+        <DialogTitle>Confirm Start Game</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Are you sure you want to start the game?
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 3 }}>
+          <Button onClick={() => setStartConfirmOpen(false)} variant="outlined" color="primary" sx={{ textTransform: "none", borderRadius: "8px" }}>Cancel</Button>
+          <Button
+            onClick={() => {
+              setStartConfirmOpen(false);
+              if (onGameStatusChange) onGameStatusChange();
+            }}
+            color="primary"
+            variant="contained"
+            sx={{ textTransform: "none", borderRadius: "8px" }}
+          >
+            Start
+          </Button>
+        </DialogActions>
+      </Dialog>
     </>
   );
 };

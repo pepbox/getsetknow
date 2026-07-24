@@ -174,9 +174,13 @@ const ManageQuestionsModal: React.FC<ManageQuestionsModalProps> = ({
             <CircularProgress />
           </Box>
         ) : (
-          <Box sx={{ maxHeight: 280, overflowY: "auto", border: "1px solid #e0e0e0", borderRadius: 1 }}>
+          <Box sx={{ maxHeight: 380, overflowY: "auto", border: "1px solid #e0e0e0", borderRadius: 1, p: 1 }}>
+            {/* Default Questions Section */}
+            <Typography variant="subtitle2" color="primary" sx={{ px: 2, py: 1, fontWeight: "bold" }}>
+              Default Questions (Cannot be deleted)
+            </Typography>
             <List dense>
-              {questions.map((question) => {
+              {questions.filter((q) => q.isDefault).map((question) => {
                 const labelId = `checkbox-list-label-${question.id}`;
                 return (
                   <ListItem
@@ -209,23 +213,74 @@ const ManageQuestionsModal: React.FC<ManageQuestionsModalProps> = ({
                         </Typography>
                       }
                     />
-                    {gameStatus === "pending" && (
-                      <IconButton
-                        edge="end"
-                        aria-label="delete"
-                        disabled={isDeleting}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setQuestionToDelete(question.id);
-                          setDeleteConfirmOpen(true);
-                        }}
-                      >
-                        <DeleteIcon color="error" />
-                      </IconButton>
-                    )}
                   </ListItem>
                 );
               })}
+            </List>
+
+            <Divider sx={{ my: 1 }} />
+
+            {/* Custom Questions Section */}
+            <Typography variant="subtitle2" color="secondary" sx={{ px: 2, py: 1, fontWeight: "bold" }}>
+              Custom Questions
+            </Typography>
+            <List dense>
+              {questions.filter((q) => !q.isDefault).length === 0 ? (
+                <ListItem>
+                  <ListItemText primary={<Typography variant="body2" color="text.secondary" sx={{ fontStyle: "italic", pl: 4 }}>No custom questions added yet.</Typography>} />
+                </ListItem>
+              ) : (
+                questions.filter((q) => !q.isDefault).map((question) => {
+                  const labelId = `checkbox-list-label-${question.id}`;
+                  return (
+                    <ListItem
+                      key={question.id}
+                      dense
+                      onClick={() => handleToggleQuestion(question.id, question.isSelected)}
+                      sx={{
+                        cursor: gameStatus === "pending" ? "pointer" : "default",
+                        "&:hover": { backgroundColor: gameStatus === "pending" ? "#f5f5f5" : "inherit" },
+                        borderBottom: "1px solid #f0f0f0",
+                        "&:last-child": { borderBottom: "none" },
+                      }}
+                    >
+                      <ListItemIcon sx={{ minWidth: 40 }}>
+                        <Checkbox
+                          edge="start"
+                          checked={question.isSelected}
+                          tabIndex={-1}
+                          disableRipple
+                          inputProps={{ "aria-labelledby": labelId }}
+                          disabled={isUpdating || gameStatus !== "pending"}
+                        />
+                      </ListItemIcon>
+                      <ListItemText
+                        id={labelId}
+                        primary={<Typography variant="body1">{question.questionText}</Typography>}
+                        secondary={
+                          <Typography variant="caption" color="text.secondary">
+                            Key Aspect: {question.keyAspect}
+                          </Typography>
+                        }
+                      />
+                      {gameStatus === "pending" && (
+                        <IconButton
+                          edge="end"
+                          aria-label="delete"
+                          disabled={isDeleting}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setQuestionToDelete(question.id);
+                            setDeleteConfirmOpen(true);
+                          }}
+                        >
+                          <DeleteIcon color="error" />
+                        </IconButton>
+                      )}
+                    </ListItem>
+                  );
+                })
+              )}
             </List>
           </Box>
         )}

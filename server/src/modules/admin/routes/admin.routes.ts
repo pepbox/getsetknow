@@ -24,4 +24,10 @@ router.put('/questions/select', authenticateUser, authorizeRoles("ADMIN"), async
 router.post('/questions', authenticateUser, authorizeRoles("ADMIN"), asyncHandeler(adminControllers.addCustomQuestion));
 router.delete('/questions/:questionId', authenticateUser, authorizeRoles("ADMIN"), asyncHandeler(adminControllers.deleteCustomQuestion));
 
+// Team management routes
+router.get('/teams', authenticateUser, authorizeRoles("ADMIN"), asyncHandeler(adminControllers.getSessionTeams));
+router.post('/teams/create-bulk', authenticateUser, authorizeRoles("ADMIN"), asyncHandeler(adminControllers.createBulkTeams));
+router.post('/teams', authenticateUser, authorizeRoles("ADMIN"), asyncHandeler(adminControllers.addSingleTeam));
+router.delete('/teams/:teamId', authenticateUser, authorizeRoles("ADMIN"), asyncHandeler(adminControllers.deleteSingleTeam));
+
 export default router;

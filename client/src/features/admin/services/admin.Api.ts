@@ -146,6 +146,40 @@ export const adminApi = api.injectEndpoints({
       invalidatesTags: ['GameSession'],
     }),
 
+    fetchSessionTeams: builder.query<any[], void>({
+      query: () => ({
+        url: '/admin/teams',
+        method: 'GET',
+      }),
+      transformResponse: (response: any) => response.data,
+      providesTags: ['SessionTeams'],
+    }),
+
+    createBulkTeams: builder.mutation<any, { count: number }>({
+      query: (body) => ({
+        url: '/admin/teams/create-bulk',
+        method: 'POST',
+        body,
+      }),
+      invalidatesTags: ['SessionTeams'],
+    }),
+
+    addSingleTeam: builder.mutation<any, void>({
+      query: () => ({
+        url: '/admin/teams',
+        method: 'POST',
+      }),
+      invalidatesTags: ['SessionTeams'],
+    }),
+
+    deleteSingleTeam: builder.mutation<any, string>({
+      query: (teamId) => ({
+        url: `/admin/teams/${teamId}`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: ['SessionTeams'],
+    }),
+
   }),
 
 });
@@ -165,5 +199,9 @@ export const {
   useSelectSessionQuestionsMutation,
   useAddCustomQuestionMutation,
   useDeleteCustomQuestionMutation,
-  useUpdateBrandingMutation
+  useUpdateBrandingMutation,
+  useFetchSessionTeamsQuery,
+  useCreateBulkTeamsMutation,
+  useAddSingleTeamMutation,
+  useDeleteSingleTeamMutation,
 } = adminApi;
