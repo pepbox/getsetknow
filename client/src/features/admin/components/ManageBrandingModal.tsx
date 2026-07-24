@@ -15,7 +15,7 @@ import {
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import PhotoCameraIcon from "@mui/icons-material/PhotoCamera";
-import DeleteIcon from "@mui/icons-material/Delete";
+import defaultLogo from "../../../assets/Get-Set-Know.webp";
 import { useGetSessionQuery } from "../../game/services/gameArena.Api";
 import { useUpdateBrandingMutation } from "../services/admin.Api";
 import { useAppSelector } from "../../../app/rootReducer";
@@ -45,7 +45,7 @@ const ManageBrandingModal: React.FC<ManageBrandingModalProps> = ({
   useEffect(() => {
     if (session) {
       setCompanyName(session.companyName || "");
-      setPreviewUrl(session.companyLogo?.location || null);
+      setPreviewUrl(session.companyLogo?.location || defaultLogo);
     }
   }, [session, open]);
 
@@ -78,13 +78,6 @@ const ManageBrandingModal: React.FC<ManageBrandingModalProps> = ({
     reader.readAsDataURL(file);
   };
 
-  const handleClearLogo = () => {
-    setSelectedFile(null);
-    setPreviewUrl(null);
-    if (fileInputRef.current) {
-      fileInputRef.current.value = "";
-    }
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -188,48 +181,41 @@ const ManageBrandingModal: React.FC<ManageBrandingModalProps> = ({
               />
 
               {previewUrl ? (
-                <Box
-                  sx={{
-                    position: "relative",
-                    width: 120,
-                    height: 120,
-                    borderRadius: 2,
-                    overflow: "hidden",
-                    border: "1px solid #ddd",
-                    boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
-                    backgroundColor: "#fff",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                  }}
-                  onClick={(e) => e.stopPropagation()} // Prevent triggering file select
-                >
-                  <img
-                    src={previewUrl}
-                    alt="Company logo preview"
-                    style={{
-                      maxWidth: "100%",
-                      maxHeight: "100%",
-                      objectFit: "contain",
+                <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 2 }}>
+                  <Box
+                    sx={{
+                      position: "relative",
+                      width: 120,
+                      height: 120,
+                      borderRadius: 2,
+                      overflow: "hidden",
+                      border: "1px solid #ddd",
+                      boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+                      backgroundColor: "#fff",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
                     }}
-                  />
-                  {!isUpdating && (
-                    <IconButton
-                      sx={{
-                        position: "absolute",
-                        top: 4,
-                        right: 4,
-                        backgroundColor: "rgba(255,255,255,0.8)",
-                        "&:hover": {
-                          backgroundColor: "rgba(255,0,0,0.1)",
-                          color: "error.main",
-                        },
+                  >
+                    <img
+                      src={previewUrl}
+                      alt="Company logo preview"
+                      style={{
+                        maxWidth: "100%",
+                        maxHeight: "100%",
+                        objectFit: "contain",
                       }}
+                    />
+                  </Box>
+                  {!isUpdating && (
+                    <Button
+                      variant="outlined"
                       size="small"
-                      onClick={handleClearLogo}
+                      startIcon={<PhotoCameraIcon />}
+                      sx={{ textTransform: "none", borderRadius: "6px" }}
                     >
-                      <DeleteIcon fontSize="small" />
-                    </IconButton>
+                      Update Logo
+                    </Button>
                   )}
                 </Box>
               ) : (

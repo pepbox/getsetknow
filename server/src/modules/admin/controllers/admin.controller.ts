@@ -422,7 +422,12 @@ export const getSessionQuestions = async (
         }
 
         const session = await sessionService.fetchSessionById(sessionId);
-        const allQuestions = await questionService.getAllQuestions();
+        const allQuestions = await Question.find({
+            $or: [
+                { isDefault: true },
+                { session: sessionId }
+            ]
+        });
 
         const activeQuestionIds = session.questions && session.questions.length > 0
             ? session.questions.map((q: any) => q.toString())
@@ -515,6 +520,7 @@ export const addCustomQuestion = async (
         const newQuestion = await questionService.createQuestion({
             questionText,
             keyAspect,
+            session: sessionId,
         });
 
         // Add to current session's active questions
@@ -525,8 +531,13 @@ export const addCustomQuestion = async (
         if (activeQuestionIds.length === 0) {
             // If currently empty, it means all existing questions were active.
             // Populating active questions with existing ones + new one.
-            const allQuestions = await questionService.getAllQuestions();
-            activeQuestionIds = allQuestions.map((q: any) => q._id.toString());
+            const sessionQuestions = await Question.find({
+                $or: [
+                    { isDefault: true },
+                    { session: sessionId }
+                ]
+            });
+            activeQuestionIds = sessionQuestions.map((q: any) => q._id.toString());
         } else {
             // Otherwise, append the new question ID
             activeQuestionIds.push((newQuestion as any)._id.toString());
@@ -582,6 +593,10 @@ export const deleteCustomQuestion = async (
 
         if (question.isDefault) {
             return next(new AppError("Default questions cannot be deleted.", 403));
+        }
+
+        if (question.session && question.session.toString() !== sessionId.toString()) {
+            return next(new AppError("You do not have permission to delete this question.", 403));
         }
 
         // Delete the question

@@ -16,6 +16,7 @@ import GlobalButton from "../../../components/ui/button";
 import { setPlayer } from "../services/player.slice";
 import { RootState } from "../../../app/store";
 import homescreenBanner from "../../../assets/homescreenBanner.webp";
+import defaultLogo from "../../../assets/Get-Set-Know.webp";
 import { useGetAllTeamsQuery } from "../services/player.api";
 import { useGetSessionQuery } from "../../game/services/gameArena.Api";
 
@@ -111,63 +112,42 @@ const HomeScreen: React.FC = () => {
         pt: 4,
       }}
     >
-      {session?.companyLogo?.location && session?.companyName ? (
-        <Box
-          sx={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: 2,
-            mb: 2,
-          }}
-        >
+      {(() => {
+        const logoSrc = session?.companyLogo?.location || defaultLogo;
+        const name = session?.companyName || "GetSetKnow";
+        return (
           <Box
-            component="img"
             sx={{
-              maxHeight: "50px",
-              maxWidth: "150px",
-              objectFit: "contain",
-            }}
-            src={session.companyLogo.location}
-            alt={session.companyName}
-          />
-          <Typography
-            variant="h1"
-            sx={{
-              color: "text.primary",
-              fontSize: "28px",
-              fontWeight: "bold",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 2,
+              mb: 2,
             }}
           >
-            {session.companyName}
-          </Typography>
-        </Box>
-      ) : session?.companyLogo?.location ? (
-        <Box
-          component="img"
-          sx={{
-            maxHeight: "80px",
-            maxWidth: "240px",
-            objectFit: "contain",
-            mb: 2,
-          }}
-          src={session.companyLogo.location}
-          alt={session.companyName || "Company logo"}
-        />
-      ) : (
-        <Typography
-          variant="h1"
-          sx={{
-            color: "text.primary",
-            fontSize: "36px",
-            textAlign: "center",
-            fontWeight: session?.companyName ? "bold" : "normal",
-            mb: 2,
-          }}
-        >
-          {session?.companyName || "GetSetKnow!"}
-        </Typography>
-      )}
+            <Box
+              component="img"
+              sx={{
+                maxHeight: "50px",
+                maxWidth: "150px",
+                objectFit: "contain",
+              }}
+              src={logoSrc}
+              alt={name}
+            />
+            <Typography
+              variant="h1"
+              sx={{
+                color: "text.primary",
+                fontSize: "28px",
+                fontWeight: "bold",
+              }}
+            >
+              {name}
+            </Typography>
+          </Box>
+        );
+      })()}
 
       <Box
         component="img"

@@ -13,6 +13,7 @@ import uiux from "../../../assets/uiux.webp";
 import foodie from "../../../assets/foodie.webp";
 import photographer from "../../../assets/photographer.webp";
 import music2 from "../../../assets/music2.webp";
+import defaultLogo from "../../../assets/Get-Set-Know.webp";
 
 interface Player {
   id: number;
@@ -120,65 +121,43 @@ const WaitingAreaScreen: React.FC<CircularPlayerAnimationProps> = ({
         margin: "0 auto",
       }}
     >
-      {session?.companyLogo?.location && session?.companyName ? (
-        <Box
-          sx={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: 2,
-            mt: 4,
-            mb: 2,
-          }}
-        >
+      {(() => {
+        const logoSrc = session?.companyLogo?.location || defaultLogo;
+        const name = session?.companyName || "GetSetKnow";
+        return (
           <Box
-            component="img"
             sx={{
-              maxHeight: "50px",
-              maxWidth: "150px",
-              objectFit: "contain",
-            }}
-            src={session.companyLogo.location}
-            alt={session.companyName}
-          />
-          <Typography
-            variant="h1"
-            sx={{
-              color: "text.primary",
-              fontSize: "28px",
-              fontWeight: "bold",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 2,
+              mt: 4,
+              mb: 2,
             }}
           >
-            {session.companyName}
-          </Typography>
-        </Box>
-      ) : session?.companyLogo?.location ? (
-        <Box
-          component="img"
-          sx={{
-            maxHeight: "80px",
-            maxWidth: "240px",
-            objectFit: "contain",
-            mt: 4,
-            mb: 2,
-          }}
-          src={session.companyLogo.location}
-          alt={session.companyName || "Company logo"}
-        />
-      ) : (
-        <Typography
-          variant="h3"
-          sx={{
-            color: "text.primary",
-            textAlign: "center",
-            fontWeight: session?.companyName ? "bold" : "normal",
-            mt: 4,
-            mb: 2,
-          }}
-        >
-          {session?.companyName || "GetSetKnow!"}
-        </Typography>
-      )}
+            <Box
+              component="img"
+              sx={{
+                maxHeight: "50px",
+                maxWidth: "150px",
+                objectFit: "contain",
+              }}
+              src={logoSrc}
+              alt={name}
+            />
+            <Typography
+              variant="h1"
+              sx={{
+                color: "text.primary",
+                fontSize: "28px",
+                fontWeight: "bold",
+              }}
+            >
+              {name}
+            </Typography>
+          </Box>
+        );
+      })()}
       {/* Center circle indicator (optional) */}
       <Box
         sx={{

@@ -20,6 +20,11 @@ const questionSchema = new Schema<IQuestion>({
     isDefault: {
         type: Boolean,
         default: false,
+    },
+    session: {
+        type: Schema.Types.ObjectId,
+        ref: 'Session',
+        required: false,
     }
 }, {
     timestamps: true

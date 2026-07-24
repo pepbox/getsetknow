@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Dialog,
   DialogTitle,
@@ -68,21 +68,48 @@ const ManageQuestionsModal: React.FC<ManageQuestionsModalProps> = ({
     }
   };
 
-  const handleToggleQuestion = async (questionId: string, currentlySelected: boolean) => {
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+
+  useEffect(() => {
+    if (questions.length > 0) {
+      setSelectedIds(questions.filter((q) => q.isSelected).map((q) => q.id));
+    }
+  }, [questions, open]);
+
+  const handleToggleQuestionLocal = (questionId: string) => {
     if (gameStatus !== "pending") return;
-    // Collect all currently selected questions
-    const selectedIds = questions
-      .filter((q) => q.isSelected)
-      .map((q) => q.id);
+    if (selectedIds.includes(questionId)) {
+      setSelectedIds(selectedIds.filter((id) => id !== questionId));
+    } else {
+      setSelectedIds([...selectedIds, questionId]);
+    }
+  };
 
-    const newSelectedIds = currentlySelected
-      ? selectedIds.filter((id) => id !== questionId)
-      : [...selectedIds, questionId];
+  const allSelected = questions.length > 0 && selectedIds.length === questions.length;
 
+  const handleToggleSelectAll = () => {
+    if (gameStatus !== "pending") return;
+    if (allSelected) {
+      setSelectedIds([]);
+    } else {
+      setSelectedIds(questions.map((q) => q.id));
+    }
+  };
+
+  const handleSaveQuestions = async () => {
+    setFormError("");
+    setSuccessMsg("");
     try {
-      await selectQuestions({ questionIds: newSelectedIds }).unwrap();
-    } catch (err) {
-      console.error("Failed to update active questions:", err);
+      await selectQuestions({ questionIds: selectedIds }).unwrap();
+      setSuccessMsg("Questions selection saved successfully!");
+      refetch();
+      setTimeout(() => {
+        setSuccessMsg("");
+        onClose();
+      }, 1000);
+    } catch (err: any) {
+      console.error("Failed to save questions:", err);
+      setFormError(err?.data?.message || "Failed to save questions selection.");
     }
   };
 
@@ -175,18 +202,31 @@ const ManageQuestionsModal: React.FC<ManageQuestionsModalProps> = ({
           </Box>
         ) : (
           <Box sx={{ maxHeight: 380, overflowY: "auto", border: "1px solid #e0e0e0", borderRadius: 1, p: 1 }}>
-            {/* Default Questions Section */}
-            <Typography variant="subtitle2" color="primary" sx={{ px: 2, py: 1, fontWeight: "bold" }}>
-              Default Questions (Cannot be deleted)
-            </Typography>
+            {/* Default Questions Section Header with Toggle Select All */}
+            <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", px: 2, py: 1 }}>
+              <Typography variant="subtitle2" color="primary" sx={{ fontWeight: "bold" }}>
+                Default Questions (Cannot be deleted)
+              </Typography>
+              {gameStatus === "pending" && (
+                <Button
+                  size="small"
+                  variant="outlined"
+                  onClick={handleToggleSelectAll}
+                  sx={{ textTransform: "none", borderRadius: "6px", fontSize: "12px", py: 0.2 }}
+                >
+                  {allSelected ? "Deselect All" : "Select All"}
+                </Button>
+              )}
+            </Box>
             <List dense>
               {questions.filter((q) => q.isDefault).map((question) => {
                 const labelId = `checkbox-list-label-${question.id}`;
+                const isLocalSelected = selectedIds.includes(question.id);
                 return (
                   <ListItem
                     key={question.id}
                     dense
-                    onClick={() => handleToggleQuestion(question.id, question.isSelected)}
+                    onClick={() => handleToggleQuestionLocal(question.id)}
                     sx={{
                       cursor: gameStatus === "pending" ? "pointer" : "default",
                       "&:hover": { backgroundColor: gameStatus === "pending" ? "#f5f5f5" : "inherit" },
@@ -197,7 +237,7 @@ const ManageQuestionsModal: React.FC<ManageQuestionsModalProps> = ({
                     <ListItemIcon sx={{ minWidth: 40 }}>
                       <Checkbox
                         edge="start"
-                        checked={question.isSelected}
+                        checked={isLocalSelected}
                         tabIndex={-1}
                         disableRipple
                         inputProps={{ "aria-labelledby": labelId }}
@@ -232,11 +272,12 @@ const ManageQuestionsModal: React.FC<ManageQuestionsModalProps> = ({
               ) : (
                 questions.filter((q) => !q.isDefault).map((question) => {
                   const labelId = `checkbox-list-label-${question.id}`;
+                  const isLocalSelected = selectedIds.includes(question.id);
                   return (
                     <ListItem
                       key={question.id}
                       dense
-                      onClick={() => handleToggleQuestion(question.id, question.isSelected)}
+                      onClick={() => handleToggleQuestionLocal(question.id)}
                       sx={{
                         cursor: gameStatus === "pending" ? "pointer" : "default",
                         "&:hover": { backgroundColor: gameStatus === "pending" ? "#f5f5f5" : "inherit" },
@@ -247,7 +288,7 @@ const ManageQuestionsModal: React.FC<ManageQuestionsModalProps> = ({
                       <ListItemIcon sx={{ minWidth: 40 }}>
                         <Checkbox
                           edge="start"
-                          checked={question.isSelected}
+                          checked={isLocalSelected}
                           tabIndex={-1}
                           disableRipple
                           inputProps={{ "aria-labelledby": labelId }}
@@ -334,10 +375,22 @@ const ManageQuestionsModal: React.FC<ManageQuestionsModalProps> = ({
         )}
       </DialogContent>
 
-      <DialogActions sx={{ p: 3 }}>
-        <Button onClick={onClose} variant="outlined" color="primary" sx={{ textTransform: "none", borderRadius: "8px" }}>
-          Close
+      <DialogActions sx={{ px: 3, pb: 3, gap: 1 }}>
+        <Button onClick={onClose} variant="outlined" color="primary" sx={{ textTransform: "none", borderRadius: "8px" }} disabled={isUpdating}>
+          Cancel
         </Button>
+        {gameStatus === "pending" && (
+          <Button
+            onClick={handleSaveQuestions}
+            variant="contained"
+            color="secondary"
+            disabled={isUpdating || selectedIds.length === 0}
+            startIcon={isUpdating && <CircularProgress size={16} color="inherit" />}
+            sx={{ textTransform: "none", borderRadius: "8px", fontWeight: 600 }}
+          >
+            {isUpdating ? "Saving..." : "Save Selection"}
+          </Button>
+        )}
       </DialogActions>
     </Dialog>
 

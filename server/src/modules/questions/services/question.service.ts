@@ -14,6 +14,7 @@ class QuestionService {
             questionText: data.questionText,
             keyAspect: data.keyAspect,
             questionImage: data.questionImage,
+            session: data.session,
         });
         return await question.save();
     }

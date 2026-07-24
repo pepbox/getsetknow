@@ -22,7 +22,7 @@ import LeaderboardIcon from "@mui/icons-material/Leaderboard";
 import DownloadIcon from "@mui/icons-material/Download";
 import SettingsIcon from "@mui/icons-material/Settings";
 import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
-import BusinessIcon from "@mui/icons-material/Business";
+import defaultLogo from "../../../assets/Get-Set-Know.webp";
 import ManageQuestionsModal from "./ManageQuestionsModal";
 import ManageBrandingModal from "./ManageBrandingModal";
 import ManageTeamsModal from "./ManageTeamsModal";
@@ -355,7 +355,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
                 width: 80,
                 height: 80,
                 borderRadius: "16px",
-                backgroundColor: session?.companyLogo?.location ? "#F3F4F6" : "#3622C9",
+                backgroundColor: "#F3F4F6",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
@@ -364,15 +364,11 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
                 boxShadow: "0px 2px 6px rgba(0,0,0,0.05)",
               }}
             >
-              {session?.companyLogo?.location ? (
-                <img
-                  src={session.companyLogo.location}
-                  alt="Company Logo"
-                  style={{ width: "100%", height: "100%", objectFit: "contain" }}
-                />
-              ) : (
-                <BusinessIcon sx={{ color: "#FFFFFF", fontSize: 40 }} />
-              )}
+              <img
+                src={session?.companyLogo?.location || defaultLogo}
+                alt="Company Logo"
+                style={{ width: "100%", height: "100%", objectFit: "contain" }}
+              />
             </Box>
 
             <Box>
@@ -385,7 +381,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
                 Company Name
               </Typography>
               <Typography variant="body1" fontWeight="bold" color="#1F2937" sx={{ mt: 0.5, fontSize: "22px" }}>
-                {session?.companyName || "GetSetKnow!"}
+                {session?.companyName || "GetSetKnow"}
               </Typography>
             </Box>
           </Box>

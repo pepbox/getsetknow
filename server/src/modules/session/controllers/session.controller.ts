@@ -152,6 +152,7 @@ export const createSession = async (
     const newSession = await sessionService.createSession({
       name,
       numberOfTeams: numberOfTeams || null,
+      companyName: "GetSetKnow",
     });
 
     await adminService.createAdmin({

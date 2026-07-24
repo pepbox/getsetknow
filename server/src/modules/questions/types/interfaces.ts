@@ -5,6 +5,7 @@ export interface IQuestion extends Document {
     keyAspect: string;
     questionImage?: string;
     isDefault?: boolean;
+    session?: Types.ObjectId | string;
     createdAt: Date;
     updatedAt: Date;
 }

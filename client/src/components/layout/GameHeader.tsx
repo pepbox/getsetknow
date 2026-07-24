@@ -6,67 +6,44 @@ import { useGetSessionQuery } from "../../features/game/services/gameArena.Api";
 import { useAppSelector } from "../../app/rootReducer";
 import { RootState } from "../../app/store";
 
+import defaultLogo from "../../assets/Get-Set-Know.webp";
+
 interface GameHeaderProps {
   title?: string;
 }
 
-const GameHeader: React.FC<GameHeaderProps> = ({ title }) => {
+const GameHeader: React.FC<GameHeaderProps> = () => {
   const navigate = useNavigate();
   const { sessionId } = useAppSelector((state: RootState) => state.game);
   const { data: session } = useGetSessionQuery(sessionId || "", { skip: !sessionId });
 
   // Fallback rendering
   const renderBranding = () => {
-    if (session?.companyLogo?.location && session?.companyName) {
-      return (
-        <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-          <Box
-            component="img"
-            sx={{
-              maxHeight: "32px",
-              maxWidth: "100px",
-              objectFit: "contain",
-            }}
-            src={session.companyLogo.location}
-            alt={session.companyName}
-          />
-          <Typography
-            variant="h6"
-            sx={{
-              fontWeight: "bold",
-              fontSize: "16px",
-            }}
-          >
-            {session.companyName}
-          </Typography>
-        </Box>
-      );
-    } else if (session?.companyLogo?.location) {
-      return (
+    const logoSrc = session?.companyLogo?.location || defaultLogo;
+    const name = session?.companyName || "GetSetKnow";
+    return (
+      <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
         <Box
           component="img"
           sx={{
             maxHeight: "32px",
-            maxWidth: "120px",
+            maxWidth: "100px",
             objectFit: "contain",
           }}
-          src={session.companyLogo.location}
-          alt={session.companyName || "Logo"}
+          src={logoSrc}
+          alt={name}
         />
-      );
-    } else {
-      return (
         <Typography
           variant="h6"
           sx={{
             fontWeight: "bold",
-            fontSize: "18px",
+            fontSize: "16px",
           }}
         >
-          {title || session?.companyName || "GetSetKnow!"}
+          {name}
         </Typography>
-      );
-    }
+      </Box>
+    );
   };
 
   return (
