@@ -40,6 +40,7 @@ export interface GameCompletionData {
     profilePhoto?: string;
     score: number;
     rank: number;
+    wrongGuesses?: number;
   };
   peopleYouKnow: Player[];
   peopleWhoKnowYou: Player[];

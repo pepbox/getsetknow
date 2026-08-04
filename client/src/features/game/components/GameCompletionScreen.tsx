@@ -23,12 +23,15 @@ import LogoutIcon from "@mui/icons-material/Logout";
 import Confetti from "react-confetti";
 import { useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
-import { useGetGameCompletionDataQuery, usePlayerLogoutMutation } from "../services/gameArena.Api";
+import { useGetGameCompletionDataQuery, usePlayerLogoutMutation, useGetSessionQuery } from "../services/gameArena.Api";
 import { useLazyGetPlayerWithResponsesQuery } from "../../admin/services/admin.Api";
 import { logoutPlayer } from "../../player/services/player.slice";
 import PlayerResponsesModal from "../../admin/components/PlayerResponsesModal";
 import Loader from "../../../components/ui/Loader";
 import Error from "../../../components/ui/Error";
+import { useAppSelector } from "../../../app/rootReducer";
+import { RootState } from "../../../app/store";
+import defaultLogo from "../../../assets/Get-Set-Know.webp";
 
 interface PlayerWithResponses {
   player: {
@@ -52,6 +55,8 @@ const GameCompletionScreen: React.FC = () => {
   const [modalOpen, setModalOpen] = useState(false);
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  const { sessionId } = useAppSelector((state: RootState) => state.game);
+  const { data: session } = useGetSessionQuery(sessionId || "", { skip: !sessionId });
 
   // API calls
   const {
@@ -130,9 +135,36 @@ const GameCompletionScreen: React.FC = () => {
       {/* Header with Logout */}
       <AppBar position="static" elevation={0} sx={{ bgcolor: "transparent" }}>
         <Toolbar sx={{ justifyContent: "space-between" }}>
-          <Typography variant="h6" sx={{ color: "white", fontWeight: "bold" }}>
-            GetSetKnow!
-          </Typography>
+          {(() => {
+            const logoSrc = session?.companyLogo?.location || defaultLogo;
+            const name = session?.companyName || "GetSetKnow!";
+            return (
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 1.5,
+                }}
+              >
+                <Box
+                  component="img"
+                  sx={{
+                    maxHeight: "36px",
+                    maxWidth: "120px",
+                    objectFit: "contain",
+                    borderRadius: "4px",
+                    backgroundColor: logoSrc === defaultLogo ? "transparent" : "white",
+                    p: logoSrc === defaultLogo ? 0 : 0.5,
+                  }}
+                  src={logoSrc}
+                  alt={name}
+                />
+                <Typography variant="h6" sx={{ color: "white", fontWeight: "bold" }}>
+                  {name}
+                </Typography>
+              </Box>
+            );
+          })()}
           <IconButton
             onClick={handleLogout}
             disabled={loggingOut}
@@ -275,6 +307,22 @@ const GameCompletionScreen: React.FC = () => {
                 {peopleWhoKnowYou.length}
               </Typography>
               <Typography variant="body1">People Who Know You</Typography>
+            </Box>
+            <Box
+              sx={{
+                textAlign: "center",
+                p: 2,
+                bgcolor: "#f5f5f5",
+                borderRadius: 2,
+              }}
+            >
+              <Typography
+                variant="h4"
+                sx={{ color: "error.main", fontWeight: "bold" }}
+              >
+                {currentPlayer.wrongGuesses ?? 0}
+              </Typography>
+              <Typography variant="body1">Wrong Guesses</Typography>
             </Box>
             <Box
               sx={{

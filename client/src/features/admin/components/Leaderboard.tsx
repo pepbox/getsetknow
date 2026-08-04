@@ -14,6 +14,7 @@ import { useAppSelector } from "../../../app/rootReducer";
 import { RootState } from "../../../app/store";
 import Loader from "../../../components/ui/Loader";
 import { useGetSessionQuery } from "../../game/services/gameArena.Api";
+import defaultLogo from "../../../assets/Get-Set-Know.webp";
 
 const Leaderboard: React.FC<LeaderboardProps> = ({ data, isLoading }) => {
   const navigate = useNavigate();
@@ -53,8 +54,10 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ data, isLoading }) => {
         sx={{
           p: 3,
           mb: 3,
-          backgroundColor: "rgba(252, 166, 30, 0.10)",
+          backgroundColor: "rgba(167, 139, 250, 0.05)",
           borderRadius: 0,
+          borderBottom: "1px solid rgba(167, 139, 250, 0.1)",
+          boxShadow: "none",
         }}
       >
         <Box
@@ -84,12 +87,13 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ data, isLoading }) => {
                 display: "flex",
                 alignItems: "center",
                 gap: 1,
-                bgcolor: "#4caf50",
-                color: "white",
+                bgcolor: "#ffffff",
+                border: "1px solid #e5e7eb",
+                color: "text.primary",
                 px: 2,
                 py: 0.75,
                 borderRadius: "20px",
-                boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+                boxShadow: "0 1px 2px rgba(0,0,0,0.05)",
               }}
             >
               <Box
@@ -97,7 +101,7 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ data, isLoading }) => {
                   width: 8,
                   height: 8,
                   borderRadius: "50%",
-                  bgcolor: "#fff",
+                  bgcolor: "#10B981",
                   animation: "pulse 1.5s infinite",
                   "@keyframes pulse": {
                     "0%": { transform: "scale(0.8)", opacity: 0.5 },
@@ -106,43 +110,44 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ data, isLoading }) => {
                   },
                 }}
               />
-              <Typography variant="body2" fontWeight="bold">
-                Connections Established: {data.connectionsCount}
+              <Typography variant="body2" fontWeight="bold" sx={{ color: "text.secondary" }}>
+                Connections Established:{" "}
+                <Typography component="span" fontWeight="bold" sx={{ color: "text.primary" }}>
+                  {data.connectionsCount}
+                </Typography>
               </Typography>
             </Box>
           )}
         </Box>
         
-        <Box display="flex" flexDirection="column" alignItems="center" justifyContent="center" gap={2}>
-          {session?.companyLogo?.location && (
-            <Box
-              sx={{
-                width: 80,
-                height: 80,
-                borderRadius: "16px",
-                backgroundColor: "#fff",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                overflow: "hidden",
-                border: "1px solid #E5E7EB",
-                boxShadow: "0px 4px 10px rgba(0,0,0,0.05)",
-              }}
-            >
-              <img
-                src={session.companyLogo.location}
-                alt="Session Logo"
-                style={{ width: "100%", height: "100%", objectFit: "contain" }}
-              />
-            </Box>
-          )}
+        <Box display="flex" flexDirection="row" alignItems="center" justifyContent="center" gap={2}>
+          <Box
+            sx={{
+              width: 80,
+              height: 80,
+              borderRadius: "16px",
+              backgroundColor: "#fff",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              overflow: "hidden",
+              border: "1px solid #E5E7EB",
+              boxShadow: "0px 4px 10px rgba(0,0,0,0.05)",
+            }}
+          >
+            <img
+              src={session?.companyLogo?.location || defaultLogo}
+              alt="Session Logo"
+              style={{ width: "100%", height: "100%", objectFit: "contain" }}
+            />
+          </Box>
           <Typography
             variant="h3"
             fontWeight="bold"
             color="black"
-            textAlign="center"
+            textAlign="left"
           >
-            {session?.name || "Game Leaderboard"}
+            {session?.companyName || "Game Leaderboard"}
           </Typography>
         </Box>
       </Paper>

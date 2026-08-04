@@ -74,11 +74,13 @@ const SelfiesGallery: React.FC<SelfiesGalleryProps> = ({ selfies }) => {
           <Card
             key={selfie.id}
             sx={{
-              borderRadius: "12px",
-              transition: "transform 0.2s ease-in-out",
+              borderRadius: "16px",
+              boxShadow: "0px 4px 12px rgba(0,0,0,0.03)",
+              border: "1px solid #E5E7EB",
+              transition: "transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.25s cubic-bezier(0.4, 0, 0.2, 1)",
               "&:hover": {
-                transform: "scale(1.05)",
-                boxShadow: "0 8px 16px rgba(0,0,0,0.15)",
+                transform: "translateY(-4px)",
+                boxShadow: "0 12px 24px rgba(0,0,0,0.08)",
               },
             }}
           >
@@ -91,7 +93,7 @@ const SelfiesGallery: React.FC<SelfiesGalleryProps> = ({ selfies }) => {
               alt={`${selfie.guesserName} guessed ${selfie.guessedPersonName}`}
               sx={{
                 objectFit: "cover",
-                backgroundColor: "#f5f5f5",
+                backgroundColor: "background.default",
                 height: {
                   xs: "150px",
                   sm: "170px",
@@ -107,10 +109,6 @@ const SelfiesGallery: React.FC<SelfiesGalleryProps> = ({ selfies }) => {
               {/* Simple player names display */}
               <Box
                 sx={{
-                  // backgroundColor: "#fff",
-                  // borderRadius: "8px",
-                  // p: 1.5,
-                  // border: "1px solid #e0e0e0",
                   display: "flex",
                   flexDirection: "column",
                   alignItems: "center",
@@ -125,7 +123,7 @@ const SelfiesGallery: React.FC<SelfiesGalleryProps> = ({ selfies }) => {
                     textOverflow: "ellipsis",
                     whiteSpace: "nowrap",
                     fontSize: "0.875rem",
-                    color: "#333",
+                    color: "text.primary",
                     width: "100%",
                     textAlign: "center",
                   }}
@@ -138,7 +136,7 @@ const SelfiesGallery: React.FC<SelfiesGalleryProps> = ({ selfies }) => {
                   sx={{
                     width: "100%",
                     height: "1px",
-                    backgroundColor: "#e0e0e0",
+                    backgroundColor: "divider",
                     my: 1,
                   }}
                 />
@@ -146,13 +144,13 @@ const SelfiesGallery: React.FC<SelfiesGalleryProps> = ({ selfies }) => {
                 {/* Second player name */}
                 <Typography
                   variant="body2"
-                  fontWeight="bold"
+                  fontWeight="medium"
                   sx={{
                     overflow: "hidden",
                     textOverflow: "ellipsis",
                     whiteSpace: "nowrap",
                     fontSize: "0.875rem",
-                    color: "#666",
+                    color: "text.secondary",
                     width: "100%",
                     textAlign: "center",
                   }}

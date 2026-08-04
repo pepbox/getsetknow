@@ -13,18 +13,7 @@ interface PlayerLeaderboardProps {
 const PlayerLeaderboard: React.FC<PlayerLeaderboardProps> = ({
   playerRankings,
 }) => {
-  const getRankColor = (rank: number) => {
-    switch (rank) {
-      case 1:
-        return "#FFD700"; // Gold
-      case 2:
-        return "#C0C0C0"; // Silver
-      case 3:
-        return "#CD7F32"; // Bronze
-      default:
-        return "#E0E0E0"; // Default gray
-    }
-  };
+
 
   const getRankIcon = (rank: number) => {
     switch (rank) {
@@ -77,18 +66,15 @@ const PlayerLeaderboard: React.FC<PlayerLeaderboardProps> = ({
             {/* Rank Badge */}
             <Box
               sx={{
-                minWidth: 50,
-                height: 50,
-                borderRadius: "50%",
-                backgroundColor: getRankColor(player?.rank),
+                minWidth: 40,
+                height: 40,
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                marginRight: 3,
+                marginRight: 2,
                 fontWeight: "bold",
-                fontSize: "18px",
-                color: player?.rank <= 3 ? "#000" : "#666",
-                boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+                fontSize: "20px",
+                color: player?.rank === 1 ? "#D4AF37" : player?.rank === 2 ? "#9CA3AF" : player?.rank === 3 ? "#CD7F32" : "#9CA3AF",
               }}
             >
               {getRankIcon(player?.rank)}
@@ -98,11 +84,17 @@ const PlayerLeaderboard: React.FC<PlayerLeaderboardProps> = ({
             <Avatar
               src={player?.profilePhoto || ""}
               sx={{
-                width: 60,
-                height: 60,
-                marginRight: 3,
-                border: `3px solid ${getRankColor(player?.rank)}`,
-                boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+                width: 54,
+                height: 54,
+                marginRight: 2,
+                border: player?.rank === 1
+                  ? "2px solid #F59E0B"
+                  : player?.rank === 2
+                  ? "2px solid #9CA3AF"
+                  : player?.rank === 3
+                  ? "2px solid #CD7F32"
+                  : "1px solid #E5E7EB",
+                boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
               }}
             >
               {player.name.charAt(0).toUpperCase()}
@@ -123,7 +115,7 @@ const PlayerLeaderboard: React.FC<PlayerLeaderboardProps> = ({
                 {player?.name}
               </Typography>
               <Typography variant="body2" color="text.secondary" noWrap>
-                Rank #{player?.rank} {player?.teamNumber ? `• Cluster ${player.teamNumber}` : ""}
+                Rank #{player?.rank} {player?.teamNumber ? `• Cluster ${player.teamNumber}` : ""} • {player?.wrongGuesses ?? 0} Wrong Guesses
               </Typography>
             </Box>
 

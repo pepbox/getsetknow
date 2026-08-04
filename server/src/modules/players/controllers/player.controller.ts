@@ -870,6 +870,16 @@ export const getGameCompletionData = async (
         guess.personId.toString() === guess.guessedPersonId.toString()
     );
 
+    // Calculate wrong guesses count
+    let wrongGuesses = 0;
+    guessesByUser.forEach((guess: any) => {
+      const isCorrect =
+        guess.guessedPersonId &&
+        guess.personId.toString() === guess.guessedPersonId.toString();
+      const attempts = guess.attempts || 0;
+      wrongGuesses += isCorrect ? Math.max(0, attempts - 1) : attempts;
+    });
+
     const peopleYouKnow = [];
     for (const guess of correctGuessesByUser) {
       const player = await playerService.getPlayerById(
@@ -922,13 +932,37 @@ export const getGameCompletionData = async (
       }
     }
 
-    // Calculate current player's rank within the team
-    const teamPlayers = allPlayers.sort(
-      (a: any, b: any) => (b.score || 0) - (a.score || 0)
+    // Calculate current player's rank within the team (incorporating wrongGuesses as a tie-breaker)
+    const teamPlayersWithGuesses = await Promise.all(
+      allPlayers.map(async (player: any) => {
+        const guessesByUser = await playerService.getGuessesByUserId(player._id);
+        let wrongGuesses = 0;
+        guessesByUser.forEach((guess: any) => {
+          const isCorrect =
+            guess.guessedPersonId &&
+            guess.personId.toString() === guess.guessedPersonId.toString();
+          const attempts = guess.attempts || 0;
+          wrongGuesses += isCorrect ? Math.max(0, attempts - 1) : attempts;
+        });
+        return {
+          player,
+          wrongGuesses,
+        };
+      })
     );
+
+    const sortedTeamPlayers = teamPlayersWithGuesses.sort((a, b) => {
+      const scoreA = a.player.score || 0;
+      const scoreB = b.player.score || 0;
+      if (scoreB !== scoreA) {
+        return scoreB - scoreA;
+      }
+      return a.wrongGuesses - b.wrongGuesses;
+    });
+
     const currentPlayerRank =
-      teamPlayers.findIndex(
-        (player: any) => player._id.toString() === currentPlayer._id.toString()
+      sortedTeamPlayers.findIndex(
+        (item: any) => item.player._id.toString() === currentPlayer._id.toString()
       ) + 1; // +1 for 1-based ranking
 
     res.status(StatusCodes.OK).json({
@@ -940,6 +974,7 @@ export const getGameCompletionData = async (
           profilePhoto: currentPlayerProfilePhoto,
           score: currentPlayer.score || 0,
           rank: currentPlayerRank,
+          wrongGuesses,
         },
         peopleYouKnow,
         peopleWhoKnowYou,

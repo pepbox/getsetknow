@@ -94,6 +94,7 @@ export interface PlayerRanking {
     score: number;
     rank: number;
     teamNumber?: number | null;
+    wrongGuesses?: number;
 }
 
 export interface SelfieData {

@@ -281,22 +281,42 @@ export const fetchLeaderboardData = async (
         // Fetch all players in the session sorted by score
         const players = await playerService.getPlayersBySession(sessionId);
 
-        // Sort players by score and get top 12
-        const sortedPlayers = players
-            .sort((a, b) => (b.score || 0) - (a.score || 0))
-            .slice(0, 12); // Get only top 12 players
+        // Compute wrong guesses for all players in the session
+        const playersWithWrongGuesses = await Promise.all(players.map(async (player) => {
+            const guessesByUser = await playerService.getGuessesByUserId(player._id);
+            let wrongGuesses = 0;
+            guessesByUser.forEach((guess: any) => {
+                const isCorrect =
+                    guess.guessedPersonId &&
+                    guess.personId.toString() === guess.guessedPersonId.toString();
+                const attempts = guess.attempts || 0;
+                wrongGuesses += isCorrect ? Math.max(0, attempts - 1) : attempts;
+            });
+            return {
+                player,
+                wrongGuesses,
+            };
+        }));
 
-        const profilePhotos = await Promise.all(
-            sortedPlayers.map(async (player) => {
-                if (player.profilePhoto) {
-                    const profilePhoto = await fileService.getFileById(player.profilePhoto.toString());
-                    return profilePhoto?.location || "";
+        // Sort by score descending, then wrongGuesses ascending, and get top 12
+        const sortedPlayersWithGuesses = playersWithWrongGuesses
+            .sort((a, b) => {
+                const scoreA = a.player.score || 0;
+                const scoreB = b.player.score || 0;
+                if (scoreB !== scoreA) {
+                    return scoreB - scoreA;
                 }
-                return "";
+                return a.wrongGuesses - b.wrongGuesses;
             })
-        );
+            .slice(0, 12);
 
-        const playerRankings = await Promise.all(sortedPlayers.map(async (player, index) => {
+        const playerRankings = await Promise.all(sortedPlayersWithGuesses.map(async (item, index) => {
+            const player = item.player;
+            let profilePhoto = "";
+            if (player.profilePhoto) {
+                const file = await fileService.getFileById(player.profilePhoto.toString());
+                profilePhoto = file?.location || "";
+            }
             let teamNumber = null;
             if (player.team) {
                 const teamObj = await teamService.fetchTeamById(player.team.toString());
@@ -305,10 +325,11 @@ export const fetchLeaderboardData = async (
             return {
                 id: player._id.toString(),
                 name: player.name,
-                profilePhoto: profilePhotos[index],
+                profilePhoto,
                 score: player.score || 0,
                 rank: index + 1,
                 teamNumber,
+                wrongGuesses: item.wrongGuesses,
             };
         }));
 
