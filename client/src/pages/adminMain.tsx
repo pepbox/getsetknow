@@ -4,8 +4,6 @@ import LeaderboardPage from "../features/admin/Pages/LeaderboardPage";
 import AdminLogin from "../features/admin/Pages/AdminLogin";
 import Box from "@mui/material/Box";
 import { useLazyFetchAdminQuery } from "../features/admin/services/admin.Api";
-import { useAppSelector } from "../app/hooks";
-import { RootState } from "../app/store";
 import { useEffect } from "react";
 import Loader from "../components/ui/Loader";
 import AuthWrapper from "../components/auth/AuthWrapper";
@@ -13,10 +11,7 @@ import { useAppDispatch } from "../app/rootReducer";
 import { setSessionId } from "../features/game/services/gameSlice";
 
 const AdminMain = () => {
-  const [FetchAdmin] = useLazyFetchAdminQuery();
-  const { isLoading, isAuthenticated } = useAppSelector(
-    (state: RootState) => state.player
-  );
+  const [FetchAdmin, { isLoading: isQueryLoading, isUninitialized }] = useLazyFetchAdminQuery();
   const dispatch = useAppDispatch();
   const sessionId = useParams<{ sessionId: string }>().sessionId;
 
@@ -26,9 +21,9 @@ const AdminMain = () => {
 
   useEffect(() => {
     FetchAdmin({});
-  }, [isAuthenticated, FetchAdmin]);
+  }, [FetchAdmin]);
 
-  if (isLoading) {
+  if (isQueryLoading || isUninitialized) {
     return <Loader />;
   }
 

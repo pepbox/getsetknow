@@ -30,9 +30,8 @@ export const getAllQuestions = async (req: Request, res: Response): Promise<void
             return;
         }
 
-        const questions: IQuestion[] = await questionService.getAllQuestions();
-
-        res.status(200).json(questions);
+        const defaultQuestions = await Question.find({ isDefault: true });
+        res.status(200).json(defaultQuestions);
     } catch (error) {
         res.status(500).json({ message: 'Error fetching questions', error });
     }

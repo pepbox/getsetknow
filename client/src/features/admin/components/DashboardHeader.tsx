@@ -86,7 +86,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
   // };
 
   const handleViewLeaderboard = () => {
-    navigate(`/admin/${sessionId}/leaderboard`);
+    window.open(`/admin/${sessionId}/leaderboard`, "_blank");
   };
 
   const handleDownloadSelfies = async () => {
@@ -167,7 +167,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
                   display: { xs: "none", sm: "inline" },
                 }}
               >
-                Manage Teams
+                Manage Clusters
               </Box>
             </Button>
           )}

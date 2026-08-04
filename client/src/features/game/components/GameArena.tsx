@@ -181,6 +181,9 @@ const GameArena: React.FC<GameArenaProps> = ({
       );
     }
 
+    // Sort available players alphabetically by name
+    availablePlayers.sort((a, b) => (a.name || "").localeCompare(b.name || ""));
+
     return availablePlayers;
   };
 

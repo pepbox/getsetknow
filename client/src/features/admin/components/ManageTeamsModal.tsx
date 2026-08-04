@@ -43,7 +43,7 @@ const ManageTeamsModal: React.FC<ManageTeamsModalProps> = ({
   const [addSingleTeam, { isLoading: isAdding }] = useAddSingleTeamMutation();
   const [deleteSingleTeam, { isLoading: isDeleting }] = useDeleteSingleTeamMutation();
 
-  const [bulkCount, setBulkCount] = useState<number | "">("");
+  const [bulkCount, setBulkCount] = useState<number | "">(1);
   const [formError, setFormError] = useState("");
   const [successMsg, setSuccessMsg] = useState("");
 
@@ -63,7 +63,7 @@ const ManageTeamsModal: React.FC<ManageTeamsModalProps> = ({
     try {
       await createBulkTeams({ count: Number(bulkCount) }).unwrap();
       setSuccessMsg(`Successfully created ${bulkCount} teams.`);
-      setBulkCount("");
+      setBulkCount(1);
       refetch();
     } catch (err: any) {
       console.error("Failed to bulk create teams:", err);
@@ -127,7 +127,7 @@ const ManageTeamsModal: React.FC<ManageTeamsModalProps> = ({
           }}
         >
           <Typography variant="h5" fontWeight="bold">
-            Configure Session Teams
+            Configure Session Clusters
           </Typography>
           <IconButton onClick={onClose} size="small">
             <CloseIcon />
@@ -136,12 +136,12 @@ const ManageTeamsModal: React.FC<ManageTeamsModalProps> = ({
 
         <DialogContent sx={{ display: "flex", flexDirection: "column", gap: 3, pt: 1 }}>
           <Typography variant="body2" color="text.secondary">
-            Manage teams for this session. The game cannot start until at least one team has been created. Empty teams will automatically be removed when the game starts.
+            Manage clusters for this session. The game cannot start until at least one cluster has been created. Empty clusters will automatically be removed when the game starts.
           </Typography>
 
           {isError && (
             <Alert severity="error" sx={{ mt: 1 }}>
-              Failed to load teams. Please check server connection.
+              Failed to load clusters. Please check server connection.
             </Alert>
           )}
 
@@ -160,7 +160,7 @@ const ManageTeamsModal: React.FC<ManageTeamsModalProps> = ({
                     <ListItemText
                       primary={
                         <Typography variant="body2" color="text.secondary" sx={{ fontStyle: "italic", textAlign: "center" }}>
-                          No teams created yet.
+                          No clusters created yet.
                         </Typography>
                       }
                     />
@@ -176,7 +176,7 @@ const ManageTeamsModal: React.FC<ManageTeamsModalProps> = ({
                       }}
                     >
                       <ListItemText
-                        primary={<Typography variant="body1" fontWeight="bold">Team {team.teamNumber}</Typography>}
+                        primary={<Typography variant="body1" fontWeight="bold">Cluster {team.teamNumber}</Typography>}
                         secondary={
                           <Typography variant="caption" color="text.secondary">
                             Players Assigned: {team.playerCount}
@@ -190,7 +190,7 @@ const ManageTeamsModal: React.FC<ManageTeamsModalProps> = ({
                           disabled={isDeleting}
                           onClick={() => {
                             if (team.playerCount > 0) {
-                              setFormError(`Cannot delete Team ${team.teamNumber} because it has players assigned.`);
+                              setFormError(`Cannot delete Cluster ${team.teamNumber} because it has players assigned.`);
                               return;
                             }
                             setTeamToDelete({ id: team.id, teamNumber: team.teamNumber });
@@ -214,11 +214,11 @@ const ManageTeamsModal: React.FC<ManageTeamsModalProps> = ({
               {/* Bulk Creation Section */}
               <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
                 <Typography variant="subtitle2" fontWeight="bold">
-                  Create Teams in Bulk
+                  Create Clusters in Bulk
                 </Typography>
                 <Box sx={{ display: "flex", gap: 2, flexDirection: { xs: "column", sm: "row" }, alignItems: { xs: "stretch", sm: "center" } }}>
                   <TextField
-                    label="Number of Teams (e.g. 10)"
+                    label="Number of Clusters (e.g. 10)"
                     variant="outlined"
                     type="number"
                     size="small"
@@ -241,7 +241,7 @@ const ManageTeamsModal: React.FC<ManageTeamsModalProps> = ({
                       height: "40px"
                     }}
                   >
-                    Set Teams
+                    Set Clusters
                   </Button>
                 </Box>
               </Box>
@@ -251,7 +251,7 @@ const ManageTeamsModal: React.FC<ManageTeamsModalProps> = ({
               {/* Add Single Team Section */}
               <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <Typography variant="subtitle2" fontWeight="bold">
-                  Or add teams one-by-one
+                  Or add clusters one-by-one
                 </Typography>
                 <Button
                   variant="outlined"
@@ -261,7 +261,7 @@ const ManageTeamsModal: React.FC<ManageTeamsModalProps> = ({
                   onClick={() => setAddConfirmOpen(true)}
                   sx={{ textTransform: "none", borderRadius: "8px", fontWeight: 600 }}
                 >
-                  Add Team
+                  Add Cluster
                 </Button>
               </Box>
             </>
@@ -277,10 +277,10 @@ const ManageTeamsModal: React.FC<ManageTeamsModalProps> = ({
 
       {/* Delete Confirmation Dialog */}
       <Dialog open={deleteConfirmOpen} onClose={() => setDeleteConfirmOpen(false)}>
-        <DialogTitle>Confirm Delete Team</DialogTitle>
+        <DialogTitle>Confirm Delete Cluster</DialogTitle>
         <DialogContent>
           <DialogContentText>
-            Are you sure you want to delete <strong>Team {teamToDelete?.teamNumber}</strong>? Remaining teams will be sequentially re-indexed.
+            Are you sure you want to delete <strong>Cluster {teamToDelete?.teamNumber}</strong>? Remaining clusters will be sequentially re-indexed.
           </DialogContentText>
         </DialogContent>
         <DialogActions>
@@ -293,10 +293,10 @@ const ManageTeamsModal: React.FC<ManageTeamsModalProps> = ({
 
       {/* Add Single Team Confirmation */}
       <Dialog open={addConfirmOpen} onClose={() => setAddConfirmOpen(false)}>
-        <DialogTitle>Confirm Add Team</DialogTitle>
+        <DialogTitle>Confirm Add Cluster</DialogTitle>
         <DialogContent>
           <DialogContentText>
-            Are you sure you want to add a new team to this session?
+            Are you sure you want to add a new cluster to this session?
           </DialogContentText>
         </DialogContent>
         <DialogActions>
@@ -309,10 +309,10 @@ const ManageTeamsModal: React.FC<ManageTeamsModalProps> = ({
 
       {/* Bulk Creation Confirmation */}
       <Dialog open={bulkConfirmOpen} onClose={() => setBulkConfirmOpen(false)}>
-        <DialogTitle>Confirm Set Teams</DialogTitle>
+        <DialogTitle>Confirm Set Clusters</DialogTitle>
         <DialogContent>
           <DialogContentText>
-            Setting teams to {bulkCount} will remove any currently configured empty teams. Teams with active players will be preserved. Proceed?
+            Setting clusters to {bulkCount} will remove any currently configured empty clusters. Clusters with active players will be preserved. Proceed?
           </DialogContentText>
         </DialogContent>
         <DialogActions>

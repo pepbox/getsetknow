@@ -3,6 +3,8 @@ import { StatusCodes } from "http-status-codes";
 import AppError from "../../../utils/appError";
 import PlayerService from "../services/player.service";
 import { Player } from "../models/player.model";
+import { Guess } from "../models/guess.model";
+import { QuestionResponse } from "../../questions/models/question.response.model";
 import {
   generateAccessToken,
   generateRefreshToken,
@@ -188,49 +190,94 @@ export const getPlayersCards = async (
       return;
     }
     console.log("Current Player:", CurrentPlayer);
-    // Fetch all players in the session except the current user
-    const players = await playerService.getPlayersBySession(
-      new Types.ObjectId(sessionId)
-    );
-    const otherPlayers = players.filter(
-      (player: any) =>
-        player._id.toString() !== currentUserId &&
-        player.team.toString() === CurrentPlayer?.team?.toString()
-    );
+
+    if (!CurrentPlayer.team) {
+      res.status(StatusCodes.OK).json({
+        success: true,
+        data: [],
+      });
+      return;
+    }
+
+    // Fetch teammates in the same session and team except the current user
+    const otherPlayers = await Player.find({
+      session: new Types.ObjectId(sessionId),
+      team: CurrentPlayer.team,
+      _id: { $ne: new Types.ObjectId(currentUserId) }
+    }).lean();
     console.log("Other Players:", otherPlayers);
+
+    const teammateIds = otherPlayers.map((p) => p._id);
+
+    // Fetch all responses and populate the 'question' field
+    const allResponses = await QuestionResponse.find({
+      player: { $in: teammateIds }
+    }).populate("question").lean();
+
+    // Group responses by player ID
+    const responsesByPlayer: Record<string, any[]> = {};
+    for (const resp of allResponses) {
+      const pId = resp.player.toString();
+      if (!responsesByPlayer[pId]) {
+        responsesByPlayer[pId] = [];
+      }
+      responsesByPlayer[pId].push(resp);
+    }
+
+    // Fetch existing guesses
+    const existingGuesses = await Guess.find({
+      user: new Types.ObjectId(currentUserId),
+      personId: { $in: teammateIds }
+    });
+
+    const guessMap = new Map(
+      existingGuesses.map((g) => [g.personId.toString(), g])
+    );
+
+    // Determine which guesses are missing and batch-insert them
+    const missingGuessesData = [];
+    for (const player of otherPlayers) {
+      if (!guessMap.has(player._id.toString())) {
+        missingGuessesData.push({
+          user: new Types.ObjectId(currentUserId),
+          personId: player._id,
+          session: player.session
+        });
+      }
+    }
+
+    if (missingGuessesData.length > 0) {
+      const createdGuesses = await Guess.insertMany(missingGuessesData);
+      createdGuesses.forEach((g) => {
+        guessMap.set(g.personId.toString(), g);
+      });
+    }
 
     // Prepare the result array
     const result = [];
 
     for (const player of otherPlayers) {
-      // Get responses by player id
-      const responses = await questionService.getResponsesByPlayerId(
-        player._id.toString()
-      );
+      const pId = player._id.toString();
+      const responses = responsesByPlayer[pId] || [];
 
       // Map keyAspect to response
       const aspectResponseMap: Record<string, any> = {};
 
       for (const response of responses) {
-        // Get question by id
-        const question = await questionService.getQuestionById(
-          response.question.toString()
-        );
-        if (question) {
+        const question = response.question as any;
+        if (question && question.keyAspect) {
           aspectResponseMap[question.keyAspect] = response.response;
         }
       }
-      const guess = await playerService.createGuess({
-        user: currentUserId,
-        personId: player._id,
-        session: player.session,
-      });
 
-      result.push({
-        guessId: guess._id,
-        guessedPersonId: guess.guessedPersonId || null, // This will be null until the user guesses
-        responses: aspectResponseMap,
-      });
+      const guess = guessMap.get(pId);
+      if (guess) {
+        result.push({
+          guessId: guess._id,
+          guessedPersonId: guess.guessedPersonId || null, // This will be null until the user guesses
+          responses: aspectResponseMap,
+        });
+      }
     }
 
     // Shuffle the result array
@@ -267,21 +314,27 @@ export const getPlayersBySession = async (
       });
       return;
     }
-    const players = await playerService.getPlayersBySession(
-      new Types.ObjectId(sessionId)
-    );
-    let filteredPlayers = players.filter(
-      (player: any) => player._id.toString() !== currentUserId
-    );
+
+    let filteredPlayers: any[] = [];
+
     if (role === "USER") {
       const currentPlayer = await playerService.getPlayerById(
         currentUserId.toString()
       );
-      filteredPlayers = filteredPlayers.filter(
-        (player: any) =>
-          player.team.toString() === currentPlayer?.team?.toString()
-      );
+      if (currentPlayer?.team) {
+        filteredPlayers = await Player.find({
+          session: new Types.ObjectId(sessionId),
+          team: currentPlayer.team,
+          _id: { $ne: new Types.ObjectId(currentUserId) }
+        }).populate("profilePhoto").lean();
+      }
+    } else {
+      filteredPlayers = await Player.find({
+        session: new Types.ObjectId(sessionId),
+        _id: { $ne: new Types.ObjectId(currentUserId) }
+      }).populate("profilePhoto").lean();
     }
+
     for (let i = filteredPlayers.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
       [filteredPlayers[i], filteredPlayers[j]] = [
@@ -289,15 +342,10 @@ export const getPlayersBySession = async (
         filteredPlayers[i],
       ];
     }
-    // Add profilePhoto URL to each player
+
+    // Add profilePhoto URL to each player in-memory without N+1 query loop
     for (const player of filteredPlayers) {
-      let profilePhotoUrl = "";
-      if (player.profilePhoto) {
-        const file = await fileService.getFileById(
-          player.profilePhoto.toString()
-        );
-        profilePhotoUrl = file?.location || "";
-      }
+      const profilePhotoUrl = (player.profilePhoto as any)?.location || "";
       (player as any).profilePhotoUrl = profilePhotoUrl;
     }
 
@@ -348,8 +396,8 @@ export const submitGuess = async (
       guess.personId.toString()
     );
     if (isCorrect) {
-      // Update player score if the guess is correct
-      score = 100 - (guess.attempts || 0) * 10;
+      // Guesser (Player 1) gets 100 points
+      score = 100;
       const player = await playerService.updatePlayerScore(
         guess.user.toString(),
         score
@@ -360,6 +408,13 @@ export const submitGuess = async (
           message: "Player not found",
         });
         return;
+      }
+      // Target (Player 2) gets 50 points
+      if (guess.personId) {
+        await playerService.updatePlayerScore(
+          guess.personId.toString(),
+          50
+        );
       }
       SessionEmitters.toUser(
         guess.personId?.toString() ?? "",

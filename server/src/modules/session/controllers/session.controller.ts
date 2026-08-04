@@ -55,7 +55,7 @@ export const updateSession = async (
       if (!existingTeams || existingTeams.length === 0) {
         return next(
           new AppError(
-            "Game cannot start because no teams have been created yet. Please create at least one team.",
+            "Game cannot start because no clusters have been created yet. Please create at least one cluster.",
             400
           )
         );
@@ -148,10 +148,11 @@ export const createSession = async (
 ) => {
   try {
     const { name, adminName, adminPin: password, gameConfig } = req.body;
-    const { numberOfTeams } = gameConfig;
+    const { numberOfTeams } = gameConfig || {};
+    const numTeams = (numberOfTeams && numberOfTeams >= 1) ? Number(numberOfTeams) : 1;
     const newSession = await sessionService.createSession({
       name,
-      numberOfTeams: numberOfTeams || null,
+      numberOfTeams: numTeams,
       companyName: "GetSetKnow",
     });
 
@@ -160,7 +161,7 @@ export const createSession = async (
       sessionId: newSession._id as Types.ObjectId,
       password: password,
     });
-    await teamService.createMultipleTeams(numberOfTeams, {
+    await teamService.createMultipleTeams(numTeams, {
       session: newSession._id as Types.ObjectId,
     });
 

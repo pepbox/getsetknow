@@ -53,6 +53,7 @@ export interface Player {
 
 export interface DashboardHeaderProps {
     data: HeaderData;
+    players?: Player[];
     gameStatus?: boolean;
     onGameStatusChange?: () => void;
     onTransactionsChange?: (status: boolean) => void;
@@ -92,6 +93,7 @@ export interface PlayerRanking {
     profilePhoto: string | null;
     score: number;
     rank: number;
+    teamNumber?: number | null;
 }
 
 export interface SelfieData {
@@ -105,6 +107,7 @@ export interface SelfieData {
 export interface LeaderboardData {
     playerRankings: PlayerRanking[];
     selfies: SelfieData[];
+    connectionsCount?: number;
 }
 
 export interface LeaderboardProps {

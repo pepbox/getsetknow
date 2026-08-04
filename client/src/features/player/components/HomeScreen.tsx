@@ -199,13 +199,13 @@ const HomeScreen: React.FC = () => {
               onChange={(e) => handleLastnameChange(e.target.value)}
             />
 
-            {/* Teams Dropdown */}
+            {/* Clusters Dropdown */}
             <FormControl variant="outlined" fullWidth>
-              <InputLabel>Select Team</InputLabel>
+              <InputLabel>Select Cluster</InputLabel>
               <Select
                 value={selectedTeam}
                 onChange={(e) => setSelectedTeam(e.target.value as number)}
-                label="Select Team"
+                label="Select Cluster"
                 disabled={isLoading}
                 MenuProps={{
                   PaperProps: {
@@ -216,17 +216,17 @@ const HomeScreen: React.FC = () => {
                 }}
               >
                 {isLoading ? (
-                  <MenuItem disabled>Loading teams...</MenuItem>
+                  <MenuItem disabled>Loading clusters...</MenuItem>
                 ) : isError ? (
-                  <MenuItem disabled>Error loading teams</MenuItem>
+                  <MenuItem disabled>Error loading clusters</MenuItem>
                 ) : teams && teams.length > 0 ? (
                   teams.map((_: any, index: number) => (
                     <MenuItem key={index} value={index + 1}>
-                      Team {index + 1}
+                      Cluster {index + 1}
                     </MenuItem>
                   ))
                 ) : (
-                  <MenuItem disabled>No teams available</MenuItem>
+                  <MenuItem disabled>No clusters available</MenuItem>
                 )}
               </Select>
             </FormControl>
@@ -263,7 +263,7 @@ const HomeScreen: React.FC = () => {
           severity="warning"
           sx={{ width: "100%" }}
         >
-          Please enter both first and last names and select a team.
+          Please enter both first and last names and select a cluster.
         </Alert>
       </Snackbar>
     </Box>

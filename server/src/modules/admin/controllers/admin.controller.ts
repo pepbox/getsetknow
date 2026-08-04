@@ -7,6 +7,7 @@ import AdminServices from '../services/admin.service';
 import { setCookieOptions } from '../../../utils/cookieOptions';
 import PlayerService from '../../players/services/player.service';
 import { Player } from '../../players/models/player.model';
+import { Guess } from '../../players/models/guess.model';
 import QuestionService from '../../questions/services/question.service';
 import { Question } from '../../questions/models/question.model';
 import { SessionStatus } from '../../session/types/enums';
@@ -14,6 +15,7 @@ import { SessionEmitters } from '../../../services/socket/sessionEmitters';
 import { Events } from '../../../services/socket/enums/Events';
 import FileService from '../../files/services/fileService';
 import TeamService from '../../teams/services/team.service';
+import { roomManager } from '../../../services/socket/roomManager';
 
 const adminService = new AdminServices();
 const sessionService = new SessionService();
@@ -190,7 +192,7 @@ export const fetchAdminDashboardData = async (
         // Calculate total question count for session
         const sessionQuestions = session.questions && session.questions.length > 0
             ? session.questions
-            : await questionService.getAllQuestions();
+            : await Question.find({ isDefault: true });
         const totalQuestionCount = sessionQuestions.length;
 
         // Fetch all players in the session
@@ -294,12 +296,20 @@ export const fetchLeaderboardData = async (
             })
         );
 
-        const playerRankings = sortedPlayers.map((player, index) => ({
-            id: player._id.toString(),
-            name: player.name,
-            profilePhoto: profilePhotos[index],
-            score: player.score || 0,
-            rank: index + 1,
+        const playerRankings = await Promise.all(sortedPlayers.map(async (player, index) => {
+            let teamNumber = null;
+            if (player.team) {
+                const teamObj = await teamService.fetchTeamById(player.team.toString());
+                teamNumber = teamObj ? teamObj.teamNumber : null;
+            }
+            return {
+                id: player._id.toString(),
+                name: player.name,
+                profilePhoto: profilePhotos[index],
+                score: player.score || 0,
+                rank: index + 1,
+                teamNumber,
+            };
         }));
 
         // Fetch all guesses with selfies for this session
@@ -337,9 +347,18 @@ export const fetchLeaderboardData = async (
             })
             .slice(0, 12); // Get only top 12 latest selfies
 
+        // Count correct guesses where guessedPersonId matches personId
+        const correctGuessesCount = await Guess.countDocuments({
+            session: sessionId,
+            guessedPersonId: { $exists: true, $ne: null },
+            $expr: { $eq: ["$personId", "$guessedPersonId"] }
+        });
+        const connectionsCount = correctGuessesCount;
+
         const data = {
             playerRankings,
             selfies: filteredAndSortedSelfies,
+            connectionsCount,
         };
 
         res.status(200).json({
@@ -372,7 +391,7 @@ export const checkPlayersReadiness = async (
         const session = await sessionService.fetchSessionById(sessionId);
         const sessionQuestions = session.questions && session.questions.length > 0
             ? session.questions
-            : await questionService.getAllQuestions();
+            : await Question.find({ isDefault: true });
         const totalQuestionCount = sessionQuestions.length;
 
         const pendingPlayers = [];
@@ -431,7 +450,7 @@ export const getSessionQuestions = async (
 
         const activeQuestionIds = session.questions && session.questions.length > 0
             ? session.questions.map((q: any) => q.toString())
-            : null; // null means all questions are active by default
+            : allQuestions.filter((q: any) => q.isDefault).map((q: any) => q._id.toString());
 
         const data = allQuestions.map((question: any) => {
             const isSelected = activeQuestionIds === null || activeQuestionIds.includes(question._id.toString());
@@ -675,12 +694,12 @@ export const createBulkTeams = async (
             return next(new AppError("Session ID is required.", 400));
         }
         if (!count || typeof count !== "number" || count < 1) {
-            return next(new AppError("A valid count of teams (minimum 1) is required.", 400));
+            return next(new AppError("A valid count of clusters (minimum 1) is required.", 400));
         }
 
         const session = await sessionService.fetchSessionById(sessionId.toString());
         if (session.status !== SessionStatus.PENDING) {
-            return next(new AppError("Cannot modify teams after the game has started.", 403));
+            return next(new AppError("Cannot modify clusters after the game has started.", 403));
         }
 
         // 1. Fetch current teams for session
@@ -718,7 +737,7 @@ export const createBulkTeams = async (
 
         res.status(200).json({
             success: true,
-            message: `Teams updated successfully. Session now has ${finalTeams.length} teams.`,
+            message: `Clusters updated successfully. Session now has ${finalTeams.length} clusters.`,
         });
     } catch (error) {
         console.error("Error creating bulk teams:", error);
@@ -739,7 +758,7 @@ export const addSingleTeam = async (
 
         const session = await sessionService.fetchSessionById(sessionId.toString());
         if (session.status !== SessionStatus.PENDING) {
-            return next(new AppError("Cannot add teams after the game has started.", 403));
+            return next(new AppError("Cannot add clusters after the game has started.", 403));
         }
 
         const existingTeams = await teamService.getAllTeamsBySessionId(sessionId.toString());
@@ -756,7 +775,7 @@ export const addSingleTeam = async (
 
         res.status(201).json({
             success: true,
-            message: "Team added successfully.",
+            message: "Cluster added successfully.",
             data: newTeam,
         });
     } catch (error) {
@@ -783,13 +802,13 @@ export const deleteSingleTeam = async (
 
         const session = await sessionService.fetchSessionById(sessionId.toString());
         if (session.status !== SessionStatus.PENDING) {
-            return next(new AppError("Cannot delete teams after the game has started.", 403));
+            return next(new AppError("Cannot delete clusters after the game has started.", 403));
         }
 
         // Check if team has players
         const playersCount = await Player.countDocuments({ team: teamId });
         if (playersCount > 0) {
-            return next(new AppError("Cannot delete team because players are currently assigned to it.", 400));
+            return next(new AppError("Cannot delete cluster because players are currently assigned to it.", 400));
         }
 
         await teamService.deleteTeamById(teamId);
@@ -805,7 +824,7 @@ export const deleteSingleTeam = async (
 
         res.status(200).json({
             success: true,
-            message: "Team deleted successfully and remaining teams re-indexed.",
+            message: "Cluster deleted successfully and remaining clusters re-indexed.",
         });
     } catch (error) {
         console.error("Error deleting team:", error);

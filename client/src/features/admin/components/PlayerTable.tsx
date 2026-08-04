@@ -78,6 +78,15 @@ const PlayerTable: React.FC<PlayerTableProps> = ({
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
+  const totalPlayersJoined = players ? players.length : 0;
+  const pendingPlayersCount = players
+    ? players.filter((player) => {
+        if (!player.questionsAnswered) return false;
+        const [answered, total] = player.questionsAnswered.split("/").map(Number);
+        return answered < total;
+      }).length
+    : 0;
+
   const openModal = (playerId: string, currentName: string) => {
     setSelectedPlayerId(playerId);
     setNewName(currentName);
@@ -281,7 +290,7 @@ const PlayerTable: React.FC<PlayerTableProps> = ({
     },
     {
       key: "rank",
-      label: selectedTeam ? "Team Rank" : "Rank",
+      label: selectedTeam ? "Cluster Rank" : "Rank",
       sortable: true,
       visible: (gameStatus) => gameStatus === "playing" || gameStatus === "paused",
       render: (player) =>
@@ -289,7 +298,7 @@ const PlayerTable: React.FC<PlayerTableProps> = ({
     },
     {
       key: "team",
-      label: "Team",
+      label: "Cluster",
       sortable: true,
       visible: () => true,
       render: (player) => player.team,
@@ -404,79 +413,109 @@ const PlayerTable: React.FC<PlayerTableProps> = ({
       {/* Search and Team Filter */}
       <Box
         mb={2}
-        sx={{ display: "flex", alignItems: "center", gap: 1, flexWrap: "wrap" }}
+        sx={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          flexWrap: "wrap",
+          width: "100%",
+          gap: 2,
+        }}
       >
-        <TextField
-          size="small"
-          placeholder="Search players by name..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          sx={{ minWidth: 200, flex: 1, maxWidth: 300 }}
-          InputProps={{
-            startAdornment: (
-              <Box sx={{ mr: 1, color: "text.secondary" }}>🔍</Box>
-            ),
-          }}
-        />
-        <FormControl size="small" sx={{ minWidth: 170 }}>
-          <InputLabel>Filter by Team</InputLabel>
-          <Select
-            value={selectedTeam}
-            onChange={(e) => handleTeamFilter(e.target.value)}
-            label="Filter by Team"
-          >
-            <MenuItem value="">
-              <em>All Teams</em>
-            </MenuItem>
-            {uniqueTeams.map((team) => (
-              <MenuItem key={team} value={team}>
-                Team {team}
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
-        {(selectedTeam || searchQuery) && (
-          <Button
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1, flexWrap: "wrap" }}>
+          <TextField
             size="small"
-            variant="outlined"
-            startIcon={<ClearIcon />}
-            onClick={() => {
-              clearTeamFilter();
-              setSearchQuery("");
+            placeholder="Search players by name..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            sx={{ minWidth: 200, flex: 1, maxWidth: 300 }}
+            InputProps={{
+              startAdornment: (
+                <Box sx={{ mr: 1, color: "text.secondary" }}>🔍</Box>
+              ),
             }}
-            sx={{
-              color: "text.secondary",
-              borderColor: "text.secondary",
-              padding: "6px 8px",
-              "&:hover": {
-                backgroundColor: "action.hover",
-                borderColor: "text.primary",
-                color: "text.primary",
-              },
-            }}
-          >
-            Clear Filters
-          </Button>
-        )}
-        {/* Filter Status Info */}
-        {(selectedTeam || searchQuery) && (
-          <Box>
-            <Typography variant="body2" color="text.secondary">
-              {searchQuery && selectedTeam
-                ? `Showing ${
-                    filteredPlayers?.length || 0
-                  } players matching "${searchQuery}" in Team ${selectedTeam}`
-                : searchQuery
-                ? `Showing ${
-                    filteredPlayers?.length || 0
-                  } players matching "${searchQuery}"`
-                : `Showing ${
-                    filteredPlayers?.length || 0
-                  } players from Team ${selectedTeam}`}
+          />
+          <FormControl size="small" sx={{ minWidth: 170 }}>
+            <InputLabel>Filter by Cluster</InputLabel>
+            <Select
+              value={selectedTeam}
+              onChange={(e) => handleTeamFilter(e.target.value)}
+              label="Filter by Cluster"
+            >
+              <MenuItem value="">
+                <em>All Clusters</em>
+              </MenuItem>
+              {uniqueTeams.map((team) => (
+                <MenuItem key={team} value={team}>
+                  Cluster {team}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+          {(selectedTeam || searchQuery) && (
+            <Button
+              size="small"
+              variant="outlined"
+              startIcon={<ClearIcon />}
+              onClick={() => {
+                clearTeamFilter();
+                setSearchQuery("");
+              }}
+              sx={{
+                color: "text.secondary",
+                borderColor: "text.secondary",
+                padding: "6px 8px",
+                "&:hover": {
+                  backgroundColor: "action.hover",
+                  borderColor: "text.primary",
+                  color: "text.primary",
+                },
+              }}
+            >
+              Clear Filters
+            </Button>
+          )}
+        </Box>
+
+        {/* Statistics on the right side */}
+        <Box sx={{ display: "flex", gap: 3, alignItems: "center" }}>
+          <Box sx={{ display: "flex", alignItems: "baseline", gap: 1 }}>
+            <Typography variant="subtitle2" fontWeight="bold" color="text.secondary" sx={{ textTransform: "uppercase", fontSize: "11px", letterSpacing: "0.05em" }}>
+              Joined:
+            </Typography>
+            <Typography variant="h6" fontWeight="bold" color="primary.main">
+              {totalPlayersJoined}
             </Typography>
           </Box>
-        )}
+          <Box sx={{ display: "flex", alignItems: "baseline", gap: 1 }}>
+            <Typography variant="subtitle2" fontWeight="bold" color="text.secondary" sx={{ textTransform: "uppercase", fontSize: "11px", letterSpacing: "0.05em" }}>
+              Pending:
+            </Typography>
+            <Typography variant="h6" fontWeight="bold" color="warning.main">
+              {pendingPlayersCount}
+            </Typography>
+          </Box>
+        </Box>
       </Box>
+
+      {/* Filter Status Info */}
+      {(selectedTeam || searchQuery) && (
+        <Box mb={2}>
+          <Typography variant="body2" color="text.secondary">
+            {searchQuery && selectedTeam
+              ? `Showing ${
+                  filteredPlayers?.length || 0
+                } players matching "${searchQuery}" in Cluster ${selectedTeam}`
+              : searchQuery
+              ? `Showing ${
+                  filteredPlayers?.length || 0
+                } players matching "${searchQuery}"`
+              : `Showing ${
+                  filteredPlayers?.length || 0
+                } players from Cluster ${selectedTeam}`}
+          </Typography>
+        </Box>
+      )}
 
       {!isMobile && visibleColumns.some((col) => col.sortable) && (
         <Box mb={1}>
