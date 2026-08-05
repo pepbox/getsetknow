@@ -115,7 +115,7 @@ const PlayerLeaderboard: React.FC<PlayerLeaderboardProps> = ({
                 {player?.name}
               </Typography>
               <Typography variant="body2" color="text.secondary" noWrap>
-                Rank #{player?.rank} {player?.teamNumber ? `• Cluster ${player.teamNumber}` : ""} • {player?.wrongGuesses ?? 0} Wrong Guesses
+                Rank #{player?.rank} {player?.teamNumber ? `• Cluster ${player.teamNumber}` : ""}
               </Typography>
             </Box>
 

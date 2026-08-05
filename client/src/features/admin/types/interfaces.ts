@@ -47,6 +47,7 @@ export interface Player {
     rank?: number;
     peopleYouKnow?: string;
     peopleWhoKnowYou?: string;
+    wrongGuesses?: number;
     totalScore?: number;
     team?: string | number;
 }

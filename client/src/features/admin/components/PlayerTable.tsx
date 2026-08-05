@@ -318,6 +318,13 @@ const PlayerTable: React.FC<PlayerTableProps> = ({
       render: (player) => player.peopleWhoKnowYou,
     },
     {
+      key: "wrongGuesses",
+      label: "Wrong Guesses",
+      sortable: true,
+      visible: (gameStatus) => gameStatus === "playing" || gameStatus === "paused",
+      render: (player) => player.wrongGuesses ?? 0,
+    },
+    {
       key: "totalScore",
       label: "Total Score",
       sortable: true,

@@ -210,6 +210,17 @@ export const fetchAdminDashboardData = async (
                     guess.personId.toString() === guess.guessedPersonId.toString()
             );
             const peopleYouKnow = `${correctGuessesByUser.length}`;
+
+            // Calculate wrong guesses count
+            let wrongGuesses = 0;
+            guessesByUser.forEach((guess: any) => {
+                const isCorrect =
+                    guess.guessedPersonId &&
+                    guess.personId.toString() === guess.guessedPersonId.toString();
+                const attempts = guess.attempts || 0;
+                wrongGuesses += isCorrect ? Math.max(0, attempts - 1) : attempts;
+            });
+
             // People who know you
             const guessesByPerson = await playerService.getGuessesByPersonId(player._id);
             const correctGuessesByPerson = guessesByPerson.filter(
@@ -233,6 +244,7 @@ export const fetchAdminDashboardData = async (
                 rank: 0,
                 peopleYouKnow,
                 peopleWhoKnowYou,
+                wrongGuesses,
                 totalScore,
                 team: team.teamNumber,
             };
