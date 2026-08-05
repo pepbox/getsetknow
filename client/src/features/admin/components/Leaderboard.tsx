@@ -81,43 +81,7 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ data, isLoading }) => {
             Back to Dashboard
           </Button>
 
-          {data.connectionsCount !== undefined && (
-            <Box
-              sx={{
-                display: "flex",
-                alignItems: "center",
-                gap: 1,
-                bgcolor: "#ffffff",
-                border: "1px solid #e5e7eb",
-                color: "text.primary",
-                px: 2,
-                py: 0.75,
-                borderRadius: "20px",
-                boxShadow: "0 1px 2px rgba(0,0,0,0.05)",
-              }}
-            >
-              <Box
-                sx={{
-                  width: 8,
-                  height: 8,
-                  borderRadius: "50%",
-                  bgcolor: "#10B981",
-                  animation: "pulse 1.5s infinite",
-                  "@keyframes pulse": {
-                    "0%": { transform: "scale(0.8)", opacity: 0.5 },
-                    "50%": { transform: "scale(1.2)", opacity: 1 },
-                    "100%": { transform: "scale(0.8)", opacity: 0.5 },
-                  },
-                }}
-              />
-              <Typography variant="body2" fontWeight="bold" sx={{ color: "text.secondary" }}>
-                Connections Established:{" "}
-                <Typography component="span" fontWeight="bold" sx={{ color: "text.primary" }}>
-                  {data.connectionsCount}
-                </Typography>
-              </Typography>
-            </Box>
-          )}
+          
         </Box>
         
         <Box display="flex" flexDirection="row" alignItems="center" justifyContent="center" gap={2}>
@@ -149,7 +113,35 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ data, isLoading }) => {
           >
             {session?.companyName || "Game Leaderboard"}
           </Typography>
+          
         </Box>
+
+        {data.connectionsCount !== undefined && (
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                gap: 1,
+                bgcolor: "#ffffff",
+                border: "1px solid #e5e7eb",
+                color: "text.primary",
+                px: 2,
+                py: 0.75,
+                borderRadius: "12px",
+                // boxShadow: "0 1px 2px rgba(0,0,0,0.05)",
+                width: "fit-content",
+                ml: "auto",
+              }}
+            >
+              
+              <Typography variant="body2" fontWeight="bold" sx={{ color: "text.secondary", fontSize:"16px" }}>
+                Connections Established:{" "}
+                <Typography component="span" fontWeight="bold" sx={{ color: "text.primary", fontSize:"20px" }}>
+                  {data.connectionsCount}
+                </Typography>
+              </Typography>
+            </Box>
+          )}
       </Paper>
 
       <Box sx={{ px: 4, pb: 4 }}>
