@@ -106,7 +106,19 @@ const ManageBrandingModal: React.FC<ManageBrandingModalProps> = ({
   };
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
+    <Dialog
+      open={open}
+      onClose={onClose}
+      maxWidth="sm"
+      fullWidth
+      PaperProps={{
+        sx: {
+          borderRadius: 2,
+          maxHeight: { xs: "94vh", sm: "90vh" },
+          overflowY: "auto",
+        },
+      }}
+    >
       <DialogTitle
         sx={{
           display: "flex",

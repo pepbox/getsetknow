@@ -203,7 +203,7 @@ const AdminLogin: React.FC = () => {
           sx={{
             bgcolor: "white",
             borderRadius: { xs: 3, sm: 4 },
-            p: { xs: 4, sm: 6 },
+            p: { xs: 2.5, sm: 6 },
             textAlign: "center",
             boxShadow: "0 4px 20px rgba(0, 0, 0, 0.1)",
             maxWidth: { xs: "100%", sm: 400 },
@@ -225,10 +225,10 @@ const AdminLogin: React.FC = () => {
               variant="h4"
               component="h1"
               sx={{
-                mb: { xs: 3, sm: 4 },
+                mb: { xs: 2, sm: 4 },
                 fontWeight: 600,
                 color: "#333",
-                fontSize: { xs: "1.75rem", sm: "2.125rem" },
+                fontSize: { xs: "1.5rem", sm: "2.125rem" },
               }}
             >
               Admin Login
@@ -236,9 +236,9 @@ const AdminLogin: React.FC = () => {
             <Typography
               variant="body2"
               sx={{
-                mb: 3,
+                mb: 2,
                 color: "#666",
-                fontSize: { xs: "0.85rem", sm: "0.9rem" },
+                fontSize: { xs: "0.8rem", sm: "0.9rem" },
               }}
             >
               Enter 4-digit PIN
@@ -258,7 +258,7 @@ const AdminLogin: React.FC = () => {
               sx={{
                 display: "flex",
                 justifyContent: "center",
-                gap: { xs: 1.5, sm: 2 },
+                gap: { xs: 1, sm: 2 },
                 mb: { xs: 3, sm: 4 },
                 flexWrap: "nowrap",
               }}
@@ -275,16 +275,14 @@ const AdminLogin: React.FC = () => {
                     maxLength: 1,
                     style: {
                       textAlign: "center",
-                      fontSize: "1.5rem",
                       fontWeight: "bold",
-                      padding: "16px 0",
                     },
                     inputMode: "numeric",
                     pattern: "[0-9]*",
                   }}
                   sx={{
-                    width: { xs: 50, sm: 60 },
-                    height: { xs: 50, sm: 60 },
+                    width: { xs: 46, sm: 60 },
+                    height: { xs: 46, sm: 60 },
                     "& .MuiOutlinedInput-root": {
                       borderRadius: 2,
                       "&.Mui-focused fieldset": {
@@ -293,8 +291,8 @@ const AdminLogin: React.FC = () => {
                       },
                     },
                     "& .MuiOutlinedInput-input": {
-                      padding: { xs: "14px 0", sm: "16px 0" },
-                      fontSize: { xs: "1.25rem", sm: "1.5rem" },
+                      padding: { xs: "10px 0", sm: "16px 0" },
+                      fontSize: { xs: "1.1rem", sm: "1.5rem" },
                     },
                   }}
                 />
@@ -309,7 +307,7 @@ const AdminLogin: React.FC = () => {
                 fontWeight: 600,
                 borderRadius: 2,
                 // bgcolor: isPinComplete ? "#8e9097" : "rgba(142, 142, 147, 0.5)",
-                minHeight: { xs: "44px", sm: "48px" },
+                minHeight: { xs: "40px", sm: "48px" },
                 // "&:hover": {
                 //   bgcolor: isPinComplete
                 //     ? "#7a7d84"

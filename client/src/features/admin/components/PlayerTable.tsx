@@ -423,26 +423,44 @@ const PlayerTable: React.FC<PlayerTableProps> = ({
         sx={{
           display: "flex",
           justifyContent: "space-between",
-          alignItems: "center",
-          flexWrap: "wrap",
+          alignItems: { xs: "stretch", sm: "center" },
+          flexDirection: { xs: "column", md: "row" },
           width: "100%",
           gap: 2,
         }}
       >
-        <Box sx={{ display: "flex", alignItems: "center", gap: 1, flexWrap: "wrap" }}>
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            gap: 1.5,
+            flexDirection: { xs: "column", sm: "row" },
+            width: { xs: "100%", md: "auto" },
+          }}
+        >
           <TextField
             size="small"
             placeholder="Search players by name..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            sx={{ minWidth: 200, flex: 1, maxWidth: 300 }}
+            sx={{
+              minWidth: { xs: "100%", sm: 200 },
+              maxWidth: { xs: "100%", sm: 300 },
+              flex: 1,
+            }}
             InputProps={{
               startAdornment: (
                 <Box sx={{ mr: 1, color: "text.secondary" }}>🔍</Box>
               ),
             }}
           />
-          <FormControl size="small" sx={{ minWidth: 170 }}>
+          <FormControl
+            size="small"
+            sx={{
+              minWidth: { xs: "100%", sm: 170 },
+              flex: { xs: 1, sm: 0 },
+            }}
+          >
             <InputLabel>Filter by Cluster</InputLabel>
             <Select
               value={selectedTeam}
@@ -472,6 +490,7 @@ const PlayerTable: React.FC<PlayerTableProps> = ({
                 color: "text.secondary",
                 borderColor: "text.secondary",
                 padding: "6px 8px",
+                width: { xs: "100%", sm: "auto" },
                 "&:hover": {
                   backgroundColor: "action.hover",
                   borderColor: "text.primary",
@@ -485,9 +504,26 @@ const PlayerTable: React.FC<PlayerTableProps> = ({
         </Box>
 
         {/* Statistics on the right side */}
-        <Box sx={{ display: "flex", gap: 3, alignItems: "center" }}>
+        <Box
+          sx={{
+            display: "flex",
+            gap: 3,
+            alignItems: "center",
+            justifyContent: { xs: "center", md: "flex-end" },
+            mt: { xs: 0.5, md: 0 },
+          }}
+        >
           <Box sx={{ display: "flex", alignItems: "baseline", gap: 1 }}>
-            <Typography variant="subtitle2" fontWeight="bold" color="text.secondary" sx={{ textTransform: "uppercase", fontSize: "11px", letterSpacing: "0.05em" }}>
+            <Typography
+              variant="subtitle2"
+              fontWeight="bold"
+              color="text.secondary"
+              sx={{
+                textTransform: "uppercase",
+                fontSize: "11px",
+                letterSpacing: "0.05em",
+              }}
+            >
               Joined:
             </Typography>
             <Typography variant="h6" fontWeight="bold" color="primary.main">
@@ -495,7 +531,16 @@ const PlayerTable: React.FC<PlayerTableProps> = ({
             </Typography>
           </Box>
           <Box sx={{ display: "flex", alignItems: "baseline", gap: 1 }}>
-            <Typography variant="subtitle2" fontWeight="bold" color="text.secondary" sx={{ textTransform: "uppercase", fontSize: "11px", letterSpacing: "0.05em" }}>
+            <Typography
+              variant="subtitle2"
+              fontWeight="bold"
+              color="text.secondary"
+              sx={{
+                textTransform: "uppercase",
+                fontSize: "11px",
+                letterSpacing: "0.05em",
+              }}
+            >
               Pending:
             </Typography>
             <Typography variant="h6" fontWeight="bold" color="warning.main">
@@ -542,46 +587,199 @@ const PlayerTable: React.FC<PlayerTableProps> = ({
       )}
       {isMobile ? (
         <Stack spacing={2}>
-          {sortedPlayers?.map((player, index) => (
-            <Paper
-              key={player.id}
-              elevation={0}
-              sx={{
-                borderRadius: 2,
-                backgroundColor: getRowColor(index),
-                p: 2,
-              }}
-            >
-              {visibleColumns.map((col, colIdx) => (
+          {sortedPlayers?.map((player, index) => {
+            const isWaiting =
+              player.questionsAnswered.split("/")[0] ===
+              player.questionsAnswered.split("/")[1];
+            const currentRank = selectedTeam
+              ? (player as any).teamRank || player.rank
+              : player.rank;
+
+            return (
+              <Paper
+                key={player.id}
+                elevation={0}
+                sx={{
+                  borderRadius: 3,
+                  backgroundColor: getRowColor(index),
+                  p: 2.5,
+                  border: "1px solid rgba(0,0,0,0.06)",
+                }}
+              >
+                {/* Header: Name, Team, Status */}
                 <Box
-                  key={col.key}
-                  mb={colIdx < visibleColumns.length - 1 ? 1.5 : 0}
+                  sx={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "flex-start",
+                    mb: 1.5,
+                  }}
                 >
-                  <Typography
-                    variant="caption"
-                    color="text.secondary"
-                    sx={{ fontWeight: 500 }}
-                  >
-                    {col.label}
-                  </Typography>
-                  <Box mt={0.5}>
-                    {col.render(
-                      player,
-                      onChangeName,
-                      onViewResponses,
-                      transaction,
-                      openModal,
-                      onChangeScore,
-                      openScoreModal
-                    )}
+                  <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}>
+                    <Typography variant="subtitle1" fontWeight="bold" color="text.primary">
+                      {player.name}
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      Cluster {player.team || "N/A"}
+                    </Typography>
                   </Box>
-                  {colIdx < visibleColumns.length - 1 && (
-                    <Divider sx={{ my: 1 }} />
+
+                  {/* Status chip or Rank badge */}
+                  {gameStatus === "playing" || gameStatus === "paused" ? (
+                    <Chip
+                      label={`Rank #${currentRank}`}
+                      size="small"
+                      color="secondary"
+                      sx={{ fontWeight: "bold" }}
+                    />
+                  ) : (
+                    <Chip
+                      label={isWaiting ? "waiting" : "pending"}
+                      size="small"
+                      color={isWaiting ? "primary" : "warning"}
+                    />
                   )}
                 </Box>
-              ))}
-            </Paper>
-          ))}
+
+                <Divider sx={{ mb: 1.5, opacity: 0.6 }} />
+
+                {/* Metrics Grid */}
+                <Box
+                  sx={{
+                    display: "grid",
+                    gridTemplateColumns: "repeat(2, 1fr)",
+                    gap: 1.5,
+                    mb: 1.5,
+                  }}
+                >
+                  {/* Score */}
+                  {(gameStatus === "playing" || gameStatus === "paused") && (
+                    <Box>
+                      <Typography variant="caption" color="text.secondary" display="block">
+                        Total Score
+                      </Typography>
+                      <Typography variant="body2" fontWeight="bold" color="primary.main">
+                        {player.totalScore || 0} pts
+                      </Typography>
+                    </Box>
+                  )}
+
+                  {/* Wrong Guesses */}
+                  {(gameStatus === "playing" || gameStatus === "paused") && (
+                    <Box>
+                      <Typography variant="caption" color="text.secondary" display="block">
+                        Wrong Guesses
+                      </Typography>
+                      <Typography variant="body2" fontWeight="bold" color="text.primary">
+                        {player.wrongGuesses ?? 0}
+                      </Typography>
+                    </Box>
+                  )}
+
+                  {/* People You Know */}
+                  {(gameStatus === "playing" || gameStatus === "paused") && (
+                    <Box>
+                      <Typography variant="caption" color="text.secondary" display="block">
+                        People You Know
+                      </Typography>
+                      <Typography variant="body2" fontWeight="medium" color="text.primary">
+                        {player.peopleYouKnow || 0}
+                      </Typography>
+                    </Box>
+                  )}
+
+                  {/* People Who Know You */}
+                  {(gameStatus === "playing" || gameStatus === "paused") && (
+                    <Box>
+                      <Typography variant="caption" color="text.secondary" display="block">
+                        People Who Know You
+                      </Typography>
+                      <Typography variant="body2" fontWeight="medium" color="text.primary">
+                        {player.peopleWhoKnowYou || 0}
+                      </Typography>
+                    </Box>
+                  )}
+
+                  {/* Questions Answered */}
+                  {gameStatus !== "playing" && gameStatus !== "ended" && gameStatus !== "paused" && (
+                    <Box>
+                      <Typography variant="caption" color="text.secondary" display="block">
+                        Questions Answered
+                      </Typography>
+                      <Typography variant="body2" fontWeight="bold" color="text.primary">
+                        {player.questionsAnswered}
+                      </Typography>
+                    </Box>
+                  )}
+                </Box>
+
+                {/* Actions Row */}
+                <Box
+                  sx={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    mt: 2,
+                    pt: 1.5,
+                    borderTop: "1px solid rgba(0, 0, 0, 0.06)",
+                  }}
+                >
+                  <Box sx={{ display: "flex", gap: 1 }}>
+                    <Button
+                      variant="outlined"
+                      size="small"
+                      sx={{
+                        padding: "4px 10px",
+                        color: "black",
+                        borderColor: "black",
+                        textTransform: "none",
+                        borderRadius: "6px",
+                        fontSize: "0.75rem",
+                        "&:hover": {
+                          backgroundColor: "#f5f5f5",
+                          borderColor: "black",
+                        },
+                      }}
+                      onClick={() => handleViewResponses(player.id)}
+                    >
+                      Show Responses
+                    </Button>
+                  </Box>
+
+                  {/* Edit Controls */}
+                  {transaction && (
+                    <Box sx={{ display: "flex", gap: 1 }}>
+                      {/* Edit Name */}
+                      {gameStatus !== "playing" && gameStatus !== "paused" && (
+                        <Tooltip title="Edit Name">
+                          <IconButton
+                            size="small"
+                            onClick={() => openModal(player.id, player.name)}
+                            sx={{ border: "1px solid #E5E7EB", borderRadius: "6px" }}
+                          >
+                            <EditIcon fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
+                      )}
+
+                      {/* Edit Score */}
+                      {(gameStatus === "playing" || gameStatus === "paused") && (
+                        <Tooltip title="Edit Score">
+                          <IconButton
+                            size="small"
+                            onClick={() => openScoreModal(player.id, player.totalScore || 0)}
+                            sx={{ border: "1px solid #E5E7EB", borderRadius: "6px" }}
+                          >
+                            <EditIcon fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
+                      )}
+                    </Box>
+                  )}
+                </Box>
+              </Paper>
+            );
+          })}
         </Stack>
       ) : (
         <TableContainer

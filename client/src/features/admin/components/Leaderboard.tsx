@@ -52,7 +52,7 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ data, isLoading }) => {
       {/* Header */}
       <Paper
         sx={{
-          p: 3,
+          p: { xs: 2, sm: 3 },
           mb: 3,
           backgroundColor: "rgba(167, 139, 250, 0.05)",
           borderRadius: 0,
@@ -61,12 +61,14 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ data, isLoading }) => {
         }}
       >
         <Box
-          display="flex"
-          justifyContent="space-between"
-          alignItems="center"
-          mb={2}
-          flexWrap="wrap"
-          gap={2}
+          sx={{
+            display: "flex",
+            justifyContent: { xs: "center", sm: "space-between" },
+            alignItems: "center",
+            mb: 2,
+            flexWrap: "wrap",
+            gap: 2,
+          }}
         >
           <Button
             variant="outlined"
@@ -76,19 +78,28 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ data, isLoading }) => {
               textTransform: "none",
               borderRadius: "8px",
               fontWeight: 500,
+              width: { xs: "100%", sm: "auto" },
             }}
           >
             Back to Dashboard
           </Button>
-
-          
         </Box>
-        
-        <Box display="flex" flexDirection="row" alignItems="center" justifyContent="center" gap={2}>
+
+        <Box
+          sx={{
+            display: "flex",
+            flexDirection: { xs: "column", sm: "row" },
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 2,
+            mb: 2,
+            textAlign: { xs: "center", sm: "left" },
+          }}
+        >
           <Box
             sx={{
-              width: 80,
-              height: 80,
+              width: { xs: 60, sm: 80 },
+              height: { xs: 60, sm: 80 },
               borderRadius: "16px",
               backgroundColor: "#fff",
               display: "flex",
@@ -109,11 +120,12 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ data, isLoading }) => {
             variant="h3"
             fontWeight="bold"
             color="black"
-            textAlign="left"
+            sx={{
+              fontSize: { xs: "1.75rem", sm: "2.25rem", md: "3rem" },
+            }}
           >
             {session?.companyName || "Game Leaderboard"}
           </Typography>
-          
         </Box>
 
         {data.connectionsCount !== undefined && (
@@ -128,9 +140,10 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ data, isLoading }) => {
                 px: 2,
                 py: 0.75,
                 borderRadius: "12px",
-                // boxShadow: "0 1px 2px rgba(0,0,0,0.05)",
                 width: "fit-content",
-                ml: "auto",
+                ml: { xs: "auto", sm: "auto" },
+                mr: { xs: "auto", sm: 0 },
+                mt: { xs: 1, sm: 0 },
               }}
             >
               
@@ -144,7 +157,7 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ data, isLoading }) => {
           )}
       </Paper>
 
-      <Box sx={{ px: 4, pb: 4 }}>
+      <Box sx={{ px: { xs: 2, sm: 4 }, pb: 4 }}>
         {/* Side by side layout */}
         <Box
           sx={{

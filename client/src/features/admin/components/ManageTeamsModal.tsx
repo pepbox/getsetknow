@@ -115,6 +115,8 @@ const ManageTeamsModal: React.FC<ManageTeamsModalProps> = ({
         PaperProps={{
           sx: {
             borderRadius: 2,
+            maxHeight: { xs: "94vh", sm: "90vh" },
+            overflowY: "auto",
           },
         }}
       >

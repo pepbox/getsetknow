@@ -111,7 +111,7 @@ const Dashboard: React.FC<DashboardProps> = ({
         onTransactionsChange={onTransactionsChange}
         isCheckingReadiness={isCheckingReadiness}
       />
-      <Box sx={{ px: 4 }}>
+      <Box sx={{ px: { xs: 2, sm: 4 } }}>
         <PlayerTable
           players={players}
           gameStatus={gameStatus}

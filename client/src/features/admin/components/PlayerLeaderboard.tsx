@@ -55,7 +55,7 @@ const PlayerLeaderboard: React.FC<PlayerLeaderboardProps> = ({
             sx={{
               display: "flex",
               alignItems: "center",
-              p: 2,
+              p: { xs: 1.5, sm: 2 },
               borderBottom: index < playerRankings.length - 1 ? "1px solid #f0f0f0" : "none",
               transition: "background-color 0.2s ease",
               "&:hover": {
@@ -66,14 +66,14 @@ const PlayerLeaderboard: React.FC<PlayerLeaderboardProps> = ({
             {/* Rank Badge */}
             <Box
               sx={{
-                minWidth: 40,
-                height: 40,
+                minWidth: { xs: 30, sm: 40 },
+                height: { xs: 30, sm: 40 },
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                marginRight: 2,
+                marginRight: { xs: 1, sm: 2 },
                 fontWeight: "bold",
-                fontSize: "20px",
+                fontSize: { xs: "16px", sm: "20px" },
                 color: player?.rank === 1 ? "#D4AF37" : player?.rank === 2 ? "#9CA3AF" : player?.rank === 3 ? "#CD7F32" : "#9CA3AF",
               }}
             >
@@ -84,9 +84,9 @@ const PlayerLeaderboard: React.FC<PlayerLeaderboardProps> = ({
             <Avatar
               src={player?.profilePhoto || ""}
               sx={{
-                width: 54,
-                height: 54,
-                marginRight: 2,
+                width: { xs: 44, sm: 54 },
+                height: { xs: 44, sm: 54 },
+                marginRight: { xs: 1.5, sm: 2 },
                 border: player?.rank === 1
                   ? "2px solid #F59E0B"
                   : player?.rank === 2
@@ -110,11 +110,19 @@ const PlayerLeaderboard: React.FC<PlayerLeaderboardProps> = ({
                   textOverflow: "ellipsis",
                   whiteSpace: "nowrap",
                   mb: 0.5,
+                  fontSize: { xs: "0.95rem", sm: "1.1rem" },
                 }}
               >
                 {player?.name}
               </Typography>
-              <Typography variant="body2" color="text.secondary" noWrap>
+              <Typography
+                variant="body2"
+                color="text.secondary"
+                noWrap
+                sx={{
+                  fontSize: { xs: "0.75rem", sm: "0.875rem" },
+                }}
+              >
                 Rank #{player?.rank} {player?.teamNumber ? `• Cluster ${player.teamNumber}` : ""}
               </Typography>
             </Box>
@@ -123,18 +131,27 @@ const PlayerLeaderboard: React.FC<PlayerLeaderboardProps> = ({
             <Box
               sx={{
                 textAlign: "right",
-                minWidth: 80,
+                minWidth: { xs: 60, sm: 80 },
               }}
             >
               <Typography
                 variant="h5"
                 fontWeight="bold"
                 color="primary"
-                sx={{ lineHeight: 1 }}
+                sx={{
+                  lineHeight: 1,
+                  fontSize: { xs: "1.2rem", sm: "1.5rem" },
+                }}
               >
                 {player?.score}
               </Typography>
-              <Typography variant="caption" color="text.secondary">
+              <Typography
+                variant="caption"
+                color="text.secondary"
+                sx={{
+                  fontSize: { xs: "0.7rem", sm: "0.75rem" },
+                }}
+              >
                 points
               </Typography>
             </Box>

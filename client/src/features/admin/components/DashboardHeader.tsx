@@ -118,17 +118,35 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
   return (
     <>
       <Box
-        display="flex"
-        justifyContent="space-between"
-        alignItems="center"
-        px={4}
-        py={2}
+        sx={{
+          display: "flex",
+          flexDirection: { xs: "column", sm: "row" },
+          justifyContent: "space-between",
+          alignItems: { xs: "stretch", sm: "center" },
+          px: { xs: 2, sm: 4 },
+          py: 2,
+          gap: 2,
+        }}
       >
-        <Typography variant="h6" fontWeight="bold">
+        <Typography
+          variant="h6"
+          fontWeight="bold"
+          sx={{
+            textAlign: { xs: "center", sm: "left" },
+          }}
+        >
           Admin Dashboard
         </Typography>
 
-        <Box display="flex" gap={2} alignItems="center">
+        <Box
+          sx={{
+            display: "flex",
+            gap: { xs: 1, sm: 2 },
+            alignItems: "center",
+            flexWrap: "wrap",
+            justifyContent: { xs: "center", sm: "flex-end" },
+          }}
+        >
           <Button
             variant="outlined"
             color="success"
@@ -139,11 +157,13 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
               textTransform: "none",
               borderRadius: "8px",
               fontWeight: 500,
+              flexGrow: { xs: 1, sm: 0 },
+              minWidth: { xs: "calc(50% - 8px)", sm: "auto" },
             }}
           >
             <Box
               sx={{
-                display: { xs: "none", sm: "inline" },
+                display: { xs: "inline", sm: "inline" },
               }}
             >
               {isDownloading ? 'Downloading...' : 'Download Data'}
@@ -160,11 +180,13 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
                 textTransform: "none",
                 borderRadius: "8px",
                 fontWeight: 500,
+                flexGrow: { xs: 1, sm: 0 },
+                minWidth: { xs: "calc(50% - 8px)", sm: "auto" },
               }}
             >
               <Box
                 sx={{
-                  display: { xs: "none", sm: "inline" },
+                  display: { xs: "inline", sm: "inline" },
                 }}
               >
                 Manage Clusters
@@ -181,14 +203,16 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
               textTransform: "none",
               borderRadius: "8px",
               fontWeight: 500,
+              flexGrow: { xs: 1, sm: 0 },
+              minWidth: { xs: "calc(50% - 8px)", sm: "auto" },
             }}
           >
             <Box
               sx={{
-                display: { xs: "none", sm: "inline" },
+                display: { xs: "inline", sm: "inline" },
               }}
             >
-              Customize Questions
+              Customize
             </Box>
           </Button>
 
@@ -201,11 +225,13 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
               textTransform: "none",
               borderRadius: "8px",
               fontWeight: 500,
+              flexGrow: { xs: 1, sm: 0 },
+              minWidth: { xs: "calc(50% - 8px)", sm: "auto" },
             }}
           >
             <Box
               sx={{
-                display: { xs: "none", sm: "inline" },
+                display: { xs: "inline", sm: "inline" },
               }}
             >
               Leaderboard
@@ -223,11 +249,13 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
               border: "1px solid #FF6363",
               fontWeight: 500,
               color: "#FF6363",
+              flexGrow: { xs: 1, sm: 0 },
+              minWidth: { xs: "calc(50% - 8px)", sm: "auto" },
             }}
           >
             <Box
               sx={{
-                display: { xs: "none", sm: "inline" },
+                display: { xs: "inline", sm: "inline" },
               }}
             >
               Log Out
@@ -241,7 +269,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
           display: "flex",
           flexDirection: { xs: "column", md: "row" },
           gap: 3,
-          px: 4,
+          px: { xs: 2, sm: 4 },
           mb: 2,
         }}
       >
@@ -249,7 +277,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
         <Paper
           sx={{
             flex: 1,
-            p: 3,
+            p: { xs: 2.5, sm: 3 },
             backgroundColor: "rgba(252, 166, 30, 0.10)",
             boxShadow: "0px 2px 4px rgba(0, 0, 0, 0.1)",
             display: "flex",
@@ -272,6 +300,9 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
               fontWeight="bold"
               color="black"
               textAlign={"center"}
+              sx={{
+                fontSize: { xs: "1.5rem", sm: "2rem", md: "2.25rem" },
+              }}
             >
               Admin Name - {admin?.name || data?.adminName || "Admin"}
             </Typography>
@@ -280,9 +311,10 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
           <Box
             sx={{
               display: "flex",
-              gap: 4,
+              gap: { xs: 2, sm: 4 },
               alignItems: "center",
               flexWrap: "wrap",
+              justifyContent: { xs: "center", sm: "flex-start" },
             }}
           >
             {data?.gameStatus !== "ended" && (
@@ -297,6 +329,9 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
                   } else {
                     setStartConfirmOpen(true);
                   }
+                }}
+                sx={{
+                  width: { xs: "100%", sm: "auto" },
                 }}
               >
                 {isCheckingReadiness
@@ -322,6 +357,9 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
                   Enable Transactions
                 </Typography>
               }
+              sx={{
+                m: { xs: "0 auto", sm: 0 },
+              }}
             />
           </Box>
         </Paper>
@@ -329,7 +367,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
         {/* Right Card: Session Branding */}
         <Paper
           sx={{
-            p: 3,
+            p: { xs: 2.5, sm: 3 },
             width: { xs: "100%", md: "460px" },
             borderRadius: "16px",
             border: "1px solid #E5E7EB",
