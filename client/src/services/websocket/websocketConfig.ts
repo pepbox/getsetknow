@@ -6,8 +6,19 @@ import { throttle } from "../../utils/throttle";
 import { Events } from "./enums/Events";
 import { gameApi } from "../../features/game/services/gameArena.Api";
 import { adminApi } from "../../features/admin/services/admin.Api";
+import { logoutPlayer } from "../../features/player/services/player.slice";
 
 export const setupGlobalListeners = () => {
+  websocketService.addGlobalListener(
+    Events.PLAYER_KICKED,
+    () => {
+      console.log("Player was kicked from session");
+      store.dispatch(logoutPlayer());
+      window.location.href = "/?reason=kicked";
+    },
+    "redux"
+  );
+
   websocketService.addGlobalListener(
     // Make api to fetch session state
     Events.SESSION_UPDATE,

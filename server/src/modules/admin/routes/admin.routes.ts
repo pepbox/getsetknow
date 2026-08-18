@@ -30,4 +30,7 @@ router.post('/teams/create-bulk', authenticateUser, authorizeRoles("ADMIN"), asy
 router.post('/teams', authenticateUser, authorizeRoles("ADMIN"), asyncHandeler(adminControllers.addSingleTeam));
 router.delete('/teams/:teamId', authenticateUser, authorizeRoles("ADMIN"), asyncHandeler(adminControllers.deleteSingleTeam));
 
+// Player management routes
+router.delete('/players/:playerId', authenticateUser, authorizeRoles("ADMIN"), asyncHandeler(adminControllers.removePlayer));
+
 export default router;

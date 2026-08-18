@@ -4,6 +4,7 @@ import {
   useFetchDashboardDataQuery,
   useLazyGetPlayerWithResponsesQuery,
   useUpdatePlayerMutation,
+  useRemovePlayerMutation,
 } from "../services/admin.Api";
 import ErrorLayout from "../../../components/ui/Error";
 import Snackbar from "@mui/material/Snackbar";
@@ -12,6 +13,7 @@ import Alert from "@mui/material/Alert";
 const DashboardPage: React.FC = () => {
   const { data, isError } = useFetchDashboardDataQuery({});
   const [UpdatePlayer] = useUpdatePlayerMutation();
+  const [RemovePlayer] = useRemovePlayerMutation();
   const [getPlayerWithResponses, { isLoading: loadingResponses }] =
     useLazyGetPlayerWithResponsesQuery();
 
@@ -103,6 +105,26 @@ const DashboardPage: React.FC = () => {
           console.error("Failed to fetch player responses:", error);
         });
     },
+
+    onRemovePlayer: (playerId: string) => {
+      RemovePlayer(playerId)
+        .unwrap()
+        .then(() => {
+          setSnackbar({
+            open: true,
+            message: "Player removed successfully",
+            severity: "success",
+          });
+        })
+        .catch((error) => {
+          setSnackbar({
+            open: true,
+            message: "Failed to remove player",
+            severity: "error",
+          });
+          console.error("Failed to remove player:", error);
+        });
+    },
   };
 
   if (isError) {
@@ -116,6 +138,7 @@ const DashboardPage: React.FC = () => {
         onChangeName={handlers?.onChangeName}
         onChangeScore={handlers?.onChangeScore}
         onViewResponses={handlers?.onViewResponses}
+        onRemovePlayer={handlers?.onRemovePlayer}
         playerWithResponses={playerWithResponses}
         loadingResponses={loadingResponses}
       />

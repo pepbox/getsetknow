@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useRef } from "react";
 import "./App.css";
 import { Routes, Route } from "react-router-dom";
 import GameMain from "./pages/gameMain";
@@ -19,6 +19,7 @@ const App: React.FC = () => {
   const { isAuthenticated: isUserAuthenticated } = useAppSelector(
     (state: RootState) => state.player
   );
+  const isWSInitialized = useRef(false);
 
   useEffect(() => {
     const initWS = async () => {
@@ -27,14 +28,17 @@ const App: React.FC = () => {
         await initializeWebSocket(serverUrl);
       } catch (error) {
         console.error("Failed to connect to Socket.IO:", error);
+        isWSInitialized.current = false;
       }
     };
 
-    if (isAdminAuthenticated || isUserAuthenticated) {
+    if ((isAdminAuthenticated || isUserAuthenticated) && !isWSInitialized.current) {
+      isWSInitialized.current = true;
       initWS();
     }
     return () => {
       websocketService.disconnect();
+      isWSInitialized.current = false;
     };
   }, [isAdminAuthenticated, isUserAuthenticated]);
 

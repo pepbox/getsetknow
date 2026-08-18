@@ -77,6 +77,14 @@ export const adminApi = api.injectEndpoints({
       invalidatesTags: ["AdminPlayer"],
     }),
 
+    removePlayer: builder.mutation({
+      query: (playerId: string) => ({
+        url: `/admin/players/${playerId}`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: ["AdminPlayer"],
+    }),
+
     getPlayerWithResponses: builder.query({
       query: (playerId: string) => ({
         url: `/admin/getPlayerWithResponses/${playerId}`,
@@ -191,6 +199,7 @@ export const {
   useFetchDashboardDataQuery,
   useFetchLeaderboardDataQuery,
   useUpdatePlayerMutation,
+  useRemovePlayerMutation,
   useLazyGetPlayerWithResponsesQuery,
   useLazyFetchAdminQuery,
   useLazyCheckPlayersReadinessQuery,

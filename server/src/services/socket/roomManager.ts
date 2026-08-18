@@ -123,8 +123,6 @@ class RoomManager {
   getTeamSockets(sessionId: string, teamId: string): string[] {
     const sessionRoom = this.sessions.get(sessionId);
     const teamSockets = sessionRoom?.teams.get(teamId);
-    console.log("Session Room", sessionRoom);
-    console.log("Session Room Teams", sessionRoom?.teams);
     return teamSockets ? Array.from(teamSockets) : [];
   }
 

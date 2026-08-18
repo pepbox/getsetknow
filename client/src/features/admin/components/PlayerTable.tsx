@@ -44,7 +44,8 @@ type Column = {
     transaction?: boolean,
     openNameModal?: (playerId: string, currentName: string) => void,
     onChangeScore?: (id: string, newScore: number) => void,
-    openScoreModal?: (playerId: string, currentScore: number) => void
+    openScoreModal?: (playerId: string, currentScore: number) => void,
+    openRemoveModal?: (playerId: string, name: string) => void
   ) => React.ReactNode;
 };
 
@@ -55,6 +56,7 @@ const PlayerTable: React.FC<PlayerTableProps> = ({
   onChangeName,
   onChangeScore,
   onViewResponses,
+  onRemovePlayer,
   playerWithResponses = null,
   loadingResponses = false,
 }) => {
@@ -74,6 +76,35 @@ const PlayerTable: React.FC<PlayerTableProps> = ({
   const [currentScore, setCurrentScore] = useState<number>(0);
   const [scoreAdjustment, setScoreAdjustment] = useState<string>("");
   const [operation, setOperation] = useState<"add" | "subtract">("add");
+
+  // Double verification modal state for player removal
+  const [removeDialogOpen, setRemoveDialogOpen] = useState(false);
+  const [confirmRemoveDialogOpen, setConfirmRemoveDialogOpen] = useState(false);
+  const [playerToRemove, setPlayerToRemove] = useState<{ id: string; name: string } | null>(null);
+
+  const openRemoveModal = (playerId: string, playerName: string) => {
+    setPlayerToRemove({ id: playerId, name: playerName });
+    setRemoveDialogOpen(true);
+  };
+
+  const handleRemoveFirstStepConfirm = () => {
+    setRemoveDialogOpen(false);
+    setConfirmRemoveDialogOpen(true);
+  };
+
+  const handleRemoveCancel = () => {
+    setRemoveDialogOpen(false);
+    setConfirmRemoveDialogOpen(false);
+    setPlayerToRemove(null);
+  };
+
+  const handleRemoveFinalConfirm = () => {
+    if (onRemovePlayer && playerToRemove) {
+      onRemovePlayer(playerToRemove.id);
+    }
+    setConfirmRemoveDialogOpen(false);
+    setPlayerToRemove(null);
+  };
 
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
@@ -209,10 +240,13 @@ const PlayerTable: React.FC<PlayerTableProps> = ({
     if (!filteredPlayers) return filteredPlayers;
 
     if (selectedTeam) {
-      // Sort by totalScore descending to calculate team rank
-      const sortedByScore = [...filteredPlayers].sort(
-        (a, b) => (b.totalScore || 0) - (a.totalScore || 0)
-      );
+      // Sort by totalScore descending and wrongGuesses ascending to calculate team rank
+      const sortedByScore = [...filteredPlayers].sort((a, b) => {
+        if ((b.totalScore || 0) !== (a.totalScore || 0)) {
+          return (b.totalScore || 0) - (a.totalScore || 0);
+        }
+        return (a.wrongGuesses || 0) - (b.wrongGuesses || 0);
+      });
       return sortedByScore.map((player, index) => ({
         ...player,
         teamRank: index + 1,
@@ -290,7 +324,7 @@ const PlayerTable: React.FC<PlayerTableProps> = ({
     },
     {
       key: "rank",
-      label: selectedTeam ? "Cluster Rank" : "Rank",
+      label: "Cluster Rank",
       sortable: true,
       visible: (gameStatus) => gameStatus === "playing" || gameStatus === "paused",
       render: (player) =>
@@ -407,6 +441,35 @@ const PlayerTable: React.FC<PlayerTableProps> = ({
         >
           Show
         </Button>
+      ),
+    },
+    {
+      key: "removePlayer",
+      label: "Remove",
+      sortable: false,
+      visible: (status) => status !== "ended",
+      render: (
+        player,
+        _onChangeName,
+        _,
+        transaction,
+        _openNameModal,
+        _onChangeScore,
+        _openScoreModal,
+        openRemoveModal
+      ) => (
+        <Tooltip title={!transaction ? "Enable transactions first" : ""}>
+          <span>
+            <IconButton
+              size="small"
+              disabled={!transaction}
+              color="error"
+              onClick={() => openRemoveModal?.(player.id, player.name)}
+            >
+              <ClearIcon fontSize="small" />
+            </IconButton>
+          </span>
+        </Tooltip>
       ),
     },
   ];
@@ -627,7 +690,7 @@ const PlayerTable: React.FC<PlayerTableProps> = ({
                   {/* Status chip or Rank badge */}
                   {gameStatus === "playing" || gameStatus === "paused" ? (
                     <Chip
-                      label={`Rank #${currentRank}`}
+                      label={`Cluster Rank #${currentRank}`}
                       size="small"
                       color="secondary"
                       sx={{ fontWeight: "bold" }}
@@ -774,6 +837,20 @@ const PlayerTable: React.FC<PlayerTableProps> = ({
                           </IconButton>
                         </Tooltip>
                       )}
+
+                      {/* Remove Player */}
+                      {gameStatus !== "ended" && (
+                        <Tooltip title="Remove Player">
+                          <IconButton
+                            size="small"
+                            color="error"
+                            onClick={() => openRemoveModal(player.id, player.name)}
+                            sx={{ border: "1px solid #EF4444", borderRadius: "6px" }}
+                          >
+                            <ClearIcon fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
+                      )}
                     </Box>
                   )}
                 </Box>
@@ -840,7 +917,8 @@ const PlayerTable: React.FC<PlayerTableProps> = ({
                         transaction,
                         openModal,
                         onChangeScore,
-                        openScoreModal
+                        openScoreModal,
+                        openRemoveModal
                       )}
                     </TableCell>
                   ))}
@@ -1032,6 +1110,61 @@ const PlayerTable: React.FC<PlayerTableProps> = ({
         playerWithResponses={playerWithResponses}
         loading={loadingResponses}
       />
+
+      {/* Remove Player Modal - Step 1 */}
+      <Dialog open={removeDialogOpen} onClose={handleRemoveCancel}>
+        <DialogTitle sx={{ fontWeight: "bold" }}>Remove Player</DialogTitle>
+        <DialogContent>
+          <Typography>
+            Are you sure you want to remove <strong>{playerToRemove?.name}</strong> from this session?
+            This will immediately log them out of their device, and they will no longer participate in this session.
+          </Typography>
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 3 }}>
+          <Button onClick={handleRemoveCancel} sx={{ color: "text.secondary" }}>
+            Cancel
+          </Button>
+          <Button
+            onClick={handleRemoveFirstStepConfirm}
+            variant="contained"
+            color="error"
+            sx={{ px: 3 }}
+          >
+            Remove Player
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Remove Player Modal - Step 2 (Double Verification) */}
+      <Dialog open={confirmRemoveDialogOpen} onClose={handleRemoveCancel}>
+        <DialogTitle sx={{ fontWeight: "bold", color: "error.main" }}>
+          Confirm Irreversible Action
+        </DialogTitle>
+        <DialogContent>
+          <Typography>
+            <strong>WARNING:</strong> This action cannot be undone. All responses and guesses associated with <strong>{playerToRemove?.name}</strong> will be permanently deleted from the database.
+          </Typography>
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 3 }}>
+          <Button onClick={handleRemoveCancel} sx={{ color: "text.secondary" }}>
+            Cancel
+          </Button>
+          <Button
+            onClick={handleRemoveFinalConfirm}
+            variant="contained"
+            color="error"
+            sx={{
+              backgroundColor: "#d32f2f",
+              px: 3,
+              "&:hover": {
+                backgroundColor: "#c62828",
+              },
+            }}
+          >
+            Yes, Permanently Delete
+          </Button>
+        </DialogActions>
+      </Dialog>
     </>
   );
 };

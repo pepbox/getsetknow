@@ -2,10 +2,11 @@ import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import dotenv from 'dotenv';
 import mongoose from 'mongoose';
+import { Player } from '../modules/players/models/player.model';
 
 dotenv.config();
 
-export const authenticateUser = (req: Request, res: Response, next: NextFunction): void => {
+export const authenticateUser = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
 
   const token = req.cookies.accessToken;
 
@@ -15,8 +16,18 @@ export const authenticateUser = (req: Request, res: Response, next: NextFunction
   }
 
   try {
-    const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET as string) as { id: mongoose.Types.ObjectId; role: 'USER' | 'ADMIN'; companyId: string };
+    const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET as string) as { id: mongoose.Types.ObjectId; role: 'USER' | 'ADMIN'; companyId: string; sessionId?: mongoose.Types.ObjectId };
     req.user = decoded;
+
+    if (decoded.role === 'USER') {
+      const playerExists = await Player.exists({ _id: decoded.id });
+      if (!playerExists) {
+        res.clearCookie("accessToken");
+        res.status(401).json({ success: false, message: 'Unauthorized: Player has been removed from session' });
+        return;
+      }
+    }
+
     next();
   } catch (error) {
     console.log(error);

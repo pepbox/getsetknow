@@ -16,6 +16,7 @@ export interface PlayerTableProps {
     onChangeName?: (playerId: string, name: string) => void;
     onChangeScore?: (playerId: string, newScore: number) => void;
     onViewResponses?: (playerId: string) => void;
+    onRemovePlayer?: (playerId: string) => void;
     playerWithResponses?: {
         player: {
             id: string;
@@ -84,6 +85,7 @@ export interface DashboardProps {
     onChangeName?: (playerId: string, name: string) => void;
     onChangeScore?: (playerId: string, newScore: number) => void;
     onViewResponses?: (playerId: string) => void;
+    onRemovePlayer?: (playerId: string) => void;
     loadingResponses?: boolean;
 }
 

@@ -24,4 +24,6 @@ const questionResponseSchema = new Schema<IQuestionResponse>(
 }
 );
 
+questionResponseSchema.index({ player: 1 });
+
 export const QuestionResponse = model<IQuestionResponse>('QuestionResponse', questionResponseSchema);

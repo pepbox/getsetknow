@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { Box, Alert, Typography } from "@mui/material";
 import { RootState, AppDispatch } from "../../../app/store";
@@ -290,17 +290,20 @@ const GameArenaPage: React.FC = () => {
   };
 
   // Extract correctly guessed player IDs from guesses data
-  const getCorrectlyGuessedPlayerIds = (): string[] => {
+  const correctlyGuessedPlayerIds = useMemo((): string[] => {
     if (!guessesData?.data || !gameCards.length) return [];
 
     const correctPlayerIds: string[] = [];
 
-    guessesData.data.forEach((guess: any, index: number) => {
-      if (guess.status === "correct" && gameCards[index]) {
+    // Create a Set of all valid guess IDs from the gameCards
+    const validGuessIds = new Set(gameCards.map(card => card.guessId));
+
+    guessesData.data.forEach((guess: any) => {
+      // Check if this guess is correct and corresponds to one of the current game cards
+      if (guess.status === "correct" && validGuessIds.has(guess.guessId)) {
         if (guess.guessedPersonId) {
           correctPlayerIds.push(guess.guessedPersonId);
         }
-        // Alternative: if the guess data contains the person information directly
         else if (guess.correctPersonId) {
           correctPlayerIds.push(guess.correctPersonId);
         }
@@ -308,9 +311,7 @@ const GameArenaPage: React.FC = () => {
     });
 
     return [...new Set(correctPlayerIds)]; // Remove duplicates
-  };
-
-  const correctlyGuessedPlayerIds = getCorrectlyGuessedPlayerIds();
+  }, [guessesData?.data, gameCards]);
 
   // Loading state
   if (isLoading) {

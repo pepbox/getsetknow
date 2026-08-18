@@ -33,5 +33,8 @@ const guessSchema = new Schema<IGuess>({
     timestamps: true
 });
 
+guessSchema.index({ user: 1, personId: 1 });
+guessSchema.index({ session: 1 });
+
 export const Guess = model<IGuess>('Guess', guessSchema);
 export type { IGuess };

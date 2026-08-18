@@ -10,6 +10,7 @@ import { Player } from '../../players/models/player.model';
 import { Guess } from '../../players/models/guess.model';
 import QuestionService from '../../questions/services/question.service';
 import { Question } from '../../questions/models/question.model';
+import { QuestionResponse } from '../../questions/models/question.response.model';
 import { SessionStatus } from '../../session/types/enums';
 import { SessionEmitters } from '../../../services/socket/sessionEmitters';
 import { Events } from '../../../services/socket/enums/Events';
@@ -197,13 +198,55 @@ export const fetchAdminDashboardData = async (
 
         // Fetch all players in the session
         const players = await playerService.getPlayersBySession(sessionId);
-        const playerDataPromises = players.map(async (player) => {
+        const playerIds = players.map(p => p._id);
+
+        // Bulk Fetch responses, guesses, and teams to solve N+1 queries
+        const [allResponses, allGuesses, teams] = await Promise.all([
+            QuestionResponse.find({ player: { $in: playerIds } }).lean(),
+            Guess.find({ session: sessionId }).lean(),
+            teamService.getAllTeamsBySessionId(sessionId.toString())
+        ]);
+
+        // Group responses by player
+        const responsesByPlayer = new Map<string, any[]>();
+        for (const resp of allResponses) {
+            const pId = resp.player.toString();
+            if (!responsesByPlayer.has(pId)) {
+                responsesByPlayer.set(pId, []);
+            }
+            responsesByPlayer.get(pId)!.push(resp);
+        }
+
+        // Group guesses by user (guesser) and personId (target)
+        const guessesByUserMap = new Map<string, any[]>();
+        const guessesByPersonMap = new Map<string, any[]>();
+        for (const guess of allGuesses) {
+            const userId = guess.user.toString();
+            const personId = guess.personId.toString();
+
+            if (!guessesByUserMap.has(userId)) {
+                guessesByUserMap.set(userId, []);
+            }
+            guessesByUserMap.get(userId)!.push(guess);
+
+            if (!guessesByPersonMap.has(personId)) {
+                guessesByPersonMap.set(personId, []);
+            }
+            guessesByPersonMap.get(personId)!.push(guess);
+        }
+
+        // Map teamId to teamNumber
+        const teamMap = new Map(teams.map(t => [t._id.toString(), t.teamNumber]));
+
+        const playersData = players.map((player) => {
+            const playerIdStr = player._id.toString();
+
             // Questions answered
-            const responses = await questionService.getResponsesByPlayerId(player._id.toString());
+            const responses = responsesByPlayer.get(playerIdStr) || [];
             const questionsAnswered = `${responses.length}/${totalQuestionCount}`;
 
             // People you know
-            const guessesByUser = await playerService.getGuessesByUserId(player._id);
+            const guessesByUser = guessesByUserMap.get(playerIdStr) || [];
             const correctGuessesByUser = guessesByUser.filter(
                 (guess) =>
                     guess.guessedPersonId &&
@@ -222,22 +265,23 @@ export const fetchAdminDashboardData = async (
             });
 
             // People who know you
-            const guessesByPerson = await playerService.getGuessesByPersonId(player._id);
+            const guessesByPerson = guessesByPersonMap.get(playerIdStr) || [];
             const correctGuessesByPerson = guessesByPerson.filter(
                 (guess) =>
                     guess.guessedPersonId &&
                     guess.personId.toString() === guess.guessedPersonId.toString()
             );
             const peopleWhoKnowYou = `${correctGuessesByPerson.length}`;
-            // Status from session 
+
+            // Status from session
             const currentStatus = session.status || "Pending";
 
             // Total score
             const totalScore = player.score || 0;
-            const team = await teamService.fetchTeamById(player?.team?.toString() || "");
+            const teamNumber = player.team ? teamMap.get(player.team.toString()) : null;
 
             return {
-                id: player._id.toString(),
+                id: playerIdStr,
                 name: player.name,
                 questionsAnswered,
                 currentStatus,
@@ -246,25 +290,47 @@ export const fetchAdminDashboardData = async (
                 peopleWhoKnowYou,
                 wrongGuesses,
                 totalScore,
-                team: team.teamNumber,
+                team: teamNumber || 0,
             };
         });
 
-        let playersData = await Promise.all(playerDataPromises);
+        // Group players by team (excluding those with no team if we only rank within valid teams, or grouping them together)
+        const playersByTeam = new Map<number, any[]>();
+        for (const p of playersData) {
+            const teamNum = p.team || 0;
+            if (!playersByTeam.has(teamNum)) {
+                playersByTeam.set(teamNum, []);
+            }
+            playersByTeam.get(teamNum)!.push(p);
+        }
 
-        playersData = playersData.sort((a, b) => b.totalScore - a.totalScore);
+        // Sort each team and assign cluster rank using score (desc) and wrongGuesses (asc) as tie-breaker
+        for (const [teamNum, teamPlayers] of playersByTeam.entries()) {
+            teamPlayers.sort((a, b) => {
+                if (b.totalScore !== a.totalScore) {
+                    return b.totalScore - a.totalScore;
+                }
+                return a.wrongGuesses - b.wrongGuesses;
+            });
+            teamPlayers.forEach((p, idx) => {
+                p.rank = idx + 1; // Assign rank within their team/cluster
+            });
+        }
 
-        playersData = playersData.map((player, idx) => ({
-            ...player,
-            rank: idx + 1,
-        }));
+        // Sort the entire playersData list by score desc, then wrongGuesses asc for presentation
+        const sortedPlayersData = playersData.sort((a, b) => {
+            if (b.totalScore !== a.totalScore) {
+                return b.totalScore - a.totalScore;
+            }
+            return a.wrongGuesses - b.wrongGuesses;
+        });
 
         const data = {
             headerData: {
                 adminName: admin.name,
                 gameStatus: session.status,
             },
-            players: playersData,
+            players: sortedPlayersData,
         };
 
         res.status(200).json({
@@ -290,12 +356,31 @@ export const fetchLeaderboardData = async (
             return next(new AppError("Session ID and Admin ID are required.", 400));
         }
 
-        // Fetch all players in the session sorted by score
+        // Fetch all players in the session
         const players = await playerService.getPlayersBySession(sessionId);
+        const playerMap = new Map(players.map((p) => [p._id.toString(), p]));
 
-        // Compute wrong guesses for all players in the session
-        const playersWithWrongGuesses = await Promise.all(players.map(async (player) => {
-            const guessesByUser = await playerService.getGuessesByUserId(player._id);
+        // Bulk fetch all teams and guesses for the session to resolve N+1 queries
+        const [teams, allGuesses] = await Promise.all([
+            teamService.getAllTeamsBySessionId(sessionId.toString()),
+            Guess.find({ session: sessionId }).lean()
+        ]);
+
+        const teamMap = new Map(teams.map((t) => [t._id.toString(), t.teamNumber]));
+
+        // Group guesses by user (guesser)
+        const guessesByUserMap = new Map<string, any[]>();
+        for (const guess of allGuesses) {
+            const userId = guess.user.toString();
+            if (!guessesByUserMap.has(userId)) {
+                guessesByUserMap.set(userId, []);
+            }
+            guessesByUserMap.get(userId)!.push(guess);
+        }
+
+        // Compute wrong guesses in-memory for all players in the session
+        const playersWithWrongGuesses = players.map((player) => {
+            const guessesByUser = guessesByUserMap.get(player._id.toString()) || [];
             let wrongGuesses = 0;
             guessesByUser.forEach((guess: any) => {
                 const isCorrect =
@@ -308,7 +393,7 @@ export const fetchLeaderboardData = async (
                 player,
                 wrongGuesses,
             };
-        }));
+        });
 
         // Sort by score descending, then wrongGuesses ascending, and get top 12
         const sortedPlayersWithGuesses = playersWithWrongGuesses
@@ -329,11 +414,7 @@ export const fetchLeaderboardData = async (
                 const file = await fileService.getFileById(player.profilePhoto.toString());
                 profilePhoto = file?.location || "";
             }
-            let teamNumber = null;
-            if (player.team) {
-                const teamObj = await teamService.fetchTeamById(player.team.toString());
-                teamNumber = teamObj ? teamObj.teamNumber : null;
-            }
+            const teamNumber = player.team ? teamMap.get(player.team.toString()) : null;
             return {
                 id: player._id.toString(),
                 name: player.name,
@@ -345,14 +426,20 @@ export const fetchLeaderboardData = async (
             };
         }));
 
-        // Fetch all guesses with selfies for this session
-        const allGuesses = await playerService.getGuessesWithSelfiesForSession(sessionId);
+        // Filter out guesses with selfies and sort them by latest first, then slice to top 12 BEFORE populating details
+        const guessesWithSelfies = allGuesses.filter((g: any) => g.selfie);
+        const sortedSelfieGuesses = guessesWithSelfies
+            .sort((a: any, b: any) => {
+                const dateA = new Date(a.updatedAt || a.createdAt);
+                const dateB = new Date(b.updatedAt || b.createdAt);
+                return dateB.getTime() - dateA.getTime();
+            })
+            .slice(0, 12);
 
         const selfies = await Promise.all(
-            allGuesses.map(async (guess: any) => {
-                // Get guesser and guessed person details
-                const guesser = await playerService.getPlayerById(guess.user.toString());
-                const guessedPerson = await playerService.getPlayerById(guess.personId.toString());
+            sortedSelfieGuesses.map(async (guess: any) => {
+                const guesser = playerMap.get(guess.user.toString());
+                const guessedPerson = playerMap.get(guess.personId.toString());
                 let selfiePicture = "";
                 if (guess.selfie) {
                     const file = await fileService.getFileById(guess.selfie.toString());
@@ -364,21 +451,12 @@ export const fetchLeaderboardData = async (
                     guessedPersonName: guessedPerson?.name || "Unknown",
                     selfieId: selfiePicture,
                     createdAt: guess.createdAt,
-                    updatedAt: guess.updatedAt, // Include updatedAt for proper sorting
+                    updatedAt: guess.updatedAt,
                 };
             })
         );
 
-        // Filter out selfies without images, sort by latest first, and get top 12
-        const filteredAndSortedSelfies = selfies
-            .filter((selfie: any) => selfie.selfieId) // Only include selfies that exist
-            .sort((a: any, b: any) => {
-                // Use updatedAt for sorting since that's when the selfie was actually uploaded
-                const dateA = new Date(a.updatedAt || a.createdAt);
-                const dateB = new Date(b.updatedAt || b.createdAt);
-                return dateB.getTime() - dateA.getTime(); // Sort by latest first
-            })
-            .slice(0, 12); // Get only top 12 latest selfies
+        const filteredAndSortedSelfies = selfies.filter((selfie: any) => selfie.selfieId);
 
         // Count correct guesses where guessedPersonId matches personId
         const correctGuessesCount = await Guess.countDocuments({
@@ -862,5 +940,52 @@ export const deleteSingleTeam = async (
     } catch (error) {
         console.error("Error deleting team:", error);
         next(new AppError("Failed to delete team.", 500));
+    }
+};
+
+export const removePlayer = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+) => {
+    try {
+        const { playerId } = req.params;
+        const sessionId = req.user?.sessionId;
+
+        if (!playerId || !sessionId) {
+            return next(new AppError("Player ID and Session ID are required.", 400));
+        }
+
+        // 1. Delete player responses
+        await QuestionResponse.deleteMany({ player: playerId });
+
+        // 2. Delete guesses where this player is the user OR the target (personId)
+        await Guess.deleteMany({
+            $or: [
+                { user: playerId },
+                { personId: playerId }
+            ]
+        });
+
+        // 3. Delete the player document itself
+        const deletedPlayer = await Player.findByIdAndDelete(playerId);
+
+        if (!deletedPlayer) {
+            return next(new AppError("Player not found.", 404));
+        }
+
+        // 4. Emit socket event to tell player to log out immediately
+        SessionEmitters.toUser(playerId, Events.PLAYER_KICKED, {});
+
+        // 5. Emit socket event to session players and admins that players have updated
+        SessionEmitters.toSession(sessionId.toString(), Events.PLAYERS_UPDATE, {});
+
+        res.status(200).json({
+            success: true,
+            message: "Player removed successfully from the session."
+        });
+    } catch (error) {
+        console.error("Error removing player:", error);
+        next(new AppError("Failed to remove player.", 500));
     }
 };

@@ -13,9 +13,6 @@ export class SessionEmitters {
     sockets.forEach((socketId) => {
       io.to(socketId).emit(event, data);
     });
-    console.log(
-      `Emitted ${event} to ${sockets.length} sockets in session ${sessionId}`
-    );
   }
 
   static toSessionPlayers(sessionId: string, event: string, data: any) {
@@ -25,9 +22,6 @@ export class SessionEmitters {
     sockets.forEach((socketId) => {
       io.to(socketId).emit(event, data);
     });
-    console.log(
-      `Emitted ${event} to ${sockets.length} players in session ${sessionId}`
-    );
   }
 
   static toSessionAdmins(sessionId: string, event: string, data: any) {
@@ -37,9 +31,6 @@ export class SessionEmitters {
     sockets.forEach((socketId) => {
       io.to(socketId).emit(event, data);
     });
-    console.log(
-      `Emitted ${event} to ${sockets.length} admins in session ${sessionId}`
-    );
   }
 
   // Emit to specific team
@@ -50,9 +41,6 @@ export class SessionEmitters {
     sockets.forEach((socketId) => {
       io.to(socketId).emit(event, data);
     });
-    console.log(
-      `Emitted ${event} to team ${teamId} (${sockets.length} members)`
-    );
   }
 
   static toUser(userId: string, event: string, data: any) {

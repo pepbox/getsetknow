@@ -20,6 +20,7 @@ const Dashboard: React.FC<DashboardProps> = ({
   onChangeName,
   onChangeScore,
   onViewResponses,
+  onRemovePlayer,
   playerWithResponses = null,
 }) => {
   const [UpdateSession] = useUpdateSessionMutation();
@@ -119,6 +120,7 @@ const Dashboard: React.FC<DashboardProps> = ({
           onChangeName={onChangeName}
           onChangeScore={onChangeScore}
           onViewResponses={onViewResponses}
+          onRemovePlayer={onRemovePlayer}
           playerWithResponses={playerWithResponses}
         />
       </Box>

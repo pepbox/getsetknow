@@ -23,8 +23,8 @@ class PlayerService {
     return await this.playerModel.findById(id).populate("session");
   }
 
-  async getPlayersBySession(sessionId: Types.ObjectId): Promise<IPlayer[]> {
-    return await this.playerModel.find({ session: sessionId });
+  async getPlayersBySession(sessionId: Types.ObjectId): Promise<any[]> {
+    return await this.playerModel.find({ session: sessionId }).lean();
   }
 
   async createGuess(data: {
@@ -76,14 +76,11 @@ class PlayerService {
     playerId: string,
     scoreDelta: number
   ): Promise<IPlayer | null> {
-    const player = await this.playerModel.findById(playerId);
-    if (!player) {
-      return null;
-    }
-    const newScore = (player.score || 0) + scoreDelta;
-    player.score = newScore < 0 ? 0 : newScore;
-    await player.save();
-    return player;
+    return await this.playerModel.findByIdAndUpdate(
+      playerId,
+      { $inc: { score: scoreDelta } },
+      { new: true }
+    );
   }
 
   async isSelfieRequired(guessId: string): Promise<boolean> {

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import {
   Box,
   Typography,
@@ -163,7 +163,7 @@ const GameArena: React.FC<GameArenaProps> = ({
   };
 
   // Filter players: Remove correctly guessed players and apply search
-  const getFilteredPlayers = () => {
+  const filteredPlayers = useMemo(() => {
     if (!data?.players) return [];
 
     // First, filter out correctly guessed players
@@ -182,12 +182,8 @@ const GameArena: React.FC<GameArenaProps> = ({
     }
 
     // Sort available players alphabetically by name
-    availablePlayers.sort((a, b) => (a.name || "").localeCompare(b.name || ""));
-
-    return availablePlayers;
-  };
-
-  const filteredPlayers = getFilteredPlayers();
+    return [...availablePlayers].sort((a, b) => (a.name || "").localeCompare(b.name || ""));
+  }, [data?.players, correctlyGuessedPlayerIds, searchText]);
 
   // Clear selection if selected player is no longer available (was correctly guessed)
   useEffect(() => {

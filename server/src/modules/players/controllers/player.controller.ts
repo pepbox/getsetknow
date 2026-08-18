@@ -189,7 +189,6 @@ export const getPlayersCards = async (
       });
       return;
     }
-    console.log("Current Player:", CurrentPlayer);
 
     if (!CurrentPlayer.team) {
       res.status(StatusCodes.OK).json({
@@ -205,7 +204,6 @@ export const getPlayersCards = async (
       team: CurrentPlayer.team,
       _id: { $ne: new Types.ObjectId(currentUserId) }
     }).lean();
-    console.log("Other Players:", otherPlayers);
 
     const teammateIds = otherPlayers.map((p) => p._id);
 
@@ -422,11 +420,9 @@ export const submitGuess = async (
         {}
       );
       if (guess.personId) {
-        console.log("Guessing personId:", guess.personId.toString());
         const file = await fileService.getFileById(
           guessedPerson?.profilePhoto?.toString() || ""
         );
-        console.log("File for personId:", file);
         profilePicture = file?.location || "";
       }
     }
@@ -932,24 +928,35 @@ export const getGameCompletionData = async (
       }
     }
 
+    // Bulk fetch all guesses for the session to resolve N+1 queries
+    const allGuesses = await Guess.find({ session: new Types.ObjectId(sessionId) }).lean();
+
+    // Group guesses by user in-memory
+    const guessesByUserMap = new Map<string, any[]>();
+    for (const guess of allGuesses) {
+      const userId = guess.user.toString();
+      if (!guessesByUserMap.has(userId)) {
+        guessesByUserMap.set(userId, []);
+      }
+      guessesByUserMap.get(userId)!.push(guess);
+    }
+
     // Calculate current player's rank within the team (incorporating wrongGuesses as a tie-breaker)
-    const teamPlayersWithGuesses = await Promise.all(
-      allPlayers.map(async (player: any) => {
-        const guessesByUser = await playerService.getGuessesByUserId(player._id);
-        let wrongGuesses = 0;
-        guessesByUser.forEach((guess: any) => {
-          const isCorrect =
-            guess.guessedPersonId &&
-            guess.personId.toString() === guess.guessedPersonId.toString();
-          const attempts = guess.attempts || 0;
-          wrongGuesses += isCorrect ? Math.max(0, attempts - 1) : attempts;
-        });
-        return {
-          player,
-          wrongGuesses,
-        };
-      })
-    );
+    const teamPlayersWithGuesses = allPlayers.map((player: any) => {
+      const guessesByUser = guessesByUserMap.get(player._id.toString()) || [];
+      let wrongGuesses = 0;
+      guessesByUser.forEach((guess: any) => {
+        const isCorrect =
+          guess.guessedPersonId &&
+          guess.personId.toString() === guess.guessedPersonId.toString();
+        const attempts = guess.attempts || 0;
+        wrongGuesses += isCorrect ? Math.max(0, attempts - 1) : attempts;
+      });
+      return {
+        player,
+        wrongGuesses,
+      };
+    });
 
     const sortedTeamPlayers = teamPlayersWithGuesses.sort((a, b) => {
       const scoreA = a.player.score || 0;
