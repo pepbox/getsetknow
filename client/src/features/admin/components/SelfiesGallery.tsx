@@ -109,6 +109,9 @@ const SelfiesGallery: React.FC<SelfiesGalleryProps> = ({
           📸 Photo Gallery
         </Typography>
       </Box>
+      <Typography variant="body2" color="text.secondary" sx={{ display: "block", textAlign: "center", mb: 2, fontWeight: 500 }}>
+        Showing {Math.min(visibleCount, selfies.length)} of {selfies.length} selfies
+      </Typography>
       <Box
         sx={{
           display: "grid",
