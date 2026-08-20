@@ -1,9 +1,10 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   Box,
   Typography,
   Button,
   Paper,
+  IconButton,
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
@@ -18,6 +19,7 @@ import defaultLogo from "../../../assets/Get-Set-Know.webp";
 
 const Leaderboard: React.FC<LeaderboardProps> = ({ data, isLoading }) => {
   const navigate = useNavigate();
+  const [isLeaderboardOpen, setIsLeaderboardOpen] = useState(true);
   const { sessionId } = useAppSelector((state: RootState) => state.game);
   const { data: session } = useGetSessionQuery(sessionId || "", { skip: !sessionId });
 
@@ -63,110 +65,133 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ data, isLoading }) => {
         <Box
           sx={{
             display: "flex",
-            justifyContent: { xs: "center", sm: "space-between" },
             alignItems: "center",
-            mb: 2,
-            flexWrap: "wrap",
+            justifyContent: "space-between",
             gap: 2,
+            flexWrap: { xs: "wrap", md: "nowrap" },
+            width: "100%",
           }}
         >
-          <Button
-            variant="outlined"
-            startIcon={<ArrowBackIcon />}
-            onClick={handleBackToDashboard}
-            sx={{
-              textTransform: "none",
-              borderRadius: "8px",
-              fontWeight: 500,
-              width: { xs: "100%", sm: "auto" },
-            }}
-          >
-            Back to Dashboard
-          </Button>
-        </Box>
-
-        <Box
-          sx={{
-            display: "flex",
-            flexDirection: { xs: "column", sm: "row" },
-            alignItems: "center",
-            justifyContent: "center",
-            gap: 2,
-            mb: 2,
-            textAlign: { xs: "center", sm: "left" },
-          }}
-        >
+          {/* Left: Back button (taking up left third on md+) */}
           <Box
             sx={{
-              width: { xs: 60, sm: 80 },
-              height: { xs: 60, sm: 80 },
-              borderRadius: "16px",
-              backgroundColor: "#fff",
+              display: "flex",
+              alignItems: "center",
+              width: { xs: "100%", sm: "auto", md: "25%" },
+              justifyContent: "flex-start",
+            }}
+          >
+            <IconButton
+              onClick={handleBackToDashboard}
+              sx={{
+                border: "1px solid #E5E7EB",
+                borderRadius: "8px",
+                p: 1.25,
+                color: "text.primary",
+                backgroundColor: "#ffffff",
+                "&:hover": {
+                  borderColor: "primary.main",
+                  backgroundColor: "rgba(167, 139, 250, 0.04)",
+                },
+              }}
+            >
+              <ArrowBackIcon fontSize="small" />
+            </IconButton>
+          </Box>
+
+          {/* Center: Logo + Title (centered horizontally on md+) */}
+          <Box
+            sx={{
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              overflow: "hidden",
-              border: "1px solid #E5E7EB",
-              boxShadow: "0px 4px 10px rgba(0,0,0,0.05)",
+              gap: 2,
+              flexGrow: 1,
+              textAlign: "center",
             }}
           >
-            <img
-              src={session?.companyLogo?.location || defaultLogo}
-              alt="Session Logo"
-              style={{ width: "100%", height: "100%", objectFit: "contain" }}
-            />
-          </Box>
-          <Typography
-            variant="h3"
-            fontWeight="bold"
-            color="black"
-            sx={{
-              fontSize: { xs: "1.75rem", sm: "2.25rem", md: "3rem" },
-            }}
-          >
-            {session?.companyName || "Game Leaderboard"}
-          </Typography>
-        </Box>
-
-        {data.connectionsCount !== undefined && (
             <Box
               sx={{
+                width: { xs: 50, sm: 60 },
+                height: { xs: 50, sm: 60 },
+                borderRadius: "12px",
+                backgroundColor: "#fff",
                 display: "flex",
                 alignItems: "center",
-                gap: 1,
-                bgcolor: "#ffffff",
-                border: "1px solid #e5e7eb",
-                color: "text.primary",
-                px: 2,
-                py: 0.75,
-                borderRadius: "12px",
-                width: "fit-content",
-                ml: { xs: "auto", sm: "auto" },
-                mr: { xs: "auto", sm: 0 },
-                mt: { xs: 1, sm: 0 },
+                justifyContent: "center",
+                overflow: "hidden",
+                border: "1px solid #E5E7EB",
+                boxShadow: "0px 4px 10px rgba(0,0,0,0.05)",
               }}
             >
-              
-              <Typography variant="body2" fontWeight="bold" sx={{ color: "text.secondary", fontSize:"16px" }}>
-                Connections Established:{" "}
-                <Typography component="span" fontWeight="bold" sx={{ color: "text.primary", fontSize:"20px" }}>
-                  {data.connectionsCount}
-                </Typography>
-              </Typography>
+              <img
+                src={session?.companyLogo?.location || defaultLogo}
+                alt="Session Logo"
+                style={{ width: "100%", height: "100%", objectFit: "contain" }}
+              />
             </Box>
-          )}
+
+            <Typography
+              variant="h3"
+              fontWeight="bold"
+              color="black"
+              sx={{
+                fontSize: { xs: "1.5rem", sm: "1.875rem", md: "2.25rem" },
+              }}
+            >
+              {session?.companyName || "Game Leaderboard"}
+            </Typography>
+          </Box>
+
+          {/* Right: Connections Established (taking up right third on md+) */}
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              width: { xs: "100%", sm: "auto", md: "25%" },
+              justifyContent: "flex-end",
+              flexShrink: 0,
+            }}
+          >
+            {data.connectionsCount !== undefined && (
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 1,
+                  bgcolor: "#ffffff",
+                  border: "1px solid #e5e7eb",
+                  color: "text.primary",
+                  px: 2,
+                  py: 0.75,
+                  borderRadius: "12px",
+                  width: "fit-content",
+                }}
+              >
+                <Typography variant="body2" fontWeight="bold" sx={{ color: "text.secondary", fontSize: "16px", whiteSpace: "nowrap" }}>
+                  Connections:{" "}
+                  <Typography component="span" fontWeight="bold" sx={{ color: "text.primary", fontSize: "20px" }}>
+                    {data.connectionsCount}
+                  </Typography>
+                </Typography>
+              </Box>
+            )}
+          </Box>
+        </Box>
       </Paper>
 
       <Box sx={{ px: { xs: 2, sm: 4 }, pb: 4 }}>
-        {/* Side by side layout */}
+        {/* Side by side layout or single full-width layout */}
         <Box
           sx={{
             display: "grid",
-            gridTemplateColumns: {
-              xs: "1fr",
-              md: "1fr 2fr",
-              lg: "1fr 2.5fr",
-            },
+            gridTemplateColumns: isLeaderboardOpen
+              ? {
+                  xs: "1fr",
+                  md: "1fr 2fr",
+                  lg: "1fr 2.5fr",
+                }
+              : "1fr",
             gap: {
               xs: 3,
               md: 4,
@@ -176,13 +201,22 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ data, isLoading }) => {
           }}
         >
           {/* Player Leaderboard Section - Left */}
-          <Box>
-            <PlayerLeaderboard playerRankings={data.playerRankings} />
-          </Box>
+          {isLeaderboardOpen && (
+            <Box>
+              <PlayerLeaderboard 
+                playerRankings={data.playerRankings} 
+                onClose={() => setIsLeaderboardOpen(false)}
+              />
+            </Box>
+          )}
 
           {/* Selfies Gallery Section - Right */}
           <Box>
-            <SelfiesGallery selfies={data.selfies} />
+            <SelfiesGallery 
+              selfies={data.selfies} 
+              isLeaderboardOpen={isLeaderboardOpen}
+              onToggleLeaderboard={() => setIsLeaderboardOpen(true)}
+            />
           </Box>
         </Box>
       </Box>

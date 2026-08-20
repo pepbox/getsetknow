@@ -3,15 +3,19 @@ import {
   Box,
   Typography,
   Avatar,
+  IconButton,
 } from "@mui/material";
+import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
 import { PlayerRanking } from "../types/interfaces";
 
 interface PlayerLeaderboardProps {
   playerRankings: PlayerRanking[];
+  onClose?: () => void;
 }
 
 const PlayerLeaderboard: React.FC<PlayerLeaderboardProps> = ({
   playerRankings,
+  onClose,
 }) => {
 
 
@@ -30,15 +34,21 @@ const PlayerLeaderboard: React.FC<PlayerLeaderboardProps> = ({
 
   return (
     <Box>
-      <Typography
-        variant="h5"
-        fontWeight="bold"
-        mb={3}
-        textAlign="center"
-        color="primary"
-      >
-        🏆 Player Leaderboard
-      </Typography>
+      <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 3 }}>
+        <Typography
+          variant="h5"
+          fontWeight="bold"
+          color="primary"
+          sx={{ flexGrow: 1, textAlign: "center", pl: onClose ? 4 : 0 }}
+        >
+          🏆 Player Leaderboard
+        </Typography>
+        {onClose && (
+          <IconButton onClick={onClose} size="small" sx={{ color: "text.secondary" }}>
+            <VisibilityOffIcon fontSize="small" />
+          </IconButton>
+        )}
+      </Box>
       
       {/* WhatsApp-style vertical list */}
       <Box

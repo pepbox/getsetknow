@@ -433,8 +433,7 @@ export const fetchLeaderboardData = async (
                 const dateA = new Date(a.updatedAt || a.createdAt);
                 const dateB = new Date(b.updatedAt || b.createdAt);
                 return dateB.getTime() - dateA.getTime();
-            })
-            .slice(0, 12);
+            });
 
         const selfies = await Promise.all(
             sortedSelfieGuesses.map(async (guess: any) => {

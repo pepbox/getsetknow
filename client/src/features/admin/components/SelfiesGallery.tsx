@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   Box,
   Typography,
@@ -6,26 +6,61 @@ import {
   CardContent,
   CardMedia,
   Paper,
+  Button,
+  IconButton,
 } from "@mui/material";
+import VisibilityIcon from "@mui/icons-material/Visibility";
 import { SelfieData } from "../types/interfaces";
 
 interface SelfiesGalleryProps {
   selfies: SelfieData[];
+  isLeaderboardOpen?: boolean;
+  onToggleLeaderboard?: () => void;
 }
 
-const SelfiesGallery: React.FC<SelfiesGalleryProps> = ({ selfies }) => {
+const SelfiesGallery: React.FC<SelfiesGalleryProps> = ({
+  selfies,
+  isLeaderboardOpen = true,
+  onToggleLeaderboard,
+}) => {
+  const [visibleCount, setVisibleCount] = useState(12);
+
+  const handleLoadMore = () => {
+    setVisibleCount((prev) => prev + 12);
+  };
   if (selfies.length === 0) {
     return (
       <Box>
-        <Typography
-          variant="h5"
-          fontWeight="bold"
-          mb={3}
-          textAlign="center"
-          color="primary"
-        >
-          Guess Selfies
-        </Typography>
+        <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 1, mb: 3, position: "relative" }}>
+          {!isLeaderboardOpen && onToggleLeaderboard && (
+            <IconButton
+              onClick={onToggleLeaderboard}
+              size="small"
+              sx={{
+                position: "absolute",
+                left: 0,
+                border: "1px solid #E5E7EB",
+                borderRadius: "8px",
+                backgroundColor: "#ffffff",
+                color: "text.primary",
+                "&:hover": {
+                  borderColor: "primary.main",
+                  backgroundColor: "rgba(167, 139, 250, 0.04)",
+                },
+              }}
+            >
+              <VisibilityIcon fontSize="small" />
+            </IconButton>
+          )}
+          <Typography
+            variant="h5"
+            fontWeight="bold"
+            color="primary"
+            sx={{ textAlign: "center" }}
+          >
+            Guess Selfies
+          </Typography>
+        </Box>
         <Paper
           sx={{
             p: 4,
@@ -44,15 +79,36 @@ const SelfiesGallery: React.FC<SelfiesGalleryProps> = ({ selfies }) => {
 
   return (
     <Box>
-            <Typography
-        variant="h5"
-        fontWeight="bold"
-        mb={3}
-        textAlign="center"
-        color="primary"
-      >
-        📸 Photo Gallery
-      </Typography>
+      <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 1, mb: 3, position: "relative" }}>
+        {!isLeaderboardOpen && onToggleLeaderboard && (
+          <IconButton
+            onClick={onToggleLeaderboard}
+            size="small"
+            sx={{
+              position: "absolute",
+              left: 0,
+              border: "1px solid #E5E7EB",
+              borderRadius: "8px",
+              backgroundColor: "#ffffff",
+              color: "text.primary",
+              "&:hover": {
+                borderColor: "primary.main",
+                backgroundColor: "rgba(167, 139, 250, 0.04)",
+              },
+            }}
+          >
+            <VisibilityIcon fontSize="small" />
+          </IconButton>
+        )}
+        <Typography
+          variant="h5"
+          fontWeight="bold"
+          color="primary"
+          sx={{ textAlign: "center" }}
+        >
+          📸 Photo Gallery
+        </Typography>
+      </Box>
       <Box
         sx={{
           display: "grid",
@@ -70,7 +126,7 @@ const SelfiesGallery: React.FC<SelfiesGalleryProps> = ({ selfies }) => {
           },
         }}
       >
-        {selfies.map((selfie) => (
+        {selfies.slice(0, visibleCount).map((selfie) => (
           <Card
             key={selfie.id}
             sx={{
@@ -157,11 +213,35 @@ const SelfiesGallery: React.FC<SelfiesGalleryProps> = ({ selfies }) => {
                 >
                   {selfie.guessedPersonName}
                 </Typography>
-              </Box>
+               </Box>
             </CardContent>
           </Card>
         ))}
       </Box>
+
+      {visibleCount < selfies.length && (
+        <Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
+          <Button
+            variant="outlined"
+            onClick={handleLoadMore}
+            sx={{
+              textTransform: "none",
+              borderRadius: "8px",
+              fontWeight: 700,
+              px: 4,
+              py: 1.5,
+              borderColor: "primary.main",
+              color: "primary.main",
+              "&:hover": {
+                borderColor: "primary.dark",
+                backgroundColor: "rgba(167, 139, 250, 0.04)",
+              },
+            }}
+          >
+            Load More Selfies
+          </Button>
+        </Box>
+      )}
     </Box>
   );
 };
