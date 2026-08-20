@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Box,
   Typography,
@@ -19,7 +19,15 @@ import defaultLogo from "../../../assets/Get-Set-Know.webp";
 
 const Leaderboard: React.FC<LeaderboardProps> = ({ data, isLoading }) => {
   const navigate = useNavigate();
-  const [isLeaderboardOpen, setIsLeaderboardOpen] = useState(true);
+  const [isLeaderboardOpen, setIsLeaderboardOpen] = useState<boolean>(() => {
+    const stored = localStorage.getItem("isLeaderboardOpen");
+    return stored !== null ? stored === "true" : true;
+  });
+
+  useEffect(() => {
+    localStorage.setItem("isLeaderboardOpen", String(isLeaderboardOpen));
+  }, [isLeaderboardOpen]);
+
   const { sessionId } = useAppSelector((state: RootState) => state.game);
   const { data: session } = useGetSessionQuery(sessionId || "", { skip: !sessionId });
 
