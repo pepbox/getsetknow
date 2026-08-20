@@ -395,7 +395,7 @@ export const fetchLeaderboardData = async (
             };
         });
 
-        // Sort by score descending, then wrongGuesses ascending, and get top 12
+        // Sort by score descending, then wrongGuesses ascending
         const sortedPlayersWithGuesses = playersWithWrongGuesses
             .sort((a, b) => {
                 const scoreA = a.player.score || 0;
@@ -404,8 +404,7 @@ export const fetchLeaderboardData = async (
                     return scoreB - scoreA;
                 }
                 return a.wrongGuesses - b.wrongGuesses;
-            })
-            .slice(0, 12);
+            });
 
         const playerRankings = await Promise.all(sortedPlayersWithGuesses.map(async (item, index) => {
             const player = item.player;
