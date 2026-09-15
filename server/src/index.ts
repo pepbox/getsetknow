@@ -67,23 +67,27 @@ const PORT =
 
 const startServer = async () => {
   try {
-    // 1. Connect MongoDB
-    await connectDB();
-
-    // 2. Connect Redis
-    await connectRedis();
-
-    // 3. Initialize Socket.IO
+    // 1. Initialize Socket.IO with server
     initializeSocket(server);
 
-    // 4. Start listening on 0.0.0.0
+    // 2. Start listening on 0.0.0.0 immediately so Cloud Run health check passes instantly
     server.listen(PORT, "0.0.0.0", () => {
-      console.log(`🚀 Server running on port ${PORT}`);
-      console.log(`⚡ Socket.IO initialized with Redis Adapter`);
+      console.log(`🚀 Server running and listening on port ${PORT}`);
     });
+
+    // 3. Connect to MongoDB and Redis in parallel
+    await Promise.all([
+      connectDB().catch((err) => {
+        console.error("❌ MongoDB connection error:", err);
+      }),
+      connectRedis().catch((err) => {
+        console.error("❌ Redis connection error:", err);
+      }),
+    ]);
+
+    console.log(`⚡ Background services connected and ready`);
   } catch (error) {
-    console.error("❌ Failed to start server:", error);
-    process.exit(1);
+    console.error("❌ Error during server startup:", error);
   }
 };
 
