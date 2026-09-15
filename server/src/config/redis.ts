@@ -8,8 +8,7 @@ const REDIS_URL = process.env.REDIS_URL || "redis://127.0.0.1:6379";
  */
 export const GAME_PREFIX = process.env.REDIS_KEY_PREFIX || "get-set-know";
 
-// General Redis client - presence tracking + caching
-export const redis = new Redis(REDIS_URL, {
+const redisOptions: import("ioredis").RedisOptions = {
   lazyConnect: true,
   retryStrategy: (times) => {
     if (times > 5) {
@@ -18,25 +17,18 @@ export const redis = new Redis(REDIS_URL, {
     }
     return Math.min(times * 200, 2000);
   },
-});
+};
+
+
+// General Redis client - presence tracking + caching
+export const redis = new Redis(REDIS_URL, redisOptions);
 
 // Dedicated publish client for Socket.IO adapter
-export const pubClient = new Redis(REDIS_URL, {
-  lazyConnect: true,
-  retryStrategy: (times) => {
-    if (times > 5) return null;
-    return Math.min(times * 200, 2000);
-  },
-});
+export const pubClient = new Redis(REDIS_URL, redisOptions);
 
 // Dedicated subscribe client for Socket.IO adapter
-export const subClient = new Redis(REDIS_URL, {
-  lazyConnect: true,
-  retryStrategy: (times) => {
-    if (times > 5) return null;
-    return Math.min(times * 200, 2000);
-  },
-});
+export const subClient = new Redis(REDIS_URL, redisOptions);
+
 
 redis.on("error", (err) => console.error("Redis (main) error:", err));
 pubClient.on("error", (err) => console.error("Redis (pubClient) error:", err));
