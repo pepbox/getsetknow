@@ -30,10 +30,18 @@ export const generateRefreshToken = (id: string) => {
   );
 };
 
-export const verifyToken = (token: string) => {
+export const verifyToken = (token: string, secret?: string) => {
+  try {
+    return jwt.verify(token, secret || (process.env.ACCESS_TOKEN_SECRET as string));
+  } catch (error) {
+    throw new Error('Invalid token');
+  }
+};
+
+export const verifyRefreshToken = (token: string) => {
   try {
     return jwt.verify(token, process.env.REFRESH_TOKEN_SECRET as string);
   } catch (error) {
-    throw new Error('Invalid token');
+    throw new Error('Invalid refresh token');
   }
 };

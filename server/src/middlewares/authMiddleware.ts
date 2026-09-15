@@ -22,7 +22,11 @@ export const authenticateUser = async (req: Request, res: Response, next: NextFu
     if (decoded.role === 'USER') {
       const playerExists = await Player.exists({ _id: decoded.id });
       if (!playerExists) {
-        res.clearCookie("accessToken");
+        res.clearCookie("accessToken", {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === "production",
+          sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+        });
         res.status(401).json({ success: false, message: 'Unauthorized: Player has been removed from session' });
         return;
       }

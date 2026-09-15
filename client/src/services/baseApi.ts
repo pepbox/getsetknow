@@ -4,6 +4,7 @@ export const baseApi = createApi({
   reducerPath: 'api',
   baseQuery: fetchBaseQuery({
     baseUrl: import.meta.env.VITE_BACKEND_BASE_URL,
+    credentials: 'include',
   }),
   endpoints: () => ({}),
 });
