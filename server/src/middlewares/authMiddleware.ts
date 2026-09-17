@@ -8,7 +8,12 @@ dotenv.config();
 
 export const authenticateUser = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
 
-  const token = req.cookies.accessToken;
+  let token = req.cookies?.accessToken;
+
+  // Fallback to Authorization Bearer header for cross-domain / Safari third-party cookie resilience
+  if (!token && req.headers.authorization && req.headers.authorization.startsWith("Bearer ")) {
+    token = req.headers.authorization.split(" ")[1];
+  }
 
   if (!token) {
     res.status(401).json({ success: false, message: 'Unauthorized: No token provided' });

@@ -5,15 +5,14 @@ export const socketAuthMiddleware = (
   socket: Socket,
   next: (err?: Error) => void
 ) => {
-  // const token = socket.handshake.auth?.token;
+  let token = socket.handshake.auth?.token;
   const cookies = socket.handshake.headers?.cookie;
-  if (!cookies) {
-    return next(new Error("Authentication cookie required"));
+
+  if (!token && cookies) {
+    token = parseCookieValue(cookies, "accessToken");
   }
 
-  const token = parseCookieValue(cookies, "accessToken");
-
-  if (!token) return next(new Error("Token missing"));
+  if (!token) return next(new Error("Authentication token or cookie required"));
 
   try {
     const payload = verifyToken(token);

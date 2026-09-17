@@ -14,7 +14,7 @@ const initialState = {
     player: null as IPlayer | null,
     isLoading: false,
     error: null as SerializedError | null,
-    isAuthenticated: false,
+    isAuthenticated: typeof window !== 'undefined' ? !!localStorage.getItem('accessToken') : false,
 };
 
 const playerSlice = createSlice({
@@ -33,6 +33,7 @@ const playerSlice = createSlice({
             state.error = null;
             // Clear entire localStorage on logout
             if (typeof window !== 'undefined') {
+                localStorage.removeItem('accessToken');
                 localStorage.clear();
             }
         },
@@ -48,9 +49,13 @@ const playerSlice = createSlice({
             )
             .addMatcher(
                 playerApi.endpoints.onboardPlayer.matchFulfilled,
-                (state) => {
+                (state, action: any) => {
                     state.isLoading = false;
                     state.isAuthenticated = true;
+                    const token = action.payload?.accessToken || action.payload?.data?.accessToken;
+                    if (token && typeof window !== 'undefined') {
+                        localStorage.setItem('accessToken', token);
+                    }
                 }
             )
             .addMatcher(
@@ -58,6 +63,10 @@ const playerSlice = createSlice({
                 (state, { error }) => {
                     state.isLoading = false;
                     state.error = error;
+                    state.isAuthenticated = false;
+                    if (typeof window !== 'undefined') {
+                        localStorage.removeItem('accessToken');
+                    }
                 }
             );
 
@@ -81,6 +90,10 @@ const playerSlice = createSlice({
                 (state, { error }) => {
                     state.isLoading = false;
                     state.error = error;
+                    state.isAuthenticated = false;
+                    if (typeof window !== 'undefined') {
+                        localStorage.removeItem('accessToken');
+                    }
                 }
             );
 

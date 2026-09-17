@@ -69,13 +69,15 @@ const adminSlice = createSlice({
                 adminApi.endpoints.adminLogin.matchFulfilled,
                 (state, action: any) => {
                     state.isLoading = false;
-                    if (action.payload.success) {
-                        if (action.payload.admin) {
-                            state.admin = action.payload.admin;
+                    if (action.payload?.success) {
+                        const adminData = action.payload.data?.admin || action.payload.admin;
+                        if (adminData) {
+                            state.admin = adminData;
                         }
-                        if (action.payload.token) {
-                            state.token = action.payload.token;
-                            localStorage.setItem('adminToken', action.payload.token);
+                        const token = action.payload.token || action.payload.data?.token || action.payload.accessToken || action.payload.data?.accessToken;
+                        if (token) {
+                            state.token = token;
+                            localStorage.setItem('adminToken', token);
                         }
                         state.isAuthenticated = true;
                         state.error = null;
@@ -115,6 +117,8 @@ const adminSlice = createSlice({
                 (state, { error }) => {
                     state.error = error;
                     state.isLoading = false;
+                    state.isAuthenticated = false;
+                    localStorage.removeItem('adminToken');
                 }
             );
         builder

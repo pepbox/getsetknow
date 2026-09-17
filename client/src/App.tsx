@@ -25,7 +25,8 @@ const App: React.FC = () => {
     const initWS = async () => {
       try {
         const serverUrl = import.meta.env.VITE_BACKEND_WEBSOCKET_URL;
-        await initializeWebSocket(serverUrl);
+        const token = localStorage.getItem("accessToken") || localStorage.getItem("adminToken") || undefined;
+        await initializeWebSocket(serverUrl, token);
       } catch (error) {
         console.error("Failed to connect to Socket.IO:", error);
         isWSInitialized.current = false;

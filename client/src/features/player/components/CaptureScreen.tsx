@@ -92,7 +92,11 @@ const CaptureScreen: React.FC = () => {
 
       OnboardPlayer(formData)
         .unwrap()
-        .then(() => {
+        .then((res: any) => {
+          const token = res?.accessToken || res?.data?.accessToken;
+          if (token) {
+            localStorage.setItem("accessToken", token);
+          }
           console.log("Player onboarded successfully");
           dispatch(setCurrentStep(3));
           navigate(`/game/${sessionId}/intro`);

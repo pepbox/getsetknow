@@ -10,6 +10,13 @@ import { BaseQueryFn, FetchArgs } from "@reduxjs/toolkit/query";
 const baseQuery = fetchBaseQuery({
     baseUrl: import.meta.env.VITE_BACKEND_BASE_URL,
     credentials: "include", // Include credentials for cross-origin requests
+    prepareHeaders: (headers) => {
+        const token = localStorage.getItem("accessToken") || localStorage.getItem("adminToken");
+        if (token) {
+            headers.set("Authorization", `Bearer ${token}`);
+        }
+        return headers;
+    },
 });
 
 // Helper function to determine the refresh endpoint based on the original request URL

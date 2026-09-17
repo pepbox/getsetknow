@@ -115,7 +115,13 @@ export const onboardPlayer = async (
     res.status(StatusCodes.CREATED).json({
       success: true,
       message: "Player onboarded successfully",
-      data: player,
+      data: {
+        ...(player.toObject ? player.toObject() : player),
+        accessToken,
+        refreshToken,
+      },
+      accessToken,
+      refreshToken,
     });
   } catch (error) {
     if (error instanceof AppError) {

@@ -16,7 +16,7 @@ router.get('/fetchDashboardData', authenticateUser, authorizeRoles("ADMIN"), asy
 router.get('/fetchLeaderboardData', authenticateUser, authorizeRoles("ADMIN"), asyncHandeler(adminControllers.fetchLeaderboardData));
 router.get('/checkPlayersReadiness', authenticateUser, authorizeRoles("ADMIN"), asyncHandeler(adminControllers.checkPlayersReadiness));
 router.put('/updatePlayer', authenticateUser, authorizeRoles("ADMIN"), asyncHandeler(playerControllers.updatePlayer));
-router.get('/getPlayerWithResponses/:playerId', authenticateUser, authorizeRoles("ADMIN"), asyncHandeler(playerControllers.getPlayerWithResponses));
+router.get('/getPlayerWithResponses/:playerId', authenticateUser, asyncHandeler(playerControllers.getPlayerWithResponses));
 
 // Question management routes
 router.get('/questions', authenticateUser, authorizeRoles("ADMIN"), asyncHandeler(adminControllers.getSessionQuestions));

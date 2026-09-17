@@ -47,7 +47,7 @@ export interface GameArenaData {
 const GameArenaPage: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
   const [showResult, setShowResult] = useState(false);
-  const { isGameStarted, isGamePaused } = useAppSelector((state: RootState) => state.game);
+  const { isGameStarted, isGamePaused, sessionId } = useAppSelector((state: RootState) => state.game);
   const hasCheckedPendingSelfies = useRef(false);
 
   // RTK Query hooks
@@ -335,7 +335,7 @@ const GameArenaPage: React.FC = () => {
   }
 
   if (!isGameStarted) {
-    return <Navigate to="/game/waiting" replace />;
+    return <Navigate to={`/game/${sessionId}/waiting`} replace />;
   }
 
   if (isGamePaused) {

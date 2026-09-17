@@ -64,7 +64,12 @@ export const createAdmin = async (
             message: "Admin created successfully.",
             data: {
                 admin,
+                token: accessToken,
+                accessToken,
             },
+            token: accessToken,
+            accessToken,
+            success: true,
         });
     } catch (error) {
         console.error("Error creating admin:", error);
@@ -108,12 +113,16 @@ export const loginAdmin = async (
         res.cookie("accessToken", accessToken, setCookieOptions);
         res.cookie("refreshToken", refreshToken, { ...setCookieOptions, httpOnly: true });
 
-
         res.status(200).json({
             message: "Admin logged in successfully.",
             data: {
                 admin,
+                token: accessToken,
+                accessToken,
+                refreshToken,
             },
+            token: accessToken,
+            accessToken,
             success: true,
         });
     } catch (error) {
